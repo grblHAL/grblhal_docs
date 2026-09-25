@@ -33,7 +33,8 @@ A **G-code sender** is the software you'll use to communicate with grblHAL. Here
 | **CNCjs** | Web-based | Remote access, Raspberry Pi | [GitHub](https://github.com/cncjs/cncjs) |
 | **Universal Gcode Sender (UGS)** | Windows, macOS, Linux | General purpose | [GitHub](https://github.com/winder/Universal-G-Code-Sender) |
 | **bCNC** | Windows, macOS, Linux | Advanced users | [GitHub](https://github.com/vlachoudis/bCNC) |
-| **gSender** | Windows, macOS, Linux | Sienci LongMill | [Sienci Labs](https://sienci.com/gsender/) |
+| **gSende** | Windows, macOS, Linux | Sienci LongMill | [Sienci Labs](https://sienci.com/gsender/) |
+| **ncSender** | Windows, macOS, Linux | Advanced users | [ncSender](https://docs.ncsender.xyz/getting-started/installation/) |
 
 > 💡 **Tip**
 > **ioSender** is specifically designed for grblHAL and offers the best feature support, including advanced settings management, macro support, and real-time visualization.
@@ -359,6 +360,7 @@ grblHAL has several operating states:
 | **Door** | Safety door open | Close door to resume |
 | **Check** | G-code check mode | Simulates without motion |
 | **Home** | Homing cycle active | Wait for completion |
+| **Tool** | Tool change active | Wait for completion |
 
 ---
 

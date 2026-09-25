@@ -89,7 +89,8 @@ grblHAL supports **multiple work coordinate systems**, allowing you to have seve
 | **`G59.3`** | Work Offset 9 | Extended offset 3 |
 
 > ℹ️ **Info**
-> `G54` is the **default** work coordinate system. When you power on grblHAL, G54 is automatically active.
+> `G54` is the **default** work coordinate system. When you power on grblHAL, `G54` is automatically active.  
+> `G59.1 - G59.1` can be locked against accidental changes with setting `$486`.
 
 > ⚠️ **Warning**
 > **G59.3 (Work Offset 9)** has a special role in grblHAL's **Tool Change** logic.
@@ -252,12 +253,15 @@ The **same G-code program** runs three times, but at three different physical lo
 
 ## G92: Temporary Coordinate Offset
 
-`G92` is a **temporary, volatile** coordinate offset that's applied **on top of** the active work coordinate system (G54-G59).
+`G92` is a **temporary** coordinate offset that's applied **on top of** the active work coordinate system (G54-G59).
+
+> ⚠️ **Warning**
+> Setting $384 controls G92 offset persistence, if enabled it will be restored on reboot.
 
 ### How G92 Works
 
 ```
-Final Position = Work Position + Work Offset (G54) + G92 Offset
+Final Position = Work Position + Work Offset (G54) + G92 Offset + any tool offset
 ```
 
 ### When to Use G92
@@ -274,8 +278,8 @@ Final Position = Work Position + Work Offset (G54) + G92 Offset
 | Command | Action |
 |---------|--------|
 | `G92 X0 Y0 Z0` | Set current position as 0,0,0 (temporary) |
-| `G92.1` | Cancel G92 offset |
-| `G92.2` | Suspend G92 offset |
+| `G92.1` | Clear G92 offset and parameters 5211-5219 |
+| `G92.2` | Suspend G92 offset, keeps parameters 5211-5219 |
 | `G92.3` | Restore suspended G92 offset |
 
 **Example:**
@@ -297,18 +301,18 @@ When you query position with `?`, you'll see two types of coordinates:
 
 ```
 
-- **`WPos`** (Work Position): Position in the active work coordinate system
+- **`WPos`** (Work Position): Position in the active work coordinate system + G92 and tool offset
 - **`MPos`** (Machine Position): Absolute machine position
 
 **Relationship:**
 ```
-MPos = WPos + Active Work Offset
+MPos = WPos + Active Work Offsets
 ```
 
 In this example:
 - Work position: X=10, Y=20, Z=5
 - Machine position: X=110, Y=70, Z=15
-- Therefore, work offset (G54) is: X=100, Y=50, Z=10
+- Therefore, work offsets (G54 + G92 + Tool offset) are: X=100, Y=50, Z=10
 
 ---
 

@@ -38,7 +38,7 @@ Choose the driver that matches your board's microcontroller:
 - **iMXRT1062** - For Teensy 4.x boards
 - **LPC176x** - For LPC1768/1769 boards (e.g., BTT SKR V1.4 Turbo)
 - **SAM3X8E** - For Arduino Due
-- And more...
+- **Simulator** - For Linux or Windows, run grblHAL without a controller
 
 #### **B. Select Board**
 After selecting the driver, choose your specific board from the dropdown. Examples:

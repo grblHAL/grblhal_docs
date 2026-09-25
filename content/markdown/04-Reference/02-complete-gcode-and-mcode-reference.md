@@ -339,7 +339,7 @@ These commands are used exclusively in lathe operations to define whether X-axis
 
 
 > ℹ️ **Info**
-> - **Modal:** Part of the Lathe Mode group. Only active if grblHAL is configured with lathe support (setting `$22=2`).
+> - **Modal:** Part of the Lathe Mode group. Only active if grblHAL is configured with lathe support (setting `$32=2`).
 > - **`G7` (Diameter Mode):** All X-axis coordinates and movements are interpreted as diameters. If you command `G1 X50`, the tool moves to a position where the workpiece diameter will be 50 units.
 > - **`G8` (Radius Mode):** All X-axis coordinates and movements are interpreted as radii. If you command `G1 X25`, the tool moves to a position where the workpiece radius will be 25 units (meaning a 50-unit diameter).
 
@@ -1833,12 +1833,12 @@ Executes a subroutine (a separate block of G-code or an external file) and then 
 > - **`M98 P`:** Jumps to the subroutine with the specified number.
 > - If **Scan Current (`$700=1`)** is enabled, it first looks for a label `O sub` in the current file.
 > - If not found (or `$700=0`), it looks for an external file named `xxx` (or `xxx.nc`, `xxx.gcode`, etc.) on the SD card/filesystem.
-> - **`L`:** Optional repeat count. The subroutine will act `` times before returning.
+> - **`L`:** Optional repeat count. The subroutine will run **`L`** times before returning.
 > - **`M99`:** Marks the end of the subroutine. Control returns to the line following the `M98` call.
 > - If `M99` is used in the main program (not in a sub), it acts as a "Rewind and Loop" command, jumping back to the beginning of the file.
 
 
-| Parameter | Description |
+| Parameter | Description
 |-----------|-------------|
 | **`P`** | The subroutine number or filename to call. |
 | **`L`** | (Optional) Number of times to repeat the subroutine. |
@@ -2182,82 +2182,6 @@ Marks the end of a subprogram and returns execution to the main program or the c
 
 ---
 
-
-
-## `M220` – Set Feed Rate Override Percentage
-
-**Syntax:**  
-> `M220 S-`
-
-Allows setting the feed rate override value programmatically from within G-code.
-
-
-> ℹ️ **Info**
-> - **Origin:** Marlin firmware.
-> - This command provides a way to control the feed rate override slider/knob via code. `S` is typically used for the percentage value.
-
-
-| Parameter | Description |
-|-----------|-------------|
-| **`S`** | The feed rate override percentage (e.g., `S100` for 100%, `S50` for 50%). |
-
-#### Example
-* **Slow down the next section of a program to 50% of the programmed feed rate:**  
-  `M220 S50`  
-  `(G-code for a detailed or difficult section)`
-  `M220 S100` (Return to 100% feed rate)
-
----
-
-## `M280` – Set Servo Position
-
-**Syntax:**  
-> `M280 P- S-`
-
-Commands a servo motor connected to a specific output pin to move to a given position. This is often used for controlling auxiliary machine components like tool probes, dust shoes, or material clamps.
-
-
-> ℹ️ **Info**
-> - **Origin:** Marlin firmware.
-> - Requires a servo plugin to be active in grblHAL.
-> - The `P` word specifies the servo index (which pin it's connected to), and the `S` word specifies the position, typically in microseconds (e.g., 1000-2000µs) or degrees (0-180).
-
-
-| Parameter | Description |
-|-----------|-------------|
-| **`P`** | The servo number/pin index to command. |
-| **`S`** | The target position for the servo. |
-
-#### Example
-* **Deploy a touch probe connected to servo #0:**  
-  `M280 P0 S90` (Move servo 0 to the 90-degree position)
-
-* **Stow the touch probe:**  
-  `M280 P0 S0` (Move servo 0 back to the 0-degree position)
-
----
-
-## `M400` – Finish Moves
-
-**Syntax:**  
-> `M400`
-
-Waits for all moves in the planner buffer to complete before processing the next command. It is functionally similar to a `G4 P0` (zero-second dwell).
-
-
-> ℹ️ **Info**
-> - **Origin:** Marlin / OpenPnP.
-> - This command ensures the machine is completely stationary before the next G-code line is executed. This is useful when an external action needs to happen at a precise location, like taking a picture for a computer vision system.
-
-
-#### Example
-* **Move to a location, wait until stopped, then trigger an output:**  
-  `G0 X50 Y50`  
-  `M400` (Wait for the move to finish completely)  
-  `M64 P1` (Immediately turn on output 1 to trigger a camera)
-
----
-
 # Plugin-Specific G-codes & M-codes
 
 This section provides a comprehensive list of G-code and M-code commands introduced or specifically extended by grblHAL's official plugins. These commands augment the core G-code and M-code functionality, enabling specialized features for various hardware and applications.
@@ -2335,6 +2259,29 @@ Repo: `https://github.com/grblHAL/Plugins_misc`
 |--------|--------|-------------|
 | `M220` | `M220 [B] [R] [S[percent]]` | Feed override: B=backup, R=restore, S=set % |
 
+## `M220` – Set Feed Rate Override Percentage
+
+**Syntax:**  
+> `M220 S-`
+
+Allows setting the feed rate override value programmatically from within G-code.
+
+
+> ℹ️ **Info**
+> - **Origin:** Marlin firmware.
+> - This command provides a way to control the feed rate override slider/knob via code. `S` is typically used for the percentage value.
+
+
+| Parameter | Description |
+|-----------|-------------|
+| **`S`** | The feed rate override percentage (e.g., `S100` for 100%, `S50` for 50%). |
+
+#### Example
+* **Slow down the next section of a program to 50% of the programmed feed rate:**  
+  `M220 S50`  
+  `(G-code for a detailed or difficult section)`
+  `M220 S100` (Return to 100% feed rate)
+
 ---
 
 ## Plugin: Servo Control (`Plugins_misc`)
@@ -2343,6 +2290,32 @@ Repo: `https://github.com/grblHAL/Plugins_misc`
 | M-Code | Syntax | Description |
 |--------|--------|-------------|
 | `M280` | `M280 P[servo] S[position]` | Control analog/PWM servo: P=index, S=angle 0–180° |
+
+### `M280` – Set Servo Position
+
+**Syntax:**  
+> `M280 P- S-`
+
+Commands a servo motor connected to a specific output pin to move to a given position. This is often used for controlling auxiliary machine components like tool probes, dust shoes, or material clamps.
+
+
+> ℹ️ **Info**
+> - **Origin:** Marlin firmware.
+> - Requires a servo plugin to be active in grblHAL.
+> - The `P` word specifies the servo index (which pin it's connected to), and the `S` word specifies the position, typically in microseconds (e.g., 1000-2000µs) or degrees (0-180).
+
+
+| Parameter | Description |
+|-----------|-------------|
+| **`P`** | The servo number/pin index to command. |
+| **`S`** | The target position for the servo. |
+
+#### Example
+* **Deploy a touch probe connected to servo #0:**  
+  `M280 P0 S90` (Move servo 0 to the 90-degree position)
+
+* **Stow the touch probe:**  
+  `M280 P0 S0` (Move servo 0 back to the 0-degree position)
 
 ---
 
@@ -2357,6 +2330,29 @@ Repo: `https://github.com/grblHAL/Plugin_OpenPNP`
 | `M143` | `M143 P[port] Q[scale] R[offset]` | Read Analog/Digital input |
 | `M144` | `M144 P[port]` | Read Digital input |
 | `M145` | `M145 P[port] Q[scale] R[offset]` | Read Analog input |
+| `M400` | `M400` | Wait for buffered moves to complete, equivalent to `G4P0` |
+
+## `M400` – Finish Moves
+
+**Syntax:**  
+> `M400`
+
+Waits for all moves in the planner buffer to complete before processing the next command. It is functionally similar to a `G4 P0` (zero-second dwell).
+
+
+> ℹ️ **Info**
+> - **Origin:** Marlin / OpenPnP.
+> - This command ensures the machine is completely stationary before the next G-code line is executed. This is useful when an external action needs to happen at a precise location, like taking a picture for a computer vision system.
+
+
+#### Example
+* **Move to a location, wait until stopped, then trigger an output:**  
+  `G0 X50 Y50`  
+  `M400` (Wait for the move to finish completely)  
+  `M64 P1` (Immediately turn on output 1 to trigger a camera)
+
+---
+
 
 ---
 
@@ -2399,99 +2395,5 @@ Repo: `https://github.com/grblHAL/Plugin_encoder`
 | M-Code | Syntax | Description |
 |--------|--------|-------------|
 | `M810` | `M810 P[0\|1]` | Runtime toggle for ATCi Keepout Zone enforcement. `P1` enables protection, `P0` disables it. |
-
----
-
-# System Commands ($)
-
-System commands are special real-time or near-real-time commands that start with `$`. They are used to configure, control, and query the machine state.
-
-## Core Commands
-
-| Command | Description |
-|---------|-------------|
-| **`$$`** | View current settings. |
-| **`$#`** | View G-code parameters (WCS offsets, probe positions, tool offsets). |
-| **`$G`** | View G-code parser state (active modes like G54, G17, G90, etc.). |
-| **`$I`** | View build info string. |
-| **`$N`** | View startup blocks. |
-| **`$X`** | **Kill Alarm Lock.** Unlocks the machine from an alarm state (e.g., hard limit). Use with caution! |
-| **`$H`** | **Run Homing Cycle.** Homes all axes specified in `$23`. |
-| **`$HX`** | **Home Individual Axis.** Homes only the X axis (replace X with Y, Z, etc.). |
-| **`$J=...`** | **Jogging.** Execute a jogging motion. |
-| **`$SLP`** | **Sleep.** Put the machine to sleep. |
-
-## Tool Change Extensions
-
-These commands are specific to manual and semi-automatic tool change modes.
-
-| Command | Description |
-|---------|-------------|
-| **`$TLR`** | **Set Tool Length Reference.** Sets the current tool length offset as the reference. Used after a successful probe for the first tool in a job. |
-| **`$TPW`** | **Tool Probe Workpiece.** Initiates a probing sequence to set the dynamic tool offset for a new tool. Only available in Tool Change Modes 1 and 2. |
-
-## Reporting & Enumeration (grblHAL Extensions)
-
-grblHAL provides advanced reporting commands for Senders to query capabilities without hardcoded lists.
-
-| Command | Description |
-|---------|-------------|
-| **`$EA`** | **Enumerate Alarms.** Lists all supported alarm codes and descriptions. |
-| **`$EE`** | **Enumerate Errors.** Lists all supported error codes and descriptions. |
-| **`$ES`** | **Enumerate Settings.** Lists all supported settings with types, ranges, and descriptions. |
-| **`$EG`** | **Enumerate Setting Groups.** Lists the hierarchy of setting groups. |
-| **`$pins`** | **Enumerate Pins.** Lists processor pin mappings. |
-| **`$pinstate`** | **Enumerate Pin States.** Lists current state of auxiliary pins. |
-| **`$ports`** | **Enumerate Serial Ports.** Lists available UART ports. |
-| **`$SPINDLES`** | **Enumerate Spindles.** Lists available spindles. |
-
-## File System Commands
-(Updated Build 20260310)
-
-These commands allow navigation and management of the SD card or internal LittleFS file system.
-
-| Command | Description |
-|---------|-------------|
-| **`$F`** | **List Files.** Lists CNC-compatible files (`.nc`, `.gcode`, etc.) in the current working directory. |
-| **`$F+`** | **List All Files.** Lists all files in the current working directory regardless of extension. |
-| **`$F=[file]`** | **Run File.** Starts execution of the specified G-code file. |
-| **`$CWD=[path]`** | **Change Directory.** Sets the Current Working Directory. Usage: `$CWD=/` (root), `$CWD=..` (up), `$CWD=subdir` (down). If called without arguments, it reports the current path. |
-| **`$PWD`** | **Print Working Directory.** Reports the current working directory in the format `[CWD:/path/to/dir]`. |
-| **`$FM`** | **Mount SD Card.** Manually triggers a mount of the SD card. |
-| **`$FU`** | **Unmount SD Card.** Safely unmounts the SD card. |
-| **`$FD=[file]`** | **Delete File.** Permanently removes a file from the storage. |
-
----
-
-### Storage Systems in grblHAL
-grblHAL for ESP32 utilizes a **Virtual File System (VFS)** layer that allows it to interact with different storage media through a unified set of commands.
-
-#### SD Card (FatFs)
-The SD card is the primary high-capacity storage for G-code files, typically formatted as **FAT32**.
-- **Mount Point:** Usually mounted at the root (`/`).
-- **Performance:** Ideal for large 3D carving jobs or complex laser engraving.
-- **Hot-Swapping:** Supported on most ESP32 boards with a detect pin.
-
-#### Internal Flash (LittleFS)
-LittleFS is a fail-safe file system designed for microcontrollers, using the ESP32's internal flash memory.
-- **Mount Point:** Often used as a fallback if no SD card is present, or mounted at a specific path like `/flash`.
-- **Use Case:** Best for small macro files, tool tables (`tool.tbl`), and persistent system configuration.
-- **Reliability:** Resistant to power loss during write operations.
-
-#### Navigation & Usage
-grblHAL keeps track of a **Current Working Directory (CWD)**. By default, this is the root `/`. When you use `$F` to list files or `$F=` to run one, grblHAL looks inside the CWD. You can navigate into subfolders using `$CWD=foldername` and back up using `$CWD=..`.
-
-> [!TIP]
-> You can use `$PWD` at any time to verify where you are in the file system. This is particularly useful when managing complex folder structures for different projects.
-
-## Advanced System Commands
-
-| Command | Description |
-|---------|-------------|
-| **`$REBOOT`** | **System Reboot.** Hard resets the controller. Connection will be lost. (Build 20251208) |
-| **`$DFU`**    | **Enter Bootloader.** Reboots the controller into DFU/Bootloader mode for firmware flashing. Connection will be lost. |
-| **`$MODBUSCMD`**| **Modbus Command.** Send raw Modbus commands. (Build 20260215) |
-| **`$TTLOAD`** | **Reload Tool Table.** Reloads the tool table from storage. (Build 20251111) |
-
 
 ---

@@ -1,12 +1,12 @@
 # What is grblHAL?
 
-**grblHAL** is a sophisticated, high-performance CNC (Computer Numerical Control) firmware designed to control CNC machines, routers, mills, lathes, laser cutters, and other motion control systems. It represents a complete evolution of the popular open-source GRBL firmware, specifically engineered to leverage the power of modern 32-bit microcontrollers.
+**grblHAL** is a sophisticated, high-performance CNC (Computer Numerical Control) firmware designed to control CNC machines, routers, mills, lathes, laser cutters, and other motion control systems. It represents a complete evolution of the popular open-source [GRBL firmware](https://github.com/gnea/grbl), specifically engineered to leverage the power of modern 32-bit microcontrollers.
 
 ## Overview
 
 grblHAL interprets G-code commands (the standard programming language for CNC machines) and translates them into precise motion control signals that drive your machine's motors, spindle, and other peripherals. Think of it as the "brain" of your CNC machine - it takes instructions from your CAM software and executes them with precision and reliability.
 
-Developed by **Terje Io**, grblHAL was created to address the limitations of 8-bit GRBL implementations and the fragmentation that occurred when various developers attempted to port GRBL to 32-bit platforms independently.
+grblHAL was created to address the limitations of 8-bit GRBL implementations and the fragmentation that occurred when various developers attempted to port GRBL to 32-bit platforms independently.
 
 ## Core Architecture: The Hardware Abstraction Layer (HAL)
 
@@ -27,7 +27,7 @@ This means whether you're running grblHAL on an ESP32, STM32, Teensy 4.1, or Ras
 - Significantly faster than 8-bit GRBL (~30 kHz maximum)
 
 ### **Advanced Motion Control**
-- **Up to 9-axis control** for complex machines
+- **Up to 8-axis control** for complex machines
 - Auto-squaring for dual-motor gantry systems
 - Backlash compensation
 - High-precision spindle synchronization (for threading operations)
@@ -44,12 +44,13 @@ This means whether you're running grblHAL on an ESP32, STM32, Teensy 4.1, or Ras
 - **Wi-Fi** (on supported controllers)
 - **Ethernet** (on supported controllers)
 - **Bluetooth** (on supported controllers)
-- Traditional USB serial connection
+- Traditional USB serial connection via UART <> USB converter chip
+- 'Native' USB CDC serial connection via MCU USB peripherhal (on supported controllers, speed limited by the USB stack - not the baud rate)
 - WebUI for browser-based control
 
 ### **Plugin Architecture**
 - Open, extensible plugin system
-- Add custom M-codes and functionality
+- Add custom M-codes, system commands and functionality
 - Third-party driver support
 - User-defined event handlers
 - Examples: SD card support, automatic tool changers, custom I/O control
@@ -59,6 +60,7 @@ This means whether you're running grblHAL on an ESP32, STM32, Teensy 4.1, or Ras
 - Multiple work coordinate systems
 - Probing cycles for tool measurement and workpiece setup
 - Laser mode with dynamic power control
+- Lathe mode with support for G7/G8 and G96. Spindle synced motion on supported controllers
 - Safety features: E-Stop, Safety Door, Reset
 - Real-time override controls (feed rate, spindle speed, rapid rate)
 

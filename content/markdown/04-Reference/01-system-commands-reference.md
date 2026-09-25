@@ -72,14 +72,29 @@ Sets the value of a specific setting.
 
 ---
 
+### `$x` – Read Setting
+Outputs the value of a specific setting.
+
+**Syntax:** `$x`
+
+**Example:**
+-   `$100` (Output X-axis steps/mm)
+    ```text
+	$100=250.5
+	ok
+    ```
+---
+
 > ℹ️ **Info**
 > Outputs the build info string and version.
+
 **Syntax:** `$I`
 
-**Output Example:** `[VER:1.1f.20210101.GRBLHAL]`
+**Output Example:** `[VER:1.1f.20210101:]`
 
 > ℹ️ **Info**
 > Outputs extended build information, including axis configuration, firmware options, and driver details.
+
 **Syntax:** `$I+`
 
 **Output Details:**
@@ -93,11 +108,19 @@ Sets the value of a specific setting.
 ---
 
 > ℹ️ **Info**
-> Sets a custom string in the build info. This can be used to store machine specific versioning or dates.
-**Syntax:** `$I=MyMachine_v1.0`
+> Sets a custom string in the build info. This can be used to store machine specific information and is added after the colon in the version string.
+
+**Syntax:** `$I=MyMachine_v1.0`  
+
+**Output Example:** `[VER:1.1f.20210101:MyMachine_v1.0]`
 
 > ℹ️ **Info**
-> This feature might be disabled in some builds (`DISABLE_BUILD_INFO_WRITE_COMMAND`).
+> Vendors supplying pre-compiled firmware can set and also disable modification of this string by changing
+the symbols `BUILD_INFO` and/or `DISABLE_BUILD_INFO_WRITE_COMMAND` in _grbl/config.h_ or on the compiler command line.
+
+**Example:**
+-    `#define BUILD_INFO "MyMachine_v1.0".`
+-    `#define DISABLE_BUILD_INFO_WRITE_COMMAND 1`.
 
 ---
 
@@ -121,6 +144,7 @@ Saves a G-code block to one of the startup lines (typically `$N0` and `$N1`).
 
 > 🔥 **Danger**
 > Do not place motion commands (`G0`, `G1`, `G2`, `G3`) or tool changes (`M6`) in startup lines. This can be dangerous if the machine moves unexpectedly upon connection.
+> On setting a startup line the code will be run to validate it before it is stored.
 
 ---
 
@@ -131,7 +155,8 @@ Restores groups of settings to their firmware defaults.
 
 | Flag | Effect |
 | :--- | :--- |
-| **`$`** | Restores all `$$` numbered settings to defaults. |
+| **`$`** | Restores all core `$$` numbered settings to defaults. |
+| **`&`** | Restores all driver and plugin defined `$$` numbered settings to defaults. |
 | **`#`** | Restores all G-code parameters (`G54`-`G59`, `G28`, `G30`) to zero. |
 | **`*`** | Restores **ALL** settings and parameters to defaults. |
 
@@ -275,7 +300,7 @@ Outputs the stored offsets for work coordinate systems, tool offsets, and pre-de
 ---
 
 ### `$PINS` – Report Pin Status
-Debug command to show the current hardware state of input/output pins.
+Debug command to show the current hardware mapping of input/output pins.
 
 **Syntax:** `$PINS`
 
@@ -389,6 +414,110 @@ Extended functionality for machine control and debugging found in the source.
 | **`$TTLOAD`** | **Reload Tool Table**. Reloads tool data from `tooltable.tbl` (if file-based tool table is active). |
 | **`$MODBUSSTATS`** | **Modbus Statistics**. Returns communication stats (sent/retries). Use `$MODBUSSTATS=R` to reset. |
 | **`$BL`** | Enter **Bootloader**. Jumps to the bootloader (e.g., Teensy Loader) if supported by the driver. |
+
+---
+
+# System Commands ($)
+
+System commands are special real-time or near-real-time commands that start with `$`. They are used to configure, control, and query the machine state.
+
+## Core Commands
+
+| Command | Description |
+|---------|-------------|
+| **`$$`** | View current settings. |
+| **`$#`** | View G-code parameters (WCS offsets, probe positions, tool offsets). |
+| **`$G`** | View G-code parser state (active modes like G54, G17, G90, etc.). |
+| **`$I`** | View build info string. |
+| **`$N`** | View startup blocks. |
+| **`$X`** | **Kill Alarm Lock.** Unlocks the machine from an alarm state (e.g., hard limit). Use with caution! |
+| **`$H`** | **Run Homing Cycle.** Homes all axes specified in `$23`. |
+| **`$HX`** | **Home Individual Axis.** Homes only the X axis (replace X with Y, Z, etc.). |
+| **`$J=...`** | **Jogging.** Execute a jogging motion. |
+| **`$SLP`** | **Sleep.** Put the machine to sleep. |
+
+## Tool Change Extensions
+
+These commands are specific to manual and semi-automatic tool change modes.
+
+| Command | Description |
+|---------|-------------|
+| **`$TLR`** | **Set Tool Length Reference.** Sets the current tool length offset as the reference. Used after a successful probe for the first tool in a job. |
+| **`$TPW`** | **Tool Probe Workpiece.** Initiates a probing sequence to set the dynamic tool offset for a new tool. Only available in Tool Change Modes 1 and 2. |
+
+## Reporting & Enumeration (grblHAL Extensions)
+
+grblHAL provides advanced reporting commands for Senders to query capabilities without hardcoded lists.
+
+| Command | Description |
+|---------|-------------|
+| **`$EA`** | **Enumerate Alarms.** Lists all supported alarm codes and descriptions. |
+| **`$EE`** | **Enumerate Errors.** Lists all supported error codes and descriptions. |
+| **`$ES`** | **Enumerate Settings.** Lists all supported settings with types, ranges, and descriptions. |
+| **`$EG`** | **Enumerate Setting Groups.** Lists the hierarchy of setting groups. |
+| **`$pins`** | **Enumerate Pins.** Lists processor pin mappings. |
+| **`$pinstate`** | **Enumerate Pin States.** Lists current state of auxiliary pins. |
+| **`$ports`** | **Enumerate Serial Ports.** Lists available UART ports. |
+| **`$SPINDLES`** | **Enumerate Spindles.** Lists available spindles. |
+
+## File System Commands
+(Updated Build 20260310)
+
+These commands allow navigation and management of the SD card or internal LittleFS file system.
+
+| Command | Description |
+|---------|-------------|
+| **`$F`** | **List Files.** Lists CNC-compatible files (`.nc`, `.gcode`, etc.) in the current working directory. |
+| **`$F+`** | **List All Files.** Lists all files in the current working directory regardless of extension. |
+| **`$F=[file]`** | **Run File.** Starts execution of the specified G-code file. |
+| **`$F<=[file]`** | **Copy file to output.** Copies/streams the specified file to the current output. |
+| **`$FR`** | **Rewind file.** Enables rewind mode for next file to run. When finished it can be rerun by issuing a Cycle Start command |
+| **`$FD=[file]`** | **Delete File.** Permanently removes a file from the storage. |
+| **`$CWD=[path]`** | **Change Directory.** Sets the Current Working Directory. Usage: `$CWD=/` (root), `$CWD=..` (up), `$CWD=subdir` (down). If called without arguments, it reports the current path. |
+| **`$PWD`** | **Print Working Directory.** Reports the current working directory in the format `[CWD:/path/to/dir]`. |
+| **`$FMD=[path]`** | **Create directory.** |
+| **`$FRD=[path]`** | **Remove directory.** |
+| **`$FM`** | **Mount SD Card.** Manually triggers a mount of the SD card. |
+| **`$FU`** | **Unmount SD Card.** Safely unmounts the SD card. |
+| **`$FI`** | **Mount info.** Outputs information about mounted filing systems. |
+
+---
+
+### Storage Systems in grblHAL
+grblHAL utilizes a **Virtual File System (VFS)** layer that allows it to interact with different storage media through a unified set of commands.
+
+#### SD Card (FatFs)
+The SD card is the primary high-capacity storage for G-code files, typically formatted as **FAT32**.
+- **Mount Point:** Usually mounted at the root (`/`).
+- **Performance:** Ideal for large 3D carving jobs or complex laser engraving.
+- **Hot-Swapping:** Supported on boards with SD detect support.
+
+#### Internal Flash or EEPROM (LittleFS)
+LittleFS is a fail-safe file system designed for microcontrollers, using the controllers internal flash memory or part of large EEPROMs (>= 32K) for storage.
+- **Mount Point:** Often used as a fallback if no SD card is present, typically mounted at `/littlefs`. It may also be mouned as the root (`/`) file system if SD Card is not available.
+- **Use Case:** Best for small macro files, tool tables (`tool.tbl`), and persistent system configuration.
+- **Reliability:** Resistant to power loss during write operations.
+
+#### Internal flash (Embedded)
+The Embedded filing system is read only and is added to flash at compile time.
+
+#### RAM
+The RAM filing system uses the heap to store transient data. Typically files are automatically deleted after read.
+
+#### Navigation & Usage
+grblHAL keeps track of a **Current Working Directory (CWD)**. By default, this is the root `/`. When you use `$F` to list files or `$F=` to run one, grblHAL looks inside the CWD. You can navigate into subfolders using `$CWD=foldername` and back up using `$CWD=..`.
+
+> [!TIP]
+> You can use `$PWD` at any time to verify where you are in the file system. This is particularly useful when managing complex folder structures for different projects.
+
+## Advanced System Commands
+
+| Command | Description |
+|---------|-------------|
+| **`$REBOOT`** | **System Reboot.** Hard resets the controller. Connection will be lost. (Build 20251208) |
+| **`$DFU`**    | **Enter Bootloader.** Reboots the controller into DFU/Bootloader mode for firmware flashing. Connection will be lost. |
+| **`$MODBUSCMD`**| **Modbus Command.** Send raw Modbus commands. (Build 20260215) |
+| **`$TTLOAD`** | **Reload Tool Table.** Reloads file based tool table from storage. (Build 20251111) |
 
 ---
 

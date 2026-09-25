@@ -15,9 +15,8 @@ Values are resolved in this order (last wins):
 | Layer | Source | Example |
 |:------|:-------|:--------|
 | 1. Core default | `core/config.h` | `#define DEFAULT_STEP_PULSE_MICROSECONDS 5.0f` |
-| 2. Driver override | `driver.h` / `my_machine.h` | `#undef DEFAULT_HOMING_ENABLE` / `#define DEFAULT_HOMING_ENABLE 1` |
-| 3. Runtime EEPROM | `$x` command or gsender profile | `$24=150.0` |
-| 4. Startup script | `$N0` / `$N1` | `$N0=$24=150.0` |
+| 2. Runtime EEPROM | `$x` command or gsender profile | `$24=150.0` |
+| 3. Startup script | `$N0` / `$N1` | `$N0=$24=150.0` |
 
 The `DEFAULT_` symbols are baked into the firmware binary. After flashing, the runtime values are written to EEPROM (emulated in flash or FRAM). A `$RST=*` command restores a group of settings to their DEFAULT_ values.
 
@@ -602,28 +601,6 @@ Derived variants adjust travel and steps for larger machines:
 
 ## 6. Overriding DEFAULT_ at Compile Time
 
-### In my_machine.h
-
-```c
-// Override the default step pulse
-#undef DEFAULT_STEP_PULSE_MICROSECONDS
-#define DEFAULT_STEP_PULSE_MICROSECONDS 4.0f
-
-// Override default homing enable
-#undef DEFAULT_HOMING_ENABLE
-#define DEFAULT_HOMING_ENABLE 1
-
-// Force soft limits on by default
-#undef DEFAULT_SOFT_LIMIT_ENABLE
-#define DEFAULT_SOFT_LIMIT_ENABLE 1
-
-// Set per-axis defaults
-#undef DEFAULT_X_MAX_TRAVEL
-#define DEFAULT_X_MAX_TRAVEL 800.0f
-#undef DEFAULT_Y_MAX_TRAVEL
-#define DEFAULT_Y_MAX_TRAVEL 600.0f
-```
-
 ### Via build flags (platformio.ini)
 
 ```ini
@@ -633,7 +610,7 @@ build_flags =
     -D DEFAULT_X_MAX_TRAVEL=800.0f
 ```
 
-### Via ESP-IDF CMakeLists.txt
+### Via ESP-IDF or RP2040/RP2350 CMakeLists.txt
 
 ```cmake
 target_compile_definitions(grblHAL PRIVATE
@@ -641,6 +618,14 @@ target_compile_definitions(grblHAL PRIVATE
     DEFAULT_HOMING_ENABLE=1
 )
 ```
+
+### Via Eclipse based IDE
+
+Add settings in the projects _Properties > C/C++ General > Paths and Symbols > Symbols_ tab.
+
+### In grbl/config.h
+
+Edit settings to match preferences. Only do this as the last option since _grbl/config.h_ will be overwritten on updates.
 
 ---
 
@@ -651,6 +636,9 @@ Use `$RST=` to reset groups to their compiled-in `DEFAULT_` values:
 | Command | Effect |
 |:--------|:-------|
 | `$RST=*` | Reset all settings |
-| `$RST=$` | Reset `$` settings only (non-axis) |
-| `$RST=#` | Reset axis parameters ($100–$199) |
-| `$RST=+` | Reset network settings ($300–$308) |
+| `$RST=$` | Reset core `$` settings only |
+| `$RST=#` | Reset offsets and tool database if enabled |
+| `$RST=&` | Reset driver and plugin settings (network settings etc.) |
+
+> ℹ️ **Info**
+> Some of the reset options may be disabled at compile time.  

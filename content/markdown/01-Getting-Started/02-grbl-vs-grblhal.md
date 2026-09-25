@@ -10,7 +10,7 @@ Understanding the differences between original **Grbl** and **grblHAL** will hel
 | **Clock Speed** | 16 MHz | 40 MHz - 600 MHz |
 | **Maximum Step Rate** | ~30 kHz | 250-600 kHz |
 | **Memory** | 32 KB Flash, 2 KB RAM | 256 KB - 16 MB Flash, 64 KB - 1 MB RAM |
-| **Number of Axes** | 3-6 axes | Up to 9 axes |
+| **Number of Axes** | 3-6 axes | Up to 8 axes |
 | **G-code Support** | Basic GRBL dialect | Extended LinuxCNC-compatible |
 | **Canned Cycles** | Limited | Full support (G81-G89) |
 | **Tool Changes** | Not supported | M6 tool change support |
@@ -87,15 +87,18 @@ This architecture makes grblHAL:
 - **Parameter programming** with expressions and variables
 - **Optional parameters** for advanced operations
 - **M62-M65** digital output control
+- **M66** digital input control
+- **M67-M68** analog output control
 
 ### **Connectivity**
 
 **Original Grbl:**
-- USB serial connection only
+- USB serial connection via UART <> USB converter chip only
 - Requires a computer to be connected
 
 **grblHAL:**
-- **USB serial** (traditional connection)
+- **USB serial** (connection via UART <> USB converter)
+- **Native USB CDC serial** (on supported controllers, not speed limited by UART)
 - **Wi-Fi** (on ESP32 and compatible boards)
 - **Ethernet** (on supported controllers)
 - **Bluetooth** (on compatible boards)
@@ -111,8 +114,8 @@ This architecture makes grblHAL:
 - Limited auto-squaring support
 
 **grblHAL:**
-- **Up to 9 axes**
-- **Auto-squaring** for dual-motor gantries
+- **Up to 8 axes**
+- **Auto-squaring** for dual-motor gantries with configurable offset
 - **Ganged axes** configuration
 - Better support for complex machine configurations
 
@@ -127,6 +130,7 @@ This architecture makes grblHAL:
 - **Plugin architecture** for extending functionality
 - **Event subscription system** for custom handlers
 - **User-defined M-codes** without modifying core
+- **User-defined $-commands** without modifying core
 - **Third-party driver support**
 - Examples: ATC plugins, custom I/O control, specialized machine configurations
 
@@ -137,11 +141,11 @@ Features available in grblHAL but not in original Grbl:
 - **Backlash compensation** for mechanical play
 - **High-precision spindle synchronization** (threading, tapping)
 - **Laser mode** with dynamic power control
+- **Lathe mode** adds lathe specific G-codes
 - **Probing cycles** for tool measurement and workpiece setup
 - **Safety door** handling with resume capability
 - **Real-time overrides** (feed rate, spindle speed, rapid rate)
-- **Jog commands** while idle
-- **Macro support** (in compatible senders)
+- **Macro support** (setting based or via G65 subroutines)
 
 ## Memory & Resources
 
@@ -167,6 +171,7 @@ Features available in grblHAL but not in original Grbl:
 - Regular updates and bug fixes
 - Unified codebase ensures consistency
 - New features benefit all supported platforms
+- Third party drivers for additional MCUs using the shared core and plugins
 
 ## Migration Path
 
