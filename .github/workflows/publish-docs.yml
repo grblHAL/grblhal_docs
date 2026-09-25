@@ -37,21 +37,10 @@ jobs:
       - name: Build HTML
         run: npm run build
 
-      - name: Ensure SFTP destination exists
+      - name: Publish to grblHAL.org
         env:
           SFTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
           sudo apt-get update
           sudo apt-get install --yes lftp
-          lftp -u io-engineering,"$SFTP_PASSWORD" sftp://sftp.domeneshop.no:22 -e "set sftp:auto-confirm yes; mkdir -p /www/gblHAL/docs; bye"
-
-      - name: Publish to grblHAL.org
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
-        with:
-          username: io-engineering
-          server: sftp.domeneshop.no
-          port: 22
-          password: ${{ secrets.FTP_PASSWORD }}
-          local_path: ./docs/*
-          remote_path: /www/gblHAL/docs/
-          sftp_only: true
+          lftp -u io-engineering,"$SFTP_PASSWORD" sftp://sftp.domeneshop.no:22 -e "set sftp:auto-confirm yes; mkdir -p /www/gblHAL/docs; mirror --reverse --verbose ./docs/ /www/gblHAL/docs/; bye"
