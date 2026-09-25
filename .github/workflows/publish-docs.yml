@@ -1,0 +1,49 @@
+name: Build and publish documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - content/**
+      - scripts/**
+      - package.json
+      - package-lock.json
+      - .github/workflows/publish-docs.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: documentation-publish
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install generator dependencies
+        run: npm ci
+
+      - name: Build HTML
+        run: npm run build
+
+      - name: Publish to grblHAL.org
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          username: io-engineering
+          server: sftp.domeneshop.no
+          port: 22
+          password: ${{ secrets.FTP_PASSWORD }}
+          local_path: ./docs/*
+          remote_path: /www/gblHAL/docs
+          sftp_only: true
