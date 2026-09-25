@@ -14,6 +14,18 @@ const prefixArg = process.argv.find(a => a.startsWith('--prefix='));
 const BASE = prefixArg ? prefixArg.split('=')[1].replace(/\/+$/, '') : '';
 const rel = (url) => BASE ? BASE + url : url;
 
+function prefixContentImageUrls(markdown) {
+  if (!BASE) return markdown;
+
+  return markdown
+    .replace(/\b(src|href)=(["'])\/(images\/[^"']*)\2/gi, (_, attribute, quote, imagePath) =>
+      `${attribute}=${quote}${rel('/' + imagePath)}${quote}`
+    )
+    .replace(/(!?\[[^\]]*\]\()\/(images\/[^)\s]+)(\))/g, (_, opening, imagePath, closing) =>
+      `${opening}${rel('/' + imagePath)}${closing}`
+    );
+}
+
 marked.setOptions({
   breaks: false,
   gfm: true,
@@ -577,9 +589,10 @@ function generateSite() {
       const content = fs.readFileSync(file.fullPath, 'utf-8');
       const parsed = grayMatter(content);
       const title = extractDisplayTitle(file.fullPath, file.path);
-      const toc = extractToc(parsed.content);
+      const markdown = prefixContentImageUrls(parsed.content);
+      const toc = extractToc(markdown);
       const tocHtml = renderToc(toc);
-      const htmlContent = marked.parse(parsed.content, { renderer: tocRenderer });
+      const htmlContent = marked.parse(markdown, { renderer: tocRenderer });
       const htmlPath = file.path.replace(/\.md$/, '.html');
       const outPath = path.join(BUILD, htmlPath);
       ensureDir(path.dirname(outPath));
