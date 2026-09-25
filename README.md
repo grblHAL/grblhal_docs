@@ -1,7 +1,6 @@
 # grblHAL Documentation
 
 [![Build and publish documentation](https://github.com/grblHAL/grblhal_docs/actions/workflows/publish-docs.yml/badge.svg)](https://github.com/grblHAL/grblhal_docs/actions/workflows/publish-docs.yml)
-[![Website deployed with SFTP](https://img.shields.io/badge/Website%20deployed%20with-SFTP-2b9348?style=for-the-badge)](https://grblhal.org/docs)
 
 Live documentation: [grblhal.org/docs](https://grblhal.org/docs)
 
