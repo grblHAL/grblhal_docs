@@ -30,7 +30,3 @@ npm run build
 ```
 
 The build preserves the existing navigation, search, Markdown rendering, syntax highlighting, wiki links, admonitions, table of contents, and responsive styling. Do not edit `docs/` directly.
-
-## Deployment configuration
-
-The publishing workflow uses SFTP with the fixed host, account, and target directory configured in `.github/workflows/publish-docs.yml`. It reads the password only from the repository Actions secret named `FTP_PASSWORD`.
