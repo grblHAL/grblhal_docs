@@ -1,2 +1,4 @@
 node_modules/
 docs/
+content/markdown/**/*.html
+content/trash/
