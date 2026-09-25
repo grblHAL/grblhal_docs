@@ -43,4 +43,4 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes lftp
-          lftp -u io-engineering,"$SFTP_PASSWORD" sftp://sftp.domeneshop.no:22 -e "set sftp:auto-confirm yes; mkdir -p /www/gblHAL/docs; mirror --reverse --verbose ./docs/ /www/gblHAL/docs/; bye"
+          lftp -u io-engineering,"$SFTP_PASSWORD" sftp://sftp.domeneshop.no:22 -e "set sftp:auto-confirm yes; mkdir -p /www/grblHAL/docs; mirror --reverse --verbose ./docs/ /www/grblHAL/docs/; bye"
