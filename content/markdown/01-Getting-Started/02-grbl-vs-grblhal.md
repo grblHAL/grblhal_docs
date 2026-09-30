@@ -1,3 +1,7 @@
+---
+slug: getting-started/grbl-vs-grblhal
+---
+
 # Grbl vs. grblHAL
 
 Understanding the differences between original **Grbl** and **grblHAL** will help you appreciate why grblHAL represents a significant evolution in open-source CNC control. This page breaks down the key differences and improvements.
@@ -272,7 +276,7 @@ While **grblHAL** is the natural successor to Grbl, users often compare it with 
 *   **Use LinuxCNC** if you are building an industrial 5-axis machine or robot arm and need absolute unchecked power.
 
 **Next Steps:**
-- Ready to choose hardware? See [Hardware Selection](./03-controller-support.md)
-- Want to flash firmware? Jump to [Firmware Flashing](./04-firmware-flashing.md)
-- New to CNC? Start with [What is grblHAL?](./01-what-is-grblhal.md)
+- Ready to choose hardware? See [Hardware Selection](/docs/getting-started/controllers)
+- Want to flash firmware? Jump to [Firmware Flashing](/docs/getting-started/flashing)
+- New to CNC? Start with [What is grblHAL?](/docs/getting-started/overview)
 

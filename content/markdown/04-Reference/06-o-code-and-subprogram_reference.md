@@ -1,3 +1,7 @@
+---
+slug: reference/o-code
+---
+
 # O-code and Subprograms
 
 ## O-code

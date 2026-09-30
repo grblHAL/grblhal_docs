@@ -1,3 +1,7 @@
+---
+slug: guides/probing
+---
+
 # Probing Guide
 
 Probing is the process of using a specialized sensor (a probe) to automatically find the position of your workpiece or tool. It turns your CNC machine into a measuring device, allowing you to set Work Zero offsets with extreme accuracy.
@@ -108,4 +112,4 @@ If you have a specialized probe (like a Renishaw), ensure it's wired Normally Cl
 
 ---
 
-**Next:** Learn how to handle tool changes efficiently: [Automatic Tool Changer](./automatic-tool-changer.md)
+**Next:** Learn how to handle tool changes efficiently: [Automatic Tool Changer](/docs/guides/tool-changes)

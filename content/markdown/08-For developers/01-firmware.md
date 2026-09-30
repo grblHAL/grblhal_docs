@@ -1,3 +1,7 @@
+---
+slug: developers/firmware
+---
+
 # Firmware
 
 ## Core documentation

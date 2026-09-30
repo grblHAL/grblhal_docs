@@ -1,3 +1,7 @@
+---
+slug: calibration/motion
+---
+
 # Tuning Motion Settings
 
 Once your steps per mm are calibrated for accuracy, the next step is tuning for performance. This involves finding the maximum reliable speed and acceleration your machine can handle without losing steps (stalling).
@@ -93,4 +97,4 @@ G0 X0 Y0
 
 ---
 
-**Next Step:** Now that your machine moves accurately and smoothly, let's set up the reference system: [Configuring Homing](./04-configuring-homing.md)
+**Next Step:** Now that your machine moves accurately and smoothly, let's set up the reference system: [Configuring Homing](/docs/calibration/homing)

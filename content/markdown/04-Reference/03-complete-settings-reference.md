@@ -1,3 +1,7 @@
+---
+slug: reference/settings
+---
+
 # Settings Reference
 
 This page is a comprehensive reference for all known grblHAL settings. It is designed to be a single source of truth for configuration. Use the table of contents on the right to navigate to a specific section, or use your browser's search function (`Ctrl+F`) to find a specific setting.
@@ -1876,7 +1880,7 @@ Configures a multi-point calibration curve to correct a non-linear speed respons
 ---
 
 ## `$70` – Enable Network Services
-The master switch for enabling or disabling network-related services (daemons), it is provided by the [networking plugin](./04-complete_plugin_reference.html#network-settings).
+The master switch for enabling or disabling network-related services (daemons), it is provided by the [networking plugin](/docs/reference/plugins#network-settings).
 
 ---
 
@@ -2239,7 +2243,7 @@ Defines the number of motor steps required to move an axis by **1 mm** (for line
 
 #### Tips & Tricks
 - Always verify by commanding a long move (`G91 G1 X100 F500` or similar) and measuring actual distance or angle.  
-- Adjust `$100`–`$105` proportionally based on the error. See [**Calibrating Steps per mm**](../Machine-Calibration/calibrating-steps).
+- Adjust `$100`–`$105` proportionally based on the error. See [**Calibrating Steps per mm**](/docs/calibration/steps).
 - For rotary axes, ensure `$376` is set correctly to mark the axis as **rotary** (steps/deg) or **linear** (steps/mm).  
 
 ---
@@ -2285,7 +2289,7 @@ Sets the maximum speed for each axis in **mm/min** (linear) or **degrees/min** (
 #### Tips & Tricks
 - To find the true maximum, start low and incrementally increase the value, commanding long rapid moves (e.g., `G0 X200`). Listen for the motor stalling (a loud buzzing/grinding sound), then back the value off by 20-30% for a safety margin.
 - The effective speed of a diagonal (`XY`) move is limited by the lower of the two axes' max rate settings.
-- See our detailed guide: [**Tuning Motion**](../Machine-Calibration/tuning-motion).
+- See our detailed guide: [**Tuning Motion**](/docs/calibration/motion).
 
 ---
 
@@ -2747,7 +2751,7 @@ This range is reserved for driver or plugin-specific axis settings beyond the co
 ---
 
 ## `$300` - `$308` – Ethernet settings
-These are settings for ethernet, they are provided by the [ethernet plugin](./04-complete_plugin_reference.html#ethernet-settings).
+These are settings for ethernet, they are provided by the [ethernet plugin](/docs/reference/plugins#ethernet-settings).
 
 ---
 
@@ -3524,7 +3528,7 @@ The master switch and mode selector for the Torch Height Control system.
 ## `$351` – THC Delay
 Sets a delay after the "Arc OK" signal is received before THC becomes active.
 
-These settings are provided by the [Plasma plugin](./04-complete_plugin_reference.html#plasma-settings).
+These settings are provided by the [Plasma plugin](/docs/reference/plugins#plasma-settings).
 
 > ℹ️ **Info**
 > - This is the "pierce delay." It allows the torch to pierce the material completely before height control begins, preventing the torch from diving into molten metal.
@@ -3813,9 +3817,9 @@ Disables the internal pull-up resistors on the generic digital input pins.
 #### Tips & Tricks
 - Use the `$PINS` command to list all pins including auxiliary I/O ports.
 - `$PINSTATE` command can be used to check pin capabilities and current state.
-- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](../Reference/complete-g-m-code-reference#m62-m63-m64-and--m65--synchronized-and-asynchronous-io)  
--  [M66 – Wait for Input Signal](../Reference/complete-g-m-code-reference#m66--wait-for-input-signal)  
--  [M67, M68 – Set Analog Output](../Reference/complete-g-m-code-reference#m67-m68--set-analog-output)  
+- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](/docs/reference/gcode#m62-m65)
+-  [M66 – Wait for Input Signal](/docs/reference/gcode#m66)
+-  [M67, M68 – Set Analog Output](/docs/reference/gcode#m67-m68)
 
 ---
 
@@ -3838,9 +3842,9 @@ Inverts the logic for the generic digital output pins.
 #### Tips & Tricks
 - Use the `$PINS` command to list all pins including auxiliary I/O ports.
 - `$PINSTATE` command can be used to check pin capabilities and current state.
-- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](../Reference/complete-g-m-code-reference#m62-m63-m64-and--m65--synchronized-and-asynchronous-io)  
--  [M66 – Wait for Input Signal](../Reference/complete-g-m-code-reference#m66--wait-for-input-signal)  
--  [M67, M68 – Set Analog Output](../Reference/complete-g-m-code-reference#m67-m68--set-analog-output)  
+- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](/docs/reference/gcode#m62-m65)
+-  [M66 – Wait for Input Signal](/docs/reference/gcode#m66)
+-  [M67, M68 – Set Analog Output](/docs/reference/gcode#m67-m68)
 
 ---
 
@@ -3856,9 +3860,9 @@ Configures generic output pins to operate in "open-drain" mode.
 #### Tips & Tricks
 - Use the `$PINS` command to list all pins including auxiliary I/O ports.
 - `$PINSTATE` command can be used to check pin capabilities and current state.
-- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](../Reference/complete-g-m-code-reference#m62-m63-m64-and--m65--synchronized-and-asynchronous-io)  
--  [M66 – Wait for Input Signal](../Reference/complete-g-m-code-reference#m66--wait-for-input-signal)  
--  [M67, M68 – Set Analog Output](../Reference/complete-g-m-code-reference#m67-m68--set-analog-output)  
+- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](/docs/reference/gcode#m62-m65)
+-  [M66 – Wait for Input Signal](/docs/reference/gcode#m66)
+-  [M67, M68 – Set Analog Output](/docs/reference/gcode#m67-m68)
 
 
 ---
@@ -5473,7 +5477,7 @@ Sets a factor to adjust the Z-axis feed rate for THC correction moves.
 ## `$683` – `$687` – Sienci ATCi Keepout Zone Configuration
 Defines the rectangular safety zone around the tool rack in machine coordinates.
 
-These settings are provided by the [Sienci ATCi plugin](./04-complete_plugin_reference.html#sienci-atci-settings).
+These settings are provided by the [Sienci ATCi plugin](/docs/reference/plugins#sienci-atci-settings).
 
 ---
 

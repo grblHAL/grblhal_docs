@@ -1,3 +1,7 @@
+---
+slug: getting-started/first-connection
+---
+
 # First Connection & Motion
 
 Congratulations on successfully flashing grblHAL! This guide will walk you through connecting to your controller for the first time, configuring essential settings, and testing your first movements safely.
@@ -6,7 +10,7 @@ Congratulations on successfully flashing grblHAL! This guide will walk you throu
 
 Before proceeding, ensure you have:
 
-1. **grblHAL firmware flashed** on your controller (see [Firmware Flashing](./04-firmware-flashing.md))
+1. **grblHAL firmware flashed** on your controller (see [Firmware Flashing](/docs/getting-started/flashing))
 2. **Controller connected** to your computer via USB
 3. **Stepper motors wired** to your controller
 4. **Power supply connected** (but can remain OFF for initial connection)
@@ -175,7 +179,7 @@ $102=400.000   ; Z-axis steps/mm (lead screw example)
 ```
 
 > 💡 **Tip**
-> Don't know your values? See [Calibrating Steps per mm](../03-Machine-Calibration/02-calibrating-steps.md) for detailed calculation and calibration procedures.
+> Don't know your values? See [Calibrating Steps per mm](/docs/calibration/steps) for detailed calculation and calibration procedures.
 
 ### **B. Maximum Rate ($110, $111, $112)**
 
@@ -408,11 +412,11 @@ grblHAL has several operating states:
 
 Now that your machine is moving:
 
-1. **Calibrate steps/mm** - See [Calibrating Steps per mm](../03-Machine-Calibration/02-calibrating-steps.md)
-2. **Tune acceleration and speeds** - See [Tuning Motion](../03-Machine-Calibration/03-tuning-motion.md)
-3. **Configure homing** - See [Configuring Homing](../03-Machine-Calibration/04-configuring-homing.md)
-4. **Learn core concepts** - See [Homing Explained](../02-Core-Concepts/01-homing-explained.md)
-5. **Explore G-code** - See [Complete G-code Reference](../04-Reference/complete-g-m-code-reference.md)
+1. **Calibrate steps/mm** - See [Calibrating Steps per mm](/docs/calibration/steps)
+2. **Tune acceleration and speeds** - See [Tuning Motion](/docs/calibration/motion)
+3. **Configure homing** - See [Configuring Homing](/docs/calibration/homing)
+4. **Learn core concepts** - See [Homing Explained](/docs/concepts/homing)
+5. **Explore G-code** - See [Complete G-code Reference](/docs/reference/gcode)
 
 ---
 

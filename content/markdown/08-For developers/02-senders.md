@@ -1,3 +1,7 @@
+---
+slug: developers/senders
+---
+
 # Senders
 
 ## General information ** DRAFT **

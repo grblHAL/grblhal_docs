@@ -1,3 +1,7 @@
+---
+slug: reference/commands
+---
+
 # System Commands Reference
 
 This page details the system commands available in grblHAL. These commands are distinct from G-code and are used to configure the controller, control machine state, and request real-time information.
@@ -25,7 +29,7 @@ Outputs the current value of all numbered settings.
 
 > ℹ️ **Info**
 > - Useful for backing up your configuration.
-> - See the [Complete Settings Reference](complete-settings-reference.md) for details on each setting ID.
+> - See the [Complete Settings Reference](/docs/reference/settings) for details on each setting ID.
 
 ---
 
@@ -195,7 +199,7 @@ Commands the machine to move freely. Jog commands are independent of the G-code 
 
 > ℹ️ **Info**
 > -   Jogging is "safer" than `G0`/`G1` because it checks soft limits (if enabled) *before* moving and can be smoothly aborted by the user.
-> -   If the machine is homed set [$40=1](./03-complete-settings-reference.html#40-limit-jog-commands-boolean) to automatically limit jog motion to be within machine limits.
+> -   If the machine is homed set [$40=1](/docs/reference/settings#40-limit-jog-commands-boolean) to automatically limit jog motion to be within machine limits.
 
 ---
 
@@ -211,7 +215,7 @@ Initiates the homing sequence to find the machine origin.
 -   `$HA` ... `$HW` (Home rotary/secondary axes)
 
 > ⚠️ **Warning**
-> Requires limit switches to be installed and configured unless [configured](./03-complete-settings-reference.html#22-homing-options-mask) to allow manually homed axes.
+> Requires limit switches to be installed and configured unless [configured](/docs/reference/settings#22-homing-options-mask) to allow manually homed axes.
 
 ---
 
@@ -520,7 +524,7 @@ grblHAL keeps track of a **Current Working Directory (CWD)**. By default, this i
 
 TBC
 
-The YModem protocol is part of the [file system plugins](./04-complete_plugin_reference.html#ymodem).
+The YModem protocol is part of the [file system plugins](/docs/reference/plugins#ymodem).
 
 ---
 

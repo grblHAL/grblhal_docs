@@ -1,3 +1,7 @@
+---
+slug: guides/tool-changes
+---
+
 # Tool Changes & Offsets
 
 Changing tools mid-job allows you to use different end mills (e.g., roughing, finishing, v-carving) in a single project. grblHAL supports standard G-code tool change commands (`M6`) and length offsets (`G43`).
@@ -101,4 +105,4 @@ grblHAL is fully capable of driving ATCs, but it requires compiling a custom bui
 
 ---
 
-**Next:** Explore specialized spindle and laser capabilities: [Spindles & Lasers Setup](./spindles-and-lasers.md)
+**Next:** Explore specialized spindle and laser capabilities: [Spindles & Lasers Setup](/docs/guides/spindles-lasers)

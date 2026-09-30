@@ -1,3 +1,7 @@
+---
+slug: concepts/coordinates
+---
+
 # Coordinate Systems
 
 Understanding coordinate systems is **fundamental** to CNC operation. Coordinate systems define how the machine interprets positions and movements. grblHAL supports multiple coordinate systems that work together to provide flexibility, accuracy, and ease of use.
@@ -454,9 +458,9 @@ Understanding the order of coordinate transformations:
 Now that you understand coordinate systems:
 
 1. **Practice setting work offsets** - Set up a simple part and practice zeroing
-2. **Learn about tool offsets** - See [Automatic Tool Changer](../05-Guides/automatic-tool-changer.md)
-3. **Explore probing** - Automate work offset setup with [Probing](../05-Guides/probing.md)
-4. **Study G-code** - See [Complete G-code Reference](../04-Reference/complete-g-m-code-reference.md)
+2. **Learn about tool offsets** - See [Automatic Tool Changer](/docs/guides/tool-changes)
+3. **Explore probing** - Automate work offset setup with [Probing](/docs/guides/probing)
+4. **Study G-code** - See [Complete G-code Reference](/docs/reference/gcode)
 
 ---
 

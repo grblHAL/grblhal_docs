@@ -1,3 +1,7 @@
+---
+slug: guides/vfd
+---
+
 # VFD Spindle Setup
 
 grblHAL supports controlling VFD (Variable Frequency Drive) spindles directly via Modbus (RS485). This allows for precise RPM control, direction switching, and real-time status feedback (voltage, current, actual RPM) without using a simple 0-10V analog signal.

@@ -1,3 +1,7 @@
+---
+slug: guides/spindles-lasers
+---
+
 # Spindles & Lasers Setup
 
 grblHAL is unique in its ability to support **multiple active tools** on the same machine. You can have a high-speed spindle for milling, a laser for engraving, and a drag knife for cutting vinyl—all controlled by the same board, switching between them with a simple command.
@@ -75,7 +79,7 @@ These settings allow you to:
 - **Enable/Disable Laser Mode:** Crucial for dual setups (see Advanced section below).
 - **Control Enable Pin Logic.**
 
-*(See [Settings Reference](../04-Reference/complete-settings-reference.md#9--pwm-spindle-options-primary) for bitmask details.)*
+*(See [Settings Reference](/docs/reference/settings#9-pwm-spindle-options-primary) for bitmask details.)*
 
 ---
 

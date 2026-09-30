@@ -1,3 +1,7 @@
+---
+slug: getting-started/overview
+---
+
 # What is grblHAL?
 
 **grblHAL** is a sophisticated, high-performance CNC (Computer Numerical Control) firmware designed to control CNC machines, routers, mills, lathes, laser cutters, and other motion control systems. It represents a complete evolution of the popular open-source [GRBL firmware](https://github.com/gnea/grbl), specifically engineered to leverage the power of modern 32-bit microcontrollers.
@@ -78,7 +82,7 @@ grblHAL is ideal for:
 
 To use grblHAL, you'll need:
 
-1. **A compatible controller board** (see [Hardware Selection](./03-controller-support.md))
+1. **A compatible controller board** (see [Hardware Selection](/docs/getting-started/controllers))
 2. **A CNC machine** (router, mill, lathe, laser cutter, etc.)
 3. **A G-code sender application** (such as ioSender, gSender, or bCNC)
 4. **CAM software** to generate G-code from your designs
@@ -99,4 +103,4 @@ grblHAL is **open-source software**, meaning:
 
 ---
 
-Ready to get started? Continue to [Grbl vs. grblHAL](./02-grbl-vs-grblhal.md) to understand the key differences, or jump straight to [Hardware Selection](./03-controller-support.md) to choose your controller board.
+Ready to get started? Continue to [Grbl vs. grblHAL](/docs/getting-started/grbl-vs-grblhal) to understand the key differences, or jump straight to [Hardware Selection](/docs/getting-started/controllers) to choose your controller board.

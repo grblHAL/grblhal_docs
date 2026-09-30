@@ -1,3 +1,7 @@
+---
+slug: concepts/troubleshooting
+---
+
 # Troubleshooting Guide
 
 This page covers common issues encountered when setting up grblHAL.
@@ -25,11 +29,11 @@ This page covers common issues encountered when setting up grblHAL.
 
 ### **Axis Moves Wrong Direction**
 *   Invert the direction using setting **`$3`**.
-    *   (See [Settings Reference](./04-Reference/complete-settings-reference.md#3--direction-invert-mask))
+    *   (See [Settings Reference](/docs/reference/settings#3-direction-invert-mask))
 
 ### **Dimensions are Wrong**
 *   Calibrate your steps per mm (`$100-$102`).
-    *   (See [Calibration Guide](./03-Machine-Calibration/02-calibrating-steps.md))
+    *   (See [Calibration Guide](/docs/calibration/steps))
 
 ---
 

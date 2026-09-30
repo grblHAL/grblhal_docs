@@ -1,3 +1,7 @@
+---
+slug: calibration/overview
+---
+
 # Introduction to Machine Calibration
 
 **Calibration is the bridge between a working machine and an accurate machine.**
@@ -29,7 +33,7 @@ This gives your machine spatial awareness.
 
 Before starting calibration, ensure:
 1. **Mechanical Assembly is Complete:** Belts are tight, screws are secure, and V-wheels/rails are adjusted properly.
-2. **Electronics are Functional:** Motors move in the correct direction (as verified in [First Connection](../01-Getting-Started/05-first-connection.md)).
+2. **Electronics are Functional:** Motors move in the correct direction (as verified in [First Connection](/docs/getting-started/first-connection)).
 3. **Measuring Tools are Ready:** You will need:
    - A reliable ruler or tape measure (for coarse calibration)
    - A dial indicator or digital calipers (for precision tuning)
@@ -44,11 +48,11 @@ Before starting calibration, ensure:
 
 Follow these guides in order for the best results:
 
-1. [Calibrating Steps per Unit](./02-calibrating-steps.md) - **Do this first!**
-2. [Tuning Motion Settings](./03-tuning-motion.md) - Optimize for speed
-3. [Configuring Homing](./04-configuring-homing.md) - Set up your zero point
-4. [Backlash Compensation](./05-backlash-compensation.md) - Advanced fine-tuning
+1. [Calibrating Steps per Unit](/docs/calibration/steps) - **Do this first!**
+2. [Tuning Motion Settings](/docs/calibration/motion) - Optimize for speed
+3. [Configuring Homing](/docs/calibration/homing) - Set up your zero point
+4. [Backlash Compensation](/docs/calibration/backlash) - Advanced fine-tuning
 
 ---
 
-**Ready to start?** Let's make your machine accurate: [Calibrate Steps per Unit](./02-calibrating-steps.md)
+**Ready to start?** Let's make your machine accurate: [Calibrate Steps per Unit](/docs/calibration/steps)

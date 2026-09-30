@@ -1,3 +1,7 @@
+---
+slug: reference/gcode
+---
+
 # G-code & M-code Reference
 
 This page is a comprehensive reference for all known grblHAL G-code and M-code commands. It is designed to be a single source of truth for machine operation and G-code programming.
@@ -75,7 +79,7 @@ Pre-selects a tool number for a subsequent `M6` tool change command.
 
 ## `O` – O-Code Labels and Subroutines
 
-Documented [here](06-o-code-and-subprogram_reference.html).
+Documented [here](/docs/reference/o-code).
 
 ---
 
@@ -415,7 +419,7 @@ Sets the G-code interpreter's units for all position, feed rate, and offset data
 #### Tips & Tricks
 - It is critical safety practice to include either `G20` or `G21` at the very beginning of every G-code file. This prevents misinterpreting a 10mm move as a 10-inch move, which could cause a crash.
 - This setting affects how *grblHAL interprets G-code*, but does not change the machine's internal step/mm settings (`$100`, etc.).
-- Also checkout `$13` [Report in Inches (boolean)](../Reference/complete-settings-reference/#13--report-in-inches-boolean)
+- Also checkout `$13` [Report in Inches (boolean)](/docs/reference/settings#13-report-in-inches-boolean)
 
 ---
 
@@ -803,10 +807,10 @@ These commands control how the machine handles corners and transitions between s
 `G65` allows calling a subprogram (macro) and passing arguments to it. This is a common feature in industrial controllers, enabling highly parameterized and reusable code.
 
 > ℹ️ **Info**
-> - **User-provided macros should generally start with a `P` word value of 100 or greater** to avoid conflicts with [built-in subprograms](06-o-code-and-subprogram_reference.html#built-in-g65-subprograms) (currently P1-P7).
+> - **User-provided macros should generally start with a `P` word value of 100 or greater** to avoid conflicts with [built-in subprograms](/docs/reference/o-code#built-in-g65-subprograms) (currently P1-P7).
 > - **Argument Passing:** Arguments (e.g., `A`, `B`, `C`, `X`, `Y`, `Z`, etc.) passed with `G65` are assigned to named variables within the called subprogram.
 > - **Nesting:** Nesting of `G65` macros is allowed.
-> - **Reference:** For more details on G65 macros, refer to the [G65 and G66 documentation](06-o-code-and-subprogram_reference.html#g65-and-g66). Also, a reference for G65 in other systems: [cnczone.com](https://www.cnczone.com/forums/attachments/2/0/6/1/9/22462.attach).
+> - **Reference:** For more details on G65 macros, refer to the [G65 and G66 documentation](/docs/reference/o-code#g65-and-g66). Also, a reference for G65 in other systems: [cnczone.com](https://www.cnczone.com/forums/attachments/2/0/6/1/9/22462.attach).
 
 
 | Parameter | Description |
@@ -838,7 +842,7 @@ M30
 
 ### Tips & Tricks
 - `G65` is a powerful tool for creating reusable, modular G-code for complex operations.
-- Variables are assigned to [numbered parameters](06-o-code-and-subprogram_reference.html#g65-and-g66) based on their letter, e.g., `A` maps to `#1`, `B` to `#2`, `X` to `#24`, etc.
+- Variables are assigned to [numbered parameters](/docs/reference/o-code#g65-and-g66) based on their letter, e.g., `A` maps to `#1`, `B` to `#2`, `X` to `#24`, etc.
 - **Reserve P1-P99 for built-in macros** - Start your custom macros at P100 or higher.
 
 ---
@@ -1430,7 +1434,7 @@ This is a special grblHAL extension command used to enable or disable the contro
 
 ---
 
-## `M62`, `M63`, `M64` and  `M65` – Synchronized and Asynchronous I/O
+## `M62`, `M63`, `M64` and  `M65` – Synchronized and Asynchronous I/O {#m62-m65}
 
 **Syntax:**  
 > `M62 P-` (sync output on)  
@@ -1463,11 +1467,11 @@ These are advanced commands for controlling digital output pins, either synchron
   `G0 X30` (Laser turns off at the start of this rapid move)
 
 > [!IMPORTANT]
-> The plasma plugin may shadow some outputs when its [virtual outputs](./04-complete_plugin_reference.html#virtual-ports) are enabled.
+> The plasma plugin may shadow some outputs when its [virtual outputs](/docs/reference/plugins#virtual-ports) are enabled.
 
 ---
 
-## `M66` – Wait for Input Signal
+## `M66` – Wait for Input Signal {#m66}
 
 **Syntax:**  
 > `M66 P- L- Q-`  
@@ -1497,7 +1501,7 @@ This command pauses program execution until a specified digital input pin change
 
 ---
 
-## `M67`, `M68` – Set Analog Output
+## `M67`, `M68` – Set Analog Output {#m67-m68}
 
 **Syntax:**  
 > `M67 P- Q-` (synchronized analog output)  
@@ -1528,7 +1532,7 @@ These commands control analog output pins, either synchronized with motion or im
   `G0 X30` (Laser turns off at the start of this rapid move)
 
 > [!IMPORTANT]
-> The plasma plugin may shadow some outputs when its [virtual outputs](./04-complete_plugin_reference.html#virtual-ports) are enabled.
+> The plasma plugin may shadow some outputs when its [virtual outputs](/docs/reference/plugins#virtual-ports) are enabled.
 
 ---
 
@@ -1571,7 +1575,7 @@ Imagine you have a macro to find the center of a hole. This macro needs to use `
 **Syntax:**
 > `M98 P- [L-]`
 
-Call a [subprogram](./06-o-code-and-subprogram_reference.html#m98).
+Call a [subprogram](/docs/reference/o-code#m98).
 
 ---
 
@@ -1580,7 +1584,7 @@ Call a [subprogram](./06-o-code-and-subprogram_reference.html#m98).
 **Syntax:**  
 > `M99 `
 
-Marks the [end of a subprogram](./06-o-code-and-subprogram_reference.html#m99) and returns execution to the main program or the calling subprogram.
+Marks the [end of a subprogram](/docs/reference/o-code#m99-return-from-subprogram) and returns execution to the main program or the calling subprogram.
 
 #### Example
 * **Returning from a tool change macro:**  
@@ -1595,7 +1599,7 @@ Marks the [end of a subprogram](./06-o-code-and-subprogram_reference.html#m99) a
 
 This section provides a comprehensive list of G-code and M-code commands introduced or specifically extended by grblHAL's official plugins. These commands augment the core G-code and M-code functionality, enabling specialized features for various hardware and applications.
 
-Also see the grblHAL [plugin reference](./04-complete_plugin_reference.html).
+Also see the grblHAL [plugin reference](/docs/reference/plugins).
 
 ---
 
@@ -1615,25 +1619,25 @@ Repo: `https://github.com/grblHAL/Plugin_plasma`
 
 ## `M106` and `M107` – Fan Control
 
-These commands are provided by the [fan plugin](./04-complete_plugin_reference.html#fan-mcodes).
+These commands are provided by the [fan plugin](/docs/reference/plugins#fan-mcodes).
 
 ---
 
 ## `M150` - RGB LED Strip Control
 
-This command is provided by the [RGB LED plugin](./04-complete_plugin_reference.html#rgb-led-mcode).
+This command is provided by the [RGB LED plugin](/docs/reference/plugins#rgb-led-mcode).
 
 ---
 
 ## `M220` - Feed Override
 
-This command is provided by the [Feed override plugin](./04-complete_plugin_reference.html#feed-override-mcode).
+This command is provided by the [Feed override plugin](/docs/reference/plugins#feed-override-mcode).
 
 ---
 
 ## `M280` – Set Servo Position
 
-This command is provided by the [PWM servo plugin](./04-complete_plugin_reference.html#pwm-servo-mcode).
+This command is provided by the [PWM servo plugin](/docs/reference/plugins#pwm-servo-mcode).
 
 #### Example
 * **Deploy a touch probe connected to servo #0:**  
@@ -1680,7 +1684,7 @@ Waits for all moves in the planner buffer to complete before processing the next
 
 ## `M401` and `M402` – BLTouch Probe Control
 
-These commands are provided by the [BLTouch probe plugin](./04-complete_plugin_reference.html#bltouch-mcodes).
+These commands are provided by the [BLTouch probe plugin](/docs/reference/plugins#bltouch-mcodes).
 
 ---
 
@@ -1720,6 +1724,6 @@ Repo: `https://github.com/grblHAL/Plugin_encoder`
 
 ## `M960` - Keepout Zone Control
 
-This command is provided by the [Sienci ATCi plugin](./04-complete_plugin_reference.html#sienci-atci-mcode).
+This command is provided by the [Sienci ATCi plugin](/docs/reference/plugins#sienci-atci-mcode).
 
 ---

@@ -1,3 +1,7 @@
+---
+slug: calibration/jerk
+---
+
 # Tuning Jerk & Acceleration
 
 Standard Grbl uses **Trapezoidal** motion planning: the machine ramps up to speed linearly, holds speed, and ramps down. This is efficient but can cause vibrations ("jerk") at the start and end of movements because the *rate of change* of acceleration is instant.

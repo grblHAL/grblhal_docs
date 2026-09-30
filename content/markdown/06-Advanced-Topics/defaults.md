@@ -1,3 +1,7 @@
+---
+slug: advanced/defaults
+---
+
 # Defaults and Profile Configuration
 
 grblHAL uses a layered default system. This document covers:

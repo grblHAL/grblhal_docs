@@ -1,6 +1,10 @@
+---
+slug: calibration/homing
+---
+
 # Configuring Homing
 
-This guide covers the practical steps to enable and configure the homing cycle on your machine. For a theoretical explanation of how homing works, see [Homing Explained](../02-Core-Concepts/01-homing-explained.md).
+This guide covers the practical steps to enable and configure the homing cycle on your machine. For a theoretical explanation of how homing works, see [Homing Explained](/docs/concepts/homing).
 
 ## Step 1: Enable Homing
 
@@ -94,4 +98,4 @@ Unlike 8-bit Grbl, **grblHAL uses a bitmask for `$5`**, meaning you can invert l
 
 ---
 
-**Next Step:** With homing set, let's squeeze the last bit of precision out of your mechanics: [Backlash Compensation](./05-backlash-compensation.md)
+**Next Step:** With homing set, let's squeeze the last bit of precision out of your mechanics: [Backlash Compensation](/docs/calibration/backlash)

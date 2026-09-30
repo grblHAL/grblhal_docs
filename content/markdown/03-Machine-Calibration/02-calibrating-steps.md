@@ -1,3 +1,7 @@
+---
+slug: calibration/steps
+---
+
 # Calibrating Steps per Unit
 
 **Steps per Unit** (usually Steps per mm) is the setting that tells grblHAL how many motor steps are required to move an axis exactly 1 millimeter (or inch).
@@ -114,4 +118,4 @@ Calibrating Z is critical for accurate pocket depths.
 
 ---
 
-**Next Step:** Once your machine moves accurately, let's make it move smoothly: [Tuning Motion Settings](./03-tuning-motion.md)
+**Next Step:** Once your machine moves accurately, let's make it move smoothly: [Tuning Motion Settings](/docs/calibration/motion)

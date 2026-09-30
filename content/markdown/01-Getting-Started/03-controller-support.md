@@ -1,3 +1,7 @@
+---
+slug: getting-started/controllers
+---
+
 # Controller Support
 
 This page provides a list of grblHAL-supported controllers, links to the appropriate drivers, and the Web Builer tool for building the firmware
@@ -23,6 +27,7 @@ This page provides a list of grblHAL-supported controllers, links to the appropr
 | [Makerbase MKS-TinyBee](https://github.com/makerbase-mks/MKS-TinyBee) | <img src="/images/controllers/tinybee.jpg" width="200"> | [ESP32](https://github.com/grblHAL/ESP32) | [WebBuilder](https://svn.io-engineering.com:8443/?driver=ESP32&board=MKS%20TinyBee%20V1.0) |
 | [Makerbase MKS SBASE V1.3](https://github.com/makerbase-mks/MKS-SBASE) | <img src="/images/controllers/MKS-SBASE-V1.3.jpg" width="200"> | [LPC176x](https://github.com/grblHAL/LPC176x) | [WebBuilder](https://svn.io-engineering.com:8443/?driver=LPC176x&board=MKS%20SBASE%20V1.3) |
 | [MSP430F5529 LaunchPad](https://www.ti.com/tool/MSP-EXP430F5529LP) | <img src="/images/controllers/MSP430F5529 LaunchPad.png" width="200"> | [MSP430F5529](https://github.com/grblHAL/MSP430F5529) | [WebBuilder](https://svn.io-engineering.com:8443/?driver=MSP430F5529&board=TI%20MSP430F5529LP) |
+| [Ooznest Motion Control Core](https://ooznest.co.uk/) | <img src="/images/controllers/ooznest-motion-control-core.png" width="200"> | [ESP32](https://github.com/grblHAL/ESP32) | [WebBuilder](https://svn.io-engineering.com:8443/?driver=ESP32&board=Ooznest%20Motion%20Control%20Core) |
 | [OpenBuilds BlackBox X32](https://openbuildspartstore.com/blackbox-motion-control-system-x32/) | <img src="/images/controllers/blackboxx32.jpg" width="200"> | [ESP32](https://github.com/grblHAL/ESP32) | [WebBuilder](https://svn.io-engineering.com:8443/?driver=ESP32&board=BlackBox%20X32) |
 | [Pi Pico on PicoCNC](https://github.com/phil-barrett/PicoCNC) | <img src="/images/controllers/picocnc.jpg" width="200"> | [RP2040](https://github.com/grblHAL/RP2040) | [WebBuilder](https://svn.io-engineering.com:8443/?driver=RP2040&board=PicoCNC) |
 | [RP23CNC](https://www.grbl.org/rp23u5xbb) (RP2350B based) | <img src="/images/controllers/rp23cnc.jpg" width="200"> | [RP2040](https://github.com/grblHAL/RP2040) | — |

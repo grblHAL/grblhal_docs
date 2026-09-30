@@ -97,6 +97,9 @@ const admonitionExtension = {
   }
 };
 let wikiLookup = {};
+let pageInfoByPath = {};
+let pageInfoBySlug = {};
+const unresolvedInternalLinks = new Set();
 const wikiLinkExtension = {
   name: 'wikiLink',
   level: 'inline',
@@ -111,10 +114,11 @@ const wikiLinkExtension = {
     }
   },
   renderer(token) {
-    const key = token.target.toLowerCase();
+    const [target, fragment] = token.target.split('#', 2);
+    const key = target.toLowerCase();
     const resolved = wikiLookup[key];
     if (resolved) {
-      return `<a href="${rel('/' + resolved.htmlPath)}">${token.text}</a>`;
+      return `<a href="${rel('/' + resolved.slug)}${fragment ? `#${fragment}` : ''}">${token.text}</a>`;
     }
     return `<a class="wiki-broken" href="#">${token.text}</a>`;
   }
@@ -127,6 +131,59 @@ tocRenderer.heading = function(text, level) {
   const heading = getHeadingDetails(text);
   return `<h${level} id="${heading.id}"><a class="anchor" href="#${heading.id}" aria-hidden="true"></a>${heading.text}</h${level}>`;
 };
+
+function createPageRenderer(page) {
+  const renderer = new marked.Renderer();
+  renderer.heading = tocRenderer.heading;
+  renderer.link = function(href, title, text) {
+    return marked.Renderer.prototype.link.call(this, resolveInternalLink(href, page), title, text);
+  };
+  return renderer;
+}
+
+function resolveInternalLink(href, page) {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href)) return href;
+
+  const canonicalMatch = href.match(/^\/docs\/([^?#]+)([?#].*)?$/);
+  if (canonicalMatch) {
+    const target = pageInfoBySlug[canonicalMatch[1]];
+    if (!target) {
+      unresolvedInternalLinks.add(`${page.sourcePath}: ${href}`);
+      return href;
+    }
+
+    const fragment = canonicalMatch[2] || '';
+    if (fragment.startsWith('#')) {
+      const id = decodeURIComponent(fragment.slice(1));
+      if (!target.headingIds.has(id)) {
+        unresolvedInternalLinks.add(`${page.sourcePath}: ${href} (missing heading #${id})`);
+      }
+    }
+
+    return `${rel('/' + target.slug)}${fragment}`;
+  }
+
+  if (href.startsWith('/')) return href;
+  const match = href.match(/^([^?#]+)\.(?:md|html)([?#].*)?$/i);
+  if (!match) return href;
+
+  const targetPath = path.posix.normalize(path.posix.join(path.posix.dirname(page.sourcePath), `${match[1]}.md`));
+  const target = pageInfoByPath[targetPath];
+  if (!target) {
+    unresolvedInternalLinks.add(`${page.sourcePath}: ${href}`);
+    return href;
+  }
+
+  const fragment = match[2] || '';
+  if (fragment.startsWith('#')) {
+    const id = decodeURIComponent(fragment.slice(1));
+    if (!target.headingIds.has(id)) {
+      unresolvedInternalLinks.add(`${page.sourcePath}: ${href} (missing heading #${id})`);
+    }
+  }
+
+  return `${rel('/' + target.slug)}${fragment}`;
+}
 
 function extractToc(md) {
   const headings = [];
@@ -252,6 +309,24 @@ function extractDisplayTitle(fullPath, fallbackText) {
   return fallbackTitleFromPath(fallbackText);
 }
 
+function getPageInfo(file) {
+  const content = fs.readFileSync(file.fullPath, 'utf-8');
+  const parsed = grayMatter(content);
+  const slug = typeof parsed.data.slug === 'string' ? parsed.data.slug.trim().replace(/^\/+|\/+$/g, '') : '';
+  if (!/^[a-z0-9]+(?:[a-z0-9-]*)(?:\/[a-z0-9]+(?:[a-z0-9-]*))*$/.test(slug)) {
+    throw new Error(`${file.path} must define a lowercase front-matter slug, for example: slug: reference/plugins`);
+  }
+
+  return {
+    sourcePath: file.path,
+    fullPath: file.fullPath,
+    slug,
+    outputPath: `${slug}/index.html`,
+    title: extractDisplayTitle(file.fullPath, file.path),
+    headingIds: new Set([...parsed.content.matchAll(/^(#{1,6})\s+(.+)$/gm)].map(match => getHeadingDetails(match[2]).id))
+  };
+}
+
 function getSortKey(name, order) {
   if (order != null) return order;
   const m = name.match(/^(\d+)/);
@@ -310,9 +385,10 @@ function buildNavTree(dir, relativePath, currentPath) {
         const parsed = grayMatter(content);
         if (parsed.data.order != null) order = parseInt(parsed.data.order, 10);
       } catch {}
-      const htmlPath = relPath.replace(/\.md$/, '.html');
-      title = extractDisplayTitle(fullPath, entry.name);
-      items.push({ title, path: relPath, htmlPath, type: 'file', active: relPath === currentPath, order, _sortKey: getSortKey(entry.name, order) });
+      const page = pageInfoByPath[relPath];
+      if (!page) continue;
+      title = page.title;
+      items.push({ title, path: relPath, url: page.slug, type: 'file', active: relPath === currentPath, order, _sortKey: getSortKey(entry.name, order) });
     }
   }
   sortEntries(items);
@@ -326,11 +402,12 @@ function buildSearchIndex(files) {
       const content = fs.readFileSync(file.fullPath, 'utf-8');
       const parsed = grayMatter(content);
       const text = (parsed.content || content).replace(/[#*`\[\]]/g, ' ').replace(/\s+/g, ' ').trim();
-      const title = extractDisplayTitle(file.fullPath, file.path);
+      const page = pageInfoByPath[file.path];
+      const title = page.title;
       index.push({
         title,
         path: file.path,
-        url: rel('/' + file.path.replace(/\.md$/, '.html')),
+        url: rel('/' + page.slug),
         excerpt: text.substring(0, 200),
         text: text.substring(0, 1000)
       });
@@ -591,7 +668,7 @@ function renderNavList(items, currentPath) {
       html += '</li>';
     } else {
       const active = item.path === currentPath ? ' class="active"' : '';
-      html += `<li><a${active} href="${rel('/' + item.htmlPath)}">${item.title}</a></li>`;
+      html += `<li><a${active} href="${rel('/' + item.url)}">${item.title}</a></li>`;
     }
   }
   return html;
@@ -604,7 +681,7 @@ function renderNav(items, currentPath) {
 function generateSite() {
   console.log('  🔨 Generating static site...\n');
 
-  if (fs.existsSync(path.join(BUILD, 'assets'))) {
+  if (fs.existsSync(BUILD)) {
     try { fs.rmSync(BUILD, { recursive: true, force: true }); }
     catch (e) {
       console.log('  ⚠️  Build folder locked, overwriting files in-place');
@@ -622,6 +699,17 @@ function generateSite() {
   const files = scanFiles(CONTENT, '');
   console.log(`  📄 Found ${files.length} markdown files`);
 
+  pageInfoByPath = {};
+  pageInfoBySlug = {};
+  for (const file of files) {
+    const page = getPageInfo(file);
+    if (pageInfoBySlug[page.slug]) {
+      throw new Error(`Duplicate page slug: ${page.slug}`);
+    }
+    pageInfoByPath[file.path] = page;
+    pageInfoBySlug[page.slug] = page;
+  }
+
   const allNav = buildNavTree(CONTENT, '', null);
 
   const searchIndex = buildSearchIndex(files);
@@ -636,10 +724,11 @@ function generateSite() {
   wikiLookup = {};
   for (const f of files) {
     const noExt = f.path.replace(/\.md$/, '');
-    const htmlPath = noExt + '.html';
-    wikiLookup[noExt.toLowerCase()] = { htmlPath };
+    const page = pageInfoByPath[f.path];
+    wikiLookup[noExt.toLowerCase()] = page;
     const nameOnly = f.path.split('/').pop().replace(/\.md$/, '').replace(/^\d+-/, '');
-    wikiLookup[nameOnly.toLowerCase()] = { htmlPath };
+    wikiLookup[nameOnly.toLowerCase()] = page;
+    wikiLookup[page.slug.toLowerCase()] = page;
   }
 
   let firstFile = null;
@@ -647,19 +736,19 @@ function generateSite() {
     try {
       const content = fs.readFileSync(file.fullPath, 'utf-8');
       const parsed = grayMatter(content);
-      const title = extractDisplayTitle(file.fullPath, file.path);
+      const page = pageInfoByPath[file.path];
+      const title = page.title;
       const markdown = prefixContentImageUrls(parsed.content);
       const toc = extractToc(markdown);
       const tocHtml = renderToc(toc);
-      const htmlContent = wrapTables(marked.parse(markdown, { renderer: tocRenderer }));
-      const htmlPath = file.path.replace(/\.md$/, '.html');
-      const outPath = path.join(BUILD, htmlPath);
+      const htmlContent = wrapTables(marked.parse(markdown, { renderer: createPageRenderer(page) }));
+      const outPath = path.join(BUILD, page.outputPath);
       ensureDir(path.dirname(outPath));
 
       const nav = buildNavTree(CONTENT, '', file.path);
       const pageHtml = renderPage(title, htmlContent, nav, file.path, searchIndex, tocHtml);
       fs.writeFileSync(outPath, pageHtml, 'utf-8');
-      if (!firstFile) firstFile = { path: htmlPath, title };
+      if (!firstFile) firstFile = { path: page.slug, title };
     } catch (e) {
       console.error(`  ❌ Error processing ${file.path}: ${e.message}`);
     }
@@ -671,6 +760,10 @@ function generateSite() {
   }
 
   copyAssets();
+
+  if (unresolvedInternalLinks.size > 0) {
+    throw new Error(`Unresolved internal links:\n${[...unresolvedInternalLinks].sort().join('\n')}`);
+  }
 
   console.log(`\n  ✅ Site built in ./docs/`);
   console.log(`  📂 Open ./docs/index.html or serve with any static server\n`);

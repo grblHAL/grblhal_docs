@@ -1,3 +1,7 @@
+---
+slug: vendors/profiles
+---
+
 # Creating Vendor Profiles
 
 The **[grblHAL Web Builder](https://webbuilder.grblhal.org/)** allows vendors to provide pre-configured firmware options for their machines. This guide details how to create and host your own machine profiles.

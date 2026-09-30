@@ -1,3 +1,7 @@
+---
+slug: reference/parameters
+---
+
 # Parameters (variables)
 
 grblHAL supports parameters in the format defined by RS247/NGC. There are three basic types of parameters: numbered, named with local scope and named with global scope. Numbered parameters in the range 1 - 5000 are volatile and will not survive a reboot, 5001 - 5599 are predefined and are read-only. There are also a number of global predefined read-only named parameters.
@@ -26,7 +30,7 @@ Non-global named parameters and numbered parameters in the range 1-31 defined wi
 ### Default value
 
 Uninitialized numbered parameters returns 0, uninitialized named parameters an error.  
-Presence of named parameters can be checked for by the `EXIST[]` [function](06-o-code-and-subroutine_reference#functions).
+Presence of named parameters can be checked for by the `EXIST[]` [function](/docs/reference/o-code#functions).
 
 #### Predefined numbered parameters
 

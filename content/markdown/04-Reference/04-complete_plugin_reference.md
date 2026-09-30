@@ -1,3 +1,7 @@
+---
+slug: reference/plugins
+---
+
 # Plugins Reference
 
 This guide lists plugin-specific **M-codes**, **G-codes**, **$-commands** and **$-settings** provided by grblHAL’s plugin ecosystem.  
@@ -8,7 +12,7 @@ Each section includes the repository URL for reference.
 ## SD-Card (File Systems)
 Github Repository: https://github.com/grblHAL/Plugin_SD_card
 
-The SD card plugin repository contains a collection of plugins that offers storage and file handling that integrates with the core based [Virtual File System - VFS](./01-system-commands-reference.html#file-handling).
+The SD card plugin repository contains a collection of plugins that offers storage and file handling that integrates with the core based [Virtual File System - VFS](/docs/reference/commands#file-handling).
 
 ### FS FatFS and FS littlefs
 
@@ -29,7 +33,7 @@ The FS Stream plugin sits on top of VFS and provides a number of $-commands for 
 | **`$FU`**         | Unmount SD card |
 | **`$FD=[file]`**  | Delete file |
 
-The commands are documented in more detail [here](./01-system-commands-reference.html#file-system-commands).
+The commands are documented in more detail [here](/docs/reference/commands#file-system-commands).
 
 #### Examples:
 ```gcode
@@ -900,7 +904,7 @@ M64 P0          ; Disable THC after cut
 
 ---
 
-## Sienci ATCi (Automatic Tool Changer Interface)
+## Sienci ATCi (Automatic Tool Changer Interface) {#sienciatc}
 Github Repository: https://github.com/Sienci-Labs/grblhal-atci-plugin
 
 This plugin provides advanced safety, state management, and sensor integration for the **[Sienci Automatic Tool Changer (ATC)](https://sienci.com/product/automatic_tool_changer/)**.

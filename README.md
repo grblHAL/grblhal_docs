@@ -56,13 +56,35 @@ Pages use [GitHub Flavored Markdown](https://github.github.com/gfm/) (GFM), plus
 
 ### Page metadata
 
-Optional YAML front matter sets a page title and its position within a folder. The title is used in the navigation and browser title; `order` overrides filename ordering.
+Every page needs a short, stable `slug`. It defines the public address: `slug: reference/plugins` publishes at `/docs/reference/plugins`. The optional title is used in the navigation and browser title; `order` overrides filename ordering.
 
 ```md
 ---
+slug: getting-started/connecting
 title: Connecting a controller
 order: 10
 ---
+```
+
+### Slug links
+
+Choose a slug that describes the page's place in the documentation, using lowercase letters, numbers, hyphens, and `/`. Do not include `/docs` in the front matter. Slugs are public addresses, so keep them stable after publishing unless you deliberately want to replace an old link.
+
+```md
+slug: reference/plugins
+```
+
+Link to a page with `/docs/` followed by its slug. Link to a section by adding its heading ID. The build checks both the page and heading ID, so `npm run build` fails if an internal slug link is incorrect.
+
+```md
+[Plugins](/docs/reference/plugins)
+[Plugin reference](/docs/reference/plugins#sienciatc)
+```
+
+Give sections that will be linked often a short, stable custom ID. Automatically generated IDs are fine for one-off links, but change when the heading text changes.
+
+```md
+## Sienci ATCi (Automatic Tool Changer Interface) {#sienciatc}
 ```
 
 ### Headings and links to sections

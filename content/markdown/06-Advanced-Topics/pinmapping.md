@@ -1,3 +1,7 @@
+---
+slug: advanced/pin-mapping
+---
+
 # Pin Mapping
 
 Pin mapping (pinmapping) in grblHAL is done at compile time through C preprocessor macros in board map header files. Each supported MCU platform has its own driver repository with a set of `*_map.h` files under a `boards/` directory, one per supported physical board.

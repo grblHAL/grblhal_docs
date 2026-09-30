@@ -1,3 +1,7 @@
+---
+slug: getting-started/flashing
+---
+
 # Firmware Flashing
 
 This guide will walk you through the process of getting grblHAL firmware onto your controller board. There are two main approaches: using the **Web Builder** (recommended for most users) or **manual compilation** (for advanced users).
@@ -6,7 +10,7 @@ This guide will walk you through the process of getting grblHAL firmware onto yo
 
 Before you begin, make sure you have:
 
-1. **A compatible controller board** (see [Hardware Selection](./03-controller-support.md))
+1. **A compatible controller board** (see [Hardware Selection](/docs/getting-started/controllers))
 2. **A USB cable** to connect your board to your computer
 3. **Basic knowledge** of your controller board model
 4. **Drivers installed** for your board (if required by your OS)
@@ -316,8 +320,8 @@ After flashing, verify your installation:
 Once firmware is successfully flashed:
 
 1. **Configure your machine** - Set steps/mm, max rates, acceleration
-2. **Test basic motion** - See [First Connection & Motion](./05-first-connection.md)
-3. **Calibrate your machine** - Jump to [Machine Calibration](../03-Machine-Calibration/01-introduction.md)
+2. **Test basic motion** - See [First Connection & Motion](/docs/getting-started/first-connection)
+3. **Calibrate your machine** - Jump to [Machine Calibration](/docs/calibration/overview)
 
 ---
 

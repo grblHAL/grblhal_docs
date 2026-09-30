@@ -1,3 +1,7 @@
+---
+slug: calibration/backlash
+---
+
 # Backlash Compensation
 
 **Backlash** is the lost motion or "slop" in a mechanical system caused by gaps between mating parts (e.g., a lead screw and nut, or loose belt teeth).
@@ -57,4 +61,4 @@ You have now completed the core machine calibration! Your machine is:
 - **Oriented** (Homing)
 - **Precise** (Backlash Compensation)
 
-**What's Next?** Explore our Advanced Guides, such as [Probing](../05-Guides/probing.md) or [Auto Tool Changers](../05-Guides/automatic-tool-changer.md).
+**What's Next?** Explore our Advanced Guides, such as [Probing](/docs/guides/probing) or [Auto Tool Changers](/docs/guides/tool-changes).
