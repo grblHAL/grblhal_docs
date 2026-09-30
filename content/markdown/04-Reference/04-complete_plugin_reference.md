@@ -9,7 +9,7 @@ Each section includes the repository URL for reference.
 
 ---
 
-## SD-Card (File Systems)
+## SD-Card (File Systems) {#file-systems}
 Github Repository: https://github.com/grblHAL/Plugin_SD_card
 
 The SD card plugin repository contains a collection of plugins that offers storage and file handling that integrates with the core based [Virtual File System - VFS](/docs/reference/commands#file-handling).
@@ -18,7 +18,7 @@ The SD card plugin repository contains a collection of plugins that offers stora
 
 These plugins are integration layers for VFS that provides file access to SD cards via [FatFs](https://elm-chan.org/fsw/ff/) and flash or EEPROM based files via the [littlefs](https://github.com/littlefs-project/littlefs) file systems.
 
-### FS Stream
+### FS Stream {#file-systems-commands}
 
 The FS Stream plugin sits on top of VFS and provides a number of $-commands for file handling:
 
@@ -929,18 +929,17 @@ Configures the operating modes for the Sienci Automatic Tool Changer Interface p
 > - **Rack Monitor:** Uses `AUXINPUT7` to detect if the rack is physically mounted. If the rack is removed, the Keepout zone is automatically disabled.
 > - **TC Macro Monitor:** Automatically disables the Keepout zone while a Tool Change macro is running to allow tool fetching.
 
-
 | Bit | Value | Option | Description |
 |:---:|:-----:|:-------|:------------|
 | 0   | 1     | **Enable Plugin** | Master switch to enable the Keepout Zone logic on startup. |
 | 1   | 2     | **Monitor Rack Presence** | Only enforce Keepout if the rack sensor (`AUXINPUT7`) is triggered. |
 | 2   | 4     | **Monitor TC Macro** | Automatically disable Keepout when a tool change macro is active. |
 
-#### Common Examples
-*   **Enable Basic Keepout:**
-    *   `$683=1`
-*   **Enable Full Automation (Rack Sensor + Macro Awareness):**
-    *   `$683=7` (1+2+4)
+**Common Examples**
+* _Enable Basic Keepout:_
+  * `$683=1`
+* _Enable Full Automation (Rack Sensor + Macro Awareness):_
+  * `$683=7` (1+2+4)
 
 #### `$684` – `$687` – ATCi Keepout Zone Boundaries
 Defines the rectangular safety zone around the tool rack in machine coordinates.

@@ -37,9 +37,6 @@ Use the table of contents on the right to navigate, or use your browser's search
     M3 S10000 ; Set spindle speed to 10,000RPM
     ```
 
-
----
-
 ---
 
 # Command Letters

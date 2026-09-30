@@ -14,7 +14,7 @@ Most additional predefined parameters defined by LinuxCNC (ref section 5.2.3.1) 
 > `#<myvalue>` - named, local scope.  
 > `#<_current_tool>` - named, global scope.  
 
-To set a parameter use the `#` character followed by `=` and a value, a parameter or an expression returning a value. Multiple parameters can be set in a single block, assignment will take place after the whole block is parsed so do not reference a parameter that is set in the same block.
+To set a parameter use the `#` character followed by `=` and a value, a parameter or an expression returning a value. Multiple parameters can be set in a single block, assignment will take place _after_ the whole block is parsed so do not reference a parameter that is set earlier in the same block - it will either be unset or return its original value (pre block).
 
 **Examples:**  
 ```
@@ -61,7 +61,7 @@ Presence of named parameters can be checked for by the `EXIST[]` [function](/doc
 #### Predefined named parameters
 
 | Name                 | Usage                                                              | Comment                   |
-|----------------------|-------------------------------------------------------------|---------------------------|
+|----------------------|--------------------------------------------------------------------|---------------------------|
 | _vmajor              | Major grblHAL version number, currently 1.1.                       |                           |
 | _vminor              | Minor grblHAL version number, from build date \(YYMMDD\).          | Available from 20241025.  |
 | _line                | Current G Code line number.                                        |                           |

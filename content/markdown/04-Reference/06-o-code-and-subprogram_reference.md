@@ -217,7 +217,7 @@ Call from the senders MDI or gcode program:
 
 ## Operators, functions and flow control
 
-### Operators and precedence
+### Operators and precedence {#operators}
 
 | Operators                 | Precedence |
 |---------------------------|------------|
@@ -248,7 +248,7 @@ Call from the senders MDI or gcode program:
 | PRM[arg]        | Value of numeric setting.<sup>1</sup>        | Available from build 20241025. |
 | PRM[arg,bit]    | Value of bit in integer setting.<sup>1</sup> | Available from build 20241025. |
 
-### Flow control statements
+### Flow control statements {#flow-control}
 
 | Statement         | Local file | Streamed G-Code | Comment                                                  |
 |-------------------|------------|-----------------|----------------------------------------------------------|
