@@ -86,7 +86,7 @@ G-codes primarily control the machine's motion, coordinate systems, and operatio
 
 ---
 
-## `G0` – Rapid Positioning
+## `G0` – Rapid Positioning {#G0}
 
 **Syntax:**  
 > `G0 axes`  
@@ -120,7 +120,7 @@ Moves the machine at the maximum possible travel speed to a specified coordinate
 
 ---
 
-## `G1` – Linear Interpolation
+## `G1` – Linear Interpolation {#G1}
 
 **Syntax:**  
 > `G1 axes `  
@@ -155,7 +155,7 @@ Moves the machine in a straight line at a defined feed rate (`F`). This is the p
 
 ---
 
-## `G2` & `G3` – Arc / Helical Interpolation
+## `G2` & `G3` – Arc / Helical Interpolation {#G1-G2}
 
 **Syntax:**  
 > `G2 axes offsets (center format)`  
@@ -202,7 +202,7 @@ Moves the machine along a circular arc (`G2` = Clockwise, `G3` = Counter-Clockwi
 
 ---
 
-## `G4` – Dwell
+## `G4` – Dwell {#G4}
 
 **Syntax:**  
 > `G4 P-`  
@@ -269,7 +269,7 @@ These commands enable the machine to move along complex curves defined by contro
 
 ---
 
-## `G7`, `G8` – Lathe Diameter / Radius Mode
+## `G7`, `G8` – Lathe Diameter / Radius Mode {#G7-G8}
 
 **Syntax:**  
 > `G7` (Diameter Mode)  
@@ -307,7 +307,7 @@ These commands are used exclusively in lathe operations to define whether X-axis
 
 ---
 
-## `G10 L2` & `G10 L20` – Set Coordinate System Data
+## `G10 L2` & `G10 L20` – Set Coordinate System Data {#G10L2-G10L20}
 
 **Syntax:**  
 > `G10 L2 P- axes` (absolute)  
@@ -345,7 +345,7 @@ Provides a way to programmatically set and offset work coordinate systems (G54-G
 
 ---
 
-## `G17`, `G18`, `G19` – Plane Selection
+## `G17`, `G18`, `G19` – Plane Selection {#G18-G19-G20}
 
 **Syntax:**  
 > `G17` (XY plane)  
@@ -384,7 +384,7 @@ Selects the active plane for circular interpolation (`G2`/`G3`), cutter compensa
 
 ---
 
-## `G20`, `G21` – Unit Selection
+## `G20`, `G21` – Unit Selection {#G20-G21}
 
 **Syntax:**  
 > `G20` (inches)  
@@ -413,14 +413,14 @@ Sets the G-code interpreter's units for all position, feed rate, and offset data
   `G20`  
   `G1 X4 F20` (Moves to X=4in at 20in/min)
 
-#### Tips & Tricks
-- It is critical safety practice to include either `G20` or `G21` at the very beginning of every G-code file. This prevents misinterpreting a 10mm move as a 10-inch move, which could cause a crash.
-- This setting affects how *grblHAL interprets G-code*, but does not change the machine's internal step/mm settings (`$100`, etc.).
-- Also checkout `$13` [Report in Inches (boolean)](/docs/reference/settings#13-report-in-inches-boolean)
+> [!TIP]
+> - It is critical safety practice to include either `G20` or `G21` at the very beginning of every G-code file. This prevents misinterpreting a 10mm move as a 10-inch move, which could cause a crash.
+> - This setting affects how *grblHAL interprets G-code*, but does not change the machine's internal step/mm settings (`$100`, etc.).
+> - Also checkout `$13` [Report in Inches (boolean)](/docs/reference/settings#13)
 
 ---
 
-## `G28`, `G30` – Go to Pre-Defined Position
+## `G28`, `G30` – Go to Pre-Defined Position {#G28-G30}
 
 **Syntax:**  
 > `G28  axes`  
@@ -464,7 +464,7 @@ Commands the machine to perform a rapid move to a stored, user-defined position.
 
 ---
 
-## `G28.1`, `G30.1` – Set Pre-Defined Position
+## `G28.1`, `G30.1` – Set Pre-Defined Position {#G28_1-G30_1}
 
 **Syntax:**  
 > `G28.1`  
@@ -492,7 +492,7 @@ Stores the machine's current absolute position as the `G28` or `G30` pre-defined
 
 ---
 
-## `G38.2`, `G38.3`, `G38.4`, `G38.5` – Probing
+## `G38.2`, `G38.3`, `G38.4`, `G38.5` – Probing {#G38_2-G38_3-G38_4-G38_5}
 
 **Syntax:**  
 > `G38.2 axes F-`  
@@ -538,7 +538,7 @@ Performs a straight probing operation. The machine moves along a specified path 
 
 ---
 
-## `G40` – Cancel Cutter Radius Compensation
+## `G40` – Cancel Cutter Radius Compensation {#G40}
 
 **Syntax:**  
 > `G40`  
@@ -559,7 +559,7 @@ Disables cutter radius compensation (`G41`/`G42`). This is the default state.
 
 *Note: The `G40` command is included for compatibility and to ensure a known state.*
 
-## `G41, G42` – Cutter Compensation
+## `G41, G42` – Cutter Compensation {#G41-G42}
 
 **Syntax:**  
 > `G41 <D->` (left of programmed path)  
@@ -576,7 +576,7 @@ Disables cutter radius compensation (`G41`/`G42`). This is the default state.
 
 ---
 
-## `G41, G42` – Dynamic Cutter Compensation
+## `G41.1, G42.2` – Dynamic Cutter Compensation {#G41_1-G42_1}
 
 **Syntax:**  
 > `G41.1 D-` (left of programmed path)  
@@ -636,11 +636,11 @@ Applies or removes a tool length offset, primarily along the Z-axis. This allows
 
 ---
 
-## `G50`, `G51` – Coordinate System Scaling
+## `G50`, `G51` – Coordinate System Scaling {#G50-G51}
 
 **Syntax:**  
 > `G50` (cancel scaling)  
-> `G51 X- Y- Z- A- B- C-` (apply scaling)  
+> `G51 axes` (apply scaling)  
 
 These commands enable or disable scaling of coordinate systems. This allows G-code programs to be run at different sizes or even mirrored, without modifying the original program.
 
@@ -676,7 +676,7 @@ These commands enable or disable scaling of coordinate systems. This allows G-co
 ---
 
 
-## `G53` – Move in Machine Coordinates
+## `G53` – Move in Machine Coordinates {#G53}
 
 **Syntax:**  
 > `G53 G0 axes`  
@@ -687,7 +687,7 @@ Executes a linear or rapid move in the absolute machine coordinate system, tempo
 
 > ℹ️ **Info**
 > - **Non-Modal:** `G53` is only active for the block in which it is commanded.
-> - It must be combined with a motion command like `G0` or `G1`.
+> - It must be combined with a motion command like [G0](#G0) or [G1](#G1).
 
 
 | Parameter(s) | Description |
@@ -708,7 +708,7 @@ Executes a linear or rapid move in the absolute machine coordinate system, tempo
 
 ---
 
-## `G54` to `G59.3` – Work Coordinate Systems (WCS)
+## `G54` to `G59.3` – Work Coordinate Systems (WCS) {#G5x_WCS}
 
 **Syntax:**  
 > `G54`  
@@ -763,7 +763,7 @@ Selects one of the available work coordinate systems. A WCS defines a user-progr
 
 ---
 
-## `G61`, `G61.1` – Path Control Mode
+## `G61`, `G61.1` – Path Control Mode {#G61-G61_1}
 
 **Syntax:**  
 > `G61` (exact stop)  
@@ -796,7 +796,7 @@ These commands control how the machine handles corners and transitions between s
 
 ---
 
-## `G65` – Subprogram Call with Arguments
+## `G65` – Subprogram Call with Arguments {#G65}
 
 **Syntax:**  
 > `G65 P- [L-] [A- B- C- ...]`  
@@ -816,7 +816,7 @@ These commands control how the machine handles corners and transitions between s
 | **L** | **Optional:** Repeat count. The macro will be executed `L` times. (Available from build 20260125). |
 | **A, B, C, X, Y, Z...** | Arguments to be passed to the subprogram. These become local variables inside the macro. |
 
-### User Macro Example (P100+)
+### User Subprogram Example (P100+)
 
 * **Call a custom macro `P100.macro` to drill a hole with a specific depth and feed rate:**  
 
@@ -844,7 +844,7 @@ M30
 
 ---
 
-## `G66`, `G67` – Modal Macro Call
+## `G66`, `G67` – Modal Subprogram Call {#G66-G66}
 
 **Syntax:**
 > `G66 P [L] [A- B- C- ...]`
@@ -857,7 +857,7 @@ M30
 > - **Cancellation:** `G67` cancels the modal macro state.
 
 ---
-## `G76`, `G81` to `G89` – Canned Cycles
+## `G76`, `G81` to `G89` – Canned Cycles {#canned-cycles}
 
 **Syntax:**  
 > `G81 Z- R-  `  
@@ -907,7 +907,7 @@ Canned cycles are powerful shortcuts that combine several distinct movements int
 
 ---
 
-## `G80` – Cancel Canned Cycle
+## `G80` – Cancel Canned Cycle {#G80}
 
 **Syntax:**  
 > `G80`
@@ -931,7 +931,7 @@ Immediately cancels any active canned cycle mode (`G81`-`G89`). It is a critical
 
 ---
 
-## `G90`, `G91` – Distance Mode
+## `G90`, `G91` – Distance Mode {#G90_G91}
 
 **Syntax:**  
 > `G90` (absolute)  
@@ -970,7 +970,7 @@ Controls how coordinate values (`X`, `Y`, `Z`, etc.) are interpreted by the mach
 
 ---
 
-## `G92`, `G92.1`, `G92.2` – Coordinate System Offset
+## `G92`, `G92.1`, `G92.2` – Coordinate System Offset {#G92_G92_1-G92_2}
 
 **Syntax:**  
 > `G92 axes`  
@@ -1007,7 +1007,7 @@ Controls how coordinate values (`X`, `Y`, `Z`, etc.) are interpreted by the mach
 
 ---
 
-## `G93`, `G94`, `G95` – Feed Rate Mode
+## `G93`, `G94`, `G95` – Feed Rate Mode {#G93_G94-G95}
 
 **Syntax:**  
 > `G93` (inverse time)  
@@ -1042,7 +1042,7 @@ Determines how the `F` word (feed rate) is interpreted.
 
 ---
 
-## `G96`, `G97` – Spindle Speed Mode
+## `G96`, `G97` – Spindle Speed Mode {#G96_G97}
 
 **Syntax:**  
 > `G96 S- ` (constant surface speed)  
@@ -1076,7 +1076,7 @@ Controls how the `S` word (spindle speed) is interpreted. This is primarily for 
 
 ---
 
-## `G98`, `G99` – Canned Cycle Return Mode
+## `G98`, `G99` – Canned Cycle Return Mode {#G98_G99}
 
 **Syntax:**  
 > `G98` (return to initial level)  
@@ -1123,7 +1123,7 @@ M-codes control miscellaneous machine functions. These are actions that are not 
 
 ---
 
-## `M0`, `M1`, `M2`, `M30` – Program Flow & Stopping
+## `M0`, `M1`, `M2`, `M30` – Program Flow & Stopping {#M0-M1-M2-M30-M60}
 
 **Syntax:**  
 > `M0 |(message)` (program stop)  
@@ -1168,7 +1168,7 @@ These commands control the execution and termination of a G-code program.
 
 ---
 
-## `M3`, `M4`, `M5` – Spindle Control
+## `M3`, `M4`, `M5` – Spindle Control {#M3-M4-M5}
 
 **Syntax:**  
 > `M3 S-` (spindle on CW)  
@@ -1206,7 +1206,7 @@ These are the fundamental commands for controlling the spindle's rotation.
 
 ---
 
-## `M6` – Tool Change
+## `M6` – Tool Change {#M6}
 
 **Syntax:**  
 > `M6 `
@@ -1246,45 +1246,9 @@ Initiates a tool change sequence. The behavior of `M6` is highly dependent on th
 
 ---
 
-## `M98`, `M99` – Subroutine Call & Return
-
-**Syntax:**
-> `M98 P [L]` (Call Subroutine)
-> `M99` (Return)
-
-Executes a subroutine (a separate block of G-code or an external file) and then returns to the main program.
-
-
-> ℹ️ **Info**
-> - **`M98 P`:** Jumps to the subroutine with the specified number.
-> - If **Scan Current (`$700=1`)** is enabled, it first looks for a label `O sub` in the current file.
-> - If not found (or `$700=0`), it looks for an external file named `xxx` (or `xxx.nc`, `xxx.gcode`, etc.) on the SD card/filesystem.
-> - **`L`:** Optional repeat count. The subroutine will run **`L`** times before returning.
-> - **`M99`:** Marks the end of the subroutine. Control returns to the line following the `M98` call.
-> - If `M99` is used in the main program (not in a sub), it acts as a "Rewind and Loop" command, jumping back to the beginning of the file.
-
-
-| Parameter | Description
-|-----------|-------------|
-| **`P`** | The subroutine number or filename to call. |
-| **`L`** | (Optional) Number of times to repeat the subroutine. |
-
-#### Examples
-*   **External Subroutine:**
-    *   `M98 P1001` (Calls file `1001.gcode` from SD card)
-*   **Internal Subroutine (with `$700=1`):**
-    ```gcode
-    M98 P100 L3   ; Call sub 100 three times
-    M30           ; End main program
-
-    O100 sub      ; Define subroutine 100
-    G91 G0 X10    ; Move X
-    M99           ; Return
-    ```
-
 ---
 
-## `M7`, `M8`, `M9` – Coolant Control
+## `M7`, `M8`, `M9` – Coolant Control {#M7-M8-M9}
 
 **Syntax:**  
 > `M7` (mist coolant on)  
@@ -1326,7 +1290,7 @@ These commands control the machine's coolant systems. In grblHAL, these are typi
 
 ---
 
-## `M48`, `M49` – Override Control
+## `M48`, `M49` – Override Control {#M48-M49}
 
 **Syntax:**  
 > `M48` (enable overrides)  
@@ -1355,7 +1319,7 @@ Enables or disables the real-time feed rate, spindle speed, and rapid override s
 
 ---
 
-## `M50`, `M51`, `M53` – Feed, Spindle, Rapid Override Control
+## `M50`, `M51`, `M53` – Feed, Spindle, Rapid Override Control {#M50-M51-M53}
 
 **Syntax:**  
 > `M50` (turn feed override off)  
@@ -1399,7 +1363,7 @@ These commands provide granular control over enabling or disabling specific over
 
 ---
 
-## `M56` – Parking Motion Override
+## `M56` – Parking Motion Override {#M56}
 
 **Syntax:**  
 > `M56 P-`  
@@ -1533,7 +1497,7 @@ These commands control analog output pins, either synchronized with motion or im
 
 ---
 
-## `M70`, `M71`, `M72`, `M73` – Modal State Save/Restore
+## `M70`, `M71`, `M72`, `M73` – Modal State Save/Restore {#M70-M71-M72-M73}
 
 **Syntax:**  
 > `M70` (save state)  
@@ -1566,6 +1530,43 @@ Imagine you have a macro to find the center of a hole. This macro needs to use `
 
 
 ---
+
+## `M98`, `M99` – Subroutine Call & Return {#M98-M99}
+
+**Syntax:**
+> `M98 P- [L-]` (Call Subprogram)
+> `M99` (Return)
+
+Executes a subprogram (a separate block of G-code or an external file) and then returns to the main program.
+
+
+> ℹ️ **Info**
+> - **`M98 P`:** Jumps to the subroutine with the specified number.
+> - If **Scan Current (`$700=1`)** is enabled, it first looks for a label `O sub` in the current file.
+> - If not found (or `$700=0`), it looks for an external file named `xxx` (or `xxx.nc`, `xxx.gcode`, etc.) on the SD card/filesystem.
+> - **`L`:** Optional repeat count. The subroutine will run **`L`** times before returning.
+> - **`M99`:** Marks the end of the subroutine. Control returns to the line following the `M98` call.
+> - If `M99` is used in the main program (not in a sub), it acts as a "Rewind and Loop" command, jumping back to the beginning of the file.
+
+
+| Parameter | Description
+|-----------|-------------|
+| **`P`** | The subroutine number or filename to call. |
+| **`L`** | (Optional) Number of times to repeat the subroutine. |
+
+#### Examples
+*   **External Subroutine:**
+    *   `M98 P1001` (Calls file `1001.gcode` from SD card)
+*   **Internal Subroutine (with `$700=1`):**
+    ```gcode
+    M98 P100 L3   ; Call sub 100 three times
+    M30           ; End main program
+
+    O100 sub      ; Define subroutine 100
+    G91 G0 X10    ; Move X
+    M99           ; Return
+    ```
+
 
 ## `M98` – Subprogram Call
 

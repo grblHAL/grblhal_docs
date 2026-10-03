@@ -72,7 +72,7 @@ Syntax: `M98 P- [L-]`
 | **P** | The number of the internal subprogram. |
 | **L** | **Optional:** Repeat count, default `1`. The macro will be run `L` times. (Available from build 20260125). |
 
-`M98` will run a subprogram embedded in the main program or an external program depending on the `$700` setting. When configured for running an embedded routine the whole program is scanned for subprograms which are to be delimited by `O<number>` and `M99`. Embedded subprograms may be placed anywhere in the program but normal practice is to embed them after the main program code. If not configured for running an embedded routine it will run the external program `P<number>.macro`.
+`M98` will run a subprogram embedded in the main program or an external program depending on the [$700](/docs/reference/settings#700) setting. When configured for running an embedded routine the whole program is scanned for subprograms which are to be delimited by `O<number>` and `M99`. Embedded subprograms may be placed anywhere in the program but normal practice is to embed them after the main program code. If not configured for running an embedded routine it will run the external program `P<number>.macro`.
 
 > ℹ️ **Info**
 > - When configured for running an embedded routine `M98` can only be used in programs stored in a local file system.

@@ -199,7 +199,7 @@ Commands the machine to move freely. Jog commands are independent of the G-code 
 
 > ℹ️ **Info**
 > -   Jogging is "safer" than `G0`/`G1` because it checks soft limits (if enabled) *before* moving and can be smoothly aborted by the user.
-> -   If the machine is homed set [$40=1](/docs/reference/settings#40-limit-jog-commands-boolean) to automatically limit jog motion to be within machine limits.
+> -   If the machine is homed set [$40=1](/docs/reference/settings#40) to automatically limit jog motion to be within machine limits.
 
 ---
 
@@ -215,7 +215,7 @@ Initiates the homing sequence to find the machine origin.
 -   `$HA` ... `$HW` (Home rotary/secondary axes)
 
 > ⚠️ **Warning**
-> Requires limit switches to be installed and configured unless [configured](/docs/reference/settings#22-homing-options-mask) to allow manually homed axes.
+> Requires limit switches to be installed and configured unless [configured](/docs/reference/settings#22) to allow manually homed axes.
 
 ---
 

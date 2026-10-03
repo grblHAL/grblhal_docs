@@ -79,7 +79,7 @@ These settings allow you to:
 - **Enable/Disable Laser Mode:** Crucial for dual setups (see Advanced section below).
 - **Control Enable Pin Logic.**
 
-*(See [Settings Reference](/docs/reference/settings#9-pwm-spindle-options-primary) for bitmask details.)*
+*(See [Settings Reference](/docs/reference/settings#9) for bitmask details.)*
 
 ---
 

@@ -29,7 +29,7 @@ This page covers common issues encountered when setting up grblHAL.
 
 ### **Axis Moves Wrong Direction**
 *   Invert the direction using setting **`$3`**.
-    *   (See [Settings Reference](/docs/reference/settings#3-direction-invert-mask))
+    *   (See [Settings Reference](/docs/reference/settings#3))
 
 ### **Dimensions are Wrong**
 *   Calibrate your steps per mm (`$100-$102`).
