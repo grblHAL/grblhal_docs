@@ -136,7 +136,7 @@ G-codes primarily control the machine's motion, coordinate systems, and operatio
 ## `G0` – Rapid Positioning {#G0}
 
 **Syntax:**  
-> `G0 axes`  
+> `G0 <axes>`  
 
 Moves the machine at the maximum possible travel speed to a specified coordinate. `G0` is a non-cutting move intended to reduce job time by moving quickly between operations.
 
@@ -150,7 +150,7 @@ Moves the machine at the maximum possible travel speed to a specified coordinate
 |-----------|-------------|
 | [axes](#axes) | Target coordinates. If no axis words are supplied the motion modal state is set. |
 
-#### Common Examples
+#### Examples
 * **Move to X=100, Y=50 in machine rapids (absolute mode):**  
   `G90 G0 X100 Y50`
 
@@ -169,7 +169,7 @@ Moves the machine at the maximum possible travel speed to a specified coordinate
 ## `G1` – Linear Interpolation {#G1}
 
 **Syntax:**  
-> `G1 axes`  
+> `G1 <axes>`  
 
 Moves the machine in a straight line at a defined feed rate (`F`). This is the primary command for cutting, engraving, printing, and any other material-affecting process.
 
@@ -182,7 +182,7 @@ Moves the machine in a straight line at a defined feed rate (`F`). This is the p
 |-----------|-------------|
 | [axes](#axes) | Target coordinates. If no axis words are supplied the motion modal state is set. |
 
-#### Common Examples
+#### Examples
 * _Cut a straight line to X=200 at a feed rate of 500 mm/min:_  
   `G1 X200 F500`
 
@@ -212,7 +212,6 @@ Moves the machine along a circular arc (`G2` = Clockwise, `G3` = Counter-Clockwi
 > - **Modal:** Part of the Motion Mode group.
 > - **Plane Selection:** Arcs are performed on the currently active plane (`G17` XY, `G18` XZ, `G19` YZ). The default is `G17` (XY plane).
 > - **Two Forms:** Can be defined using either `R` (radius) or `I, J, K` (center offset) parameters.
-
 
 | Parameter | Description |
 |-----------|-------------|
@@ -267,7 +266,7 @@ Pauses the machine for a specified period of time. Any buffered motion is comple
 |-----------|-------------|
 | **P** | Dwell time in seconds. |
 
-#### Common Examples
+#### Examples
 * _Pause for 2.5 seconds:_  
   `G4 P2.5`
 
@@ -342,7 +341,7 @@ These commands are used exclusively in lathe operations to define whether X-axis
 | **`G7`** | Diameter             |
 | **`G8`** | Radius               |
 
-#### Common Examples
+#### Examples
 * _Turn a shaft to a 20mm diameter:_
 	```gcode
 	G7 (Ensure diameter mode is active)  
@@ -465,7 +464,7 @@ Selects the active plane for circular interpolation (`G2`/`G3`), cutter compensa
 | **`G18`** | **XZ**         | `I` (for X), `K` (for Z) |
 | **`G19`** | **YZ**         | `J` (for Y), `K` (for Z) |
 
-#### Common Examples
+#### Examples
 * _Standard milling operation in the XY plane:_
 	```gcode
 	G17
@@ -502,7 +501,7 @@ Sets the G-code interpreter's units for all position, feed rate, and offset data
 | **`G20`** | Inches      |
 | **`G21`** | Millimeters |
 
-#### Common Examples
+#### Examples
 * _Set the machine to work in millimeters:_ 
 	```gcode
 	G21
@@ -546,13 +545,19 @@ Commands the machine to perform a rapid move to a stored, user-defined position.
 | **`G28`** | `X,Y,Z..` (optional) | Moves to the `G28` stored position. |
 | **`G30`** | `X,Y,Z..` (optional) | Moves to the `G30` stored position. |
 
-#### Common Examples
+#### Examples
 * _Go directly to the G28 position:_  
-  `G28`
+	```gcode
+	G28
+	```
 * _Go to the G28 position via an intermediate point (e.g., to lift Z first for safety):_  
-  `G28 Z0` (First moves Z to 0 in the current WCS, then moves all axes to the stored `G28` position)
+	```gcode
+	G28 Z0 (First moves Z to 0 in the current WCS, then moves all axes to the stored `G28` position)
+	```
 * _Go to the second saved position, G30:_  
-  `G30`
+	```gcode
+	G30
+	```
 
 > [!TIP]
 > - The pre-defined positions are stored in machine coordinates.
@@ -568,23 +573,24 @@ Commands the machine to perform a rapid move to a stored, user-defined position.
 
 Stores the machine's current absolute position as the `G28` or `G30` pre-defined location.
 
-
 > ℹ️ **Info**
 > - **Non-Modal.**
 > - This command captures the machine's current coordinates at the moment of execution and saves them persistently.
 
+#### Examples
+* _Move to a safe tool change location and store it as G28:_
+	```gcode
+	G53 G0 X-50 Y-50 Z-5 (Move to a safe spot in machine coordinates)
+	G28.1 (Store this position)
+	```
+* _Set a position at the front of the machine for easy access as G30:_
+	```gcode
+	G53 G0 X-200 Y-400 Z-10
+	G30.1
+	```
 
-#### Common Examples
-* **Move to a safe tool change location and store it as G28:**  
-  `G53 G0 X-50 Y-50 Z-5` (Move to a safe spot in machine coordinates)  
-  `G28.1` (Store this position)
-
-* **Set a position at the front of the machine for easy access as G30:**
-  `G53 G0 X-200 Y-400 Z-10`
-  `G30.1`
-
-#### Tips & Tricks
-- Before running `G28.1` or `G30.1`, it's best to move the machine using `G53` (move in machine coordinates) to ensure you are setting the position precisely where you want it, independent of any work offsets.
+> [!TIP]
+>  Before running `G28.1` or `G30.1`, it's best to move the machine using `G53` (move in machine coordinates) to ensure you are setting the position precisely where you want it, independent of any work offsets.
 
 ---
 
@@ -605,32 +611,31 @@ Performs a straight probing operation. The machine moves along a specified path 
 > - **`G38.4`**: Probe away from workpiece, stop on loss of contact, signal error if it starts un-triggered.
 > - **`G38.5`**: Probe away from workpiece, stop on loss of contact, no error if it starts un-triggered.
 
-| Command | Description |
-|---------|-------------|
-| **`G38.2`** | Probe towards, error on fail. |
-| **`G38.3`** | Probe towards, success on fail. |
-| **`G38.4`** | Probe away, error on fail. |
-| **`G38.5`** | Probe away, success on fail. |
-
 | Parameters | Description |
 |------------|-------------|
 | [axes](#axes) | The destination coordinates of the probe move. The probe will stop short if it triggers. |
 
-#### Common Examples
-* **Probe down in Z to find the top of a workpiece:**  
-  `G91 G38.2 Z-20 F100` (Probe down 20mm at 100mm/min. Will stop when the probe touches.)
+#### Examples
+* _Probe down in Z to find the top of a workpiece:_
+	```gcode
+	G91 G38.2 Z-20 F100 (Probe down 20mm at 100mm/min. Will stop when the probe touches.)
+	```
+* _Find the center of a bore by probing in two directions:_
+	```gcode
+	G38.2 X-10 F50 (Probe left)
+	; Record position
+	G0 X1 (Move away slightly)
+	G38.2 X10 F50 (Probe right)
+	; Record position and calculate center
+	```
 
-* **Find the center of a bore by probing in two directions:**
-  `G38.2 X-10 F50` (Probe left)  
-  *Record position*  
-  `G0 X1` (Move away slightly)  
-  `G38.2 X10 F50` (Probe right)  
-  *Record position and calculate center*
+<!-- add subprogram example -->
 
-#### Tips & Tricks
-- Upon successful probing, grblHAL reports the trigger position, which can be accessed via `?` status reports or parsed by a GUI.
-- Use a slow feed rate (`F`) for probing to get accurate results and prevent damage to the probe tip. A common practice is to perform a fast probe to find the surface, back off slightly, then perform a second, much slower probe for high accuracy.
-- `G38.3` is useful for checking if a tool is present or finding the edge of a part when you don't know exactly where it is.
+> [!TIP]
+> - Upon successful probing, grblHAL reports the trigger position, it can also be accessed via the `$#` system command.
+> - Probing result and coordinates is also stored in [parameters](./parameters/#predefined-numbered-parameters) `5070` and `5060 - 5069`.
+> - Use a slow feed rate (`F`) for probing to get accurate results and prevent damage to the probe tip. A common practice is to perform a fast probe to find the surface, back off slightly, then perform a second, much slower probe for high accuracy.
+> - `G38.3` is useful for checking if a tool is present or finding the edge of a part when you don't know exactly where it is.
 
 ---
 
@@ -641,19 +646,14 @@ Performs a straight probing operation. The machine moves along a specified path 
 
 Disables cutter radius compensation (`G41`/`G42`). This is the default state.
 
-
 > ℹ️ **Info**
 > - **Modal:** Part of the Cutter Compensation group.
 > - It is recommended to issue a `G40` at the beginning and end of all CNC programs to ensure a known state.
 
-
-#### Example
-* **Ensure compensation is off before starting a job:**  
-  `G40`
+> [!NOTE]
+> If grblHAL is compiled without cutter compensation support this command does nothing, it is included for compatibility and to ensure a known state.
 
 ---
-
-*Note: The `G40` command is included for compatibility and to ensure a known state.*
 
 ## `G41, G42` – Cutter Compensation {#G41-G42}
 
@@ -702,7 +702,7 @@ Apply tool length offset from tool table data.
 |-----------|-------------|
 | **`H`**   | Tool number, must be a tool number in the tool or if left out the current tool number is used. |
 
-#### Common Examples
+#### Examples
 * _Cancel the tool offset before a tool change:_
 	```gcode
 	G49
@@ -735,7 +735,6 @@ Applies or removes a tool length offset, primarily along the Z-axis. This allows
 > - **`G49`**: Cancel Tool Length Offset. Removes any active tool length offset.
 > - **Tool Table Integration (`G43 H-`):** If a tool table is enabled, `G43` (without `.1` or `.2`) can be used with an `H` word (e.g., `G43 H1`) to apply the Z-length offset stored for the tool number specified by the `H` word. The `H` word generally should match the active tool number.
 
-
 | Command | Description |
 |---------|-------------|
 | **`G43.1`** | Applies a dynamic offset to the specified axis. For example `G43.1 Z10` shifts the Z-axis origin by 10 units. |
@@ -746,18 +745,21 @@ Applies or removes a tool length offset, primarily along the Z-axis. This allows
 |------------|-------------|
 | [axes](#axes) | The coordinate values to set. |
 
-#### Common Examples
-* **Load a tool that is 5.2mm longer than the master tool:**  
-  `G43.1 Z5.2` (All subsequent Z moves will be adjusted by +5.2mm)
+#### Examples
+* _Load a tool that is 5.2mm longer than the master tool:_
+	```gcode
+	G43.1 Z5.2 (All subsequent Z moves will be adjusted by +5.2mm)
+	```
+* _Cancel the tool offset before a tool change:_
+	```gcode
+	G49
+	M6 T2
+	```
 
-* **Cancel the tool offset before a tool change:**
-  `G49`
-  `M6 T2`
-
-#### Tips & Tricks
-- `G49` should be commanded before any tool change (`M6`) and at the end of a program.
-- `G43.1` in grblHAL applies the offset directly. For example, after probing a new tool, a macro can calculate the difference and issue the correct `G43.1` command.
-- When a tool table is used, `G43 H` becomes the normal way to apply offsets as it looks up the value automatically.
+> [!TIP]
+> - `G49` should be commanded before any tool change (`M6`) and at the end of a program.
+> - `G43.1` in grblHAL applies the offset directly. For example, after probing a new tool, a macro can calculate the difference and issue the correct `G43.1` command.
+> - When a tool table is used, `G43 H` becomes the normal way to apply offsets as it looks up the offsets to use from the tool table.
 
 ---
 
@@ -772,34 +774,31 @@ These commands enable or disable scaling of coordinate systems. This allows G-co
 > ℹ️ **Info**
 > - **Modal:** Part of the Scaling group. `G50` is the default.
 > - **grblHAL Implementation:** grblHAL implements the Mach3 version of `G50`/`G51`. There is a compile-time option to enable a different (Fanuc-style) version.
-> - **`G51` (Apply Scaling):** Scales subsequent motion commands by a factor specified for each axis. A value of `-1` for an axis will mirror (flip) that axis. It is not permitted to use unequal scale factors to produce elliptical arcs with `G2` or `G3`.
+> - **`G51` (Apply Scaling):** Scales subsequent motion commands by a factor specified for each axis. A value of `-1` for an axis will mirror (flip) that axis. It is not permitted to use unequal scale factors to produce elliptical arcs with [G2](#G2) or [G3](#G3).
 > - **`G50` (Cancel Scaling):** Disables any active scaling, returning the coordinate system to its unscaled state.
 > - **Visual Cue:** When scaling is active, some senders like ioSender may display a yellow dot behind the axis DRO (Digital ReadOut).
-
-
-| Command | Description |
-|---------|-------------|
-| **`G50`** | Cancels all active scaling. |
-| **`G51`** | Applies a scaling factor to the specified axes. Example: `X2.0` doubles the X dimension, `X-1` mirrors X. |
 
 | Parameters | Description |
 |------------|-------------|
 | [axes](#axes) | The scaling values to set. |
 
-#### Common Examples
-* **Run a job at half size:**  
-  `G51 X0.5 Y0.5 Z0.5`  
-  `(G-code for the part)`  
-  `G50` (Cancel scaling)
+#### Examples
+* _Run a job at half size:_
+	```gcode
+	G51 X0.5 Y0.5 Z0.5
+	(G-code for the part)  
+	G50 (Cancel scaling)
+	```
+* _Mirror a PCB drilling pattern along the X-axis:_
+	```gcode
+	G51 X-1  
+	(G-code for drilling holes)` 
+	G50
+	```
 
-* **Mirror a PCB drilling pattern along the X-axis:**  
-  `G51 X-1`  
-  `(G-code for drilling holes)`  
-  `G50`
-
-#### Tips & Tricks
-- Scaling applies to all subsequent motion commands until `G50` is issued.
-- It's a powerful feature for design adjustments or creating mirrored parts without complex CAM operations.
+> [!TIP]
+> - Scaling applies to all subsequent motion commands until `G50` is issued.
+> - It's a powerful feature for design adjustments or creating mirrored parts without complex CAM operations.
 
 ---
 
@@ -819,16 +818,22 @@ Executes a linear or rapid move in the absolute machine coordinate system, tempo
 |------------|-------------|
 | [axes](#axes) | The target coordinates in the machine's absolute reference frame. |
 
-#### Common Examples
-* **Rapidly move the Z-axis to its highest point (machine Z=0) regardless of work offsets:**  
-  `G53 G0 Z0`  (A very common safety move)
+#### Examples
+* _Rapidly move the Z-axis to its highest point (machine Z=0) regardless of work offsets:_ 
+	```gcode
+	G53 G0 Z0  (A very common safety move)
+	```
+* _Move to a specific fixture point for a tool probe, using machine coordinates for consistency:_
+	```gcode
+	G53 G0 X-10 Y-10
+	```
 
-* **Move to a specific fixture point for a tool probe, using machine coordinates for consistency:**
-  `G53 G0 X-10 Y-10`
+> [!WARNING]
+> Machine should be homed before using this command.
 
-#### Tips & Tricks
-- `G53` is the most reliable way to move to a known, fixed position on the machine (like a tool change station or probing location) because it is not affected by any offsets.
-- The next block of G-code will revert to the previously active work coordinate system.
+> [!TIP]
+> - `G53` is the most reliable way to move to a known, fixed position on the machine (like a tool change station or probing location) because it is not affected by any offsets.
+> - The next block of G-code will revert to the previously active work coordinate system.
 
 ---
 
@@ -860,29 +865,23 @@ Selects one of the available work coordinate systems. A WCS defines a user-progr
 > - `G59.2` (P8)
 > - `G59.3` (P9) - **Note:** Used by Tool Change Modes 2 & 3 as the toolsetter position.
 
+#### Example
+* _Running a job on two different vices on the machine bed:_
+	```gcode
+	G10 L20 P1 X0 Y0 Z0 (Set G54 origin on the first vice)  
+	G10 L20 P2 X150 Y0 Z0 (Set G55 origin on the second vice, 150mm to the right)
 
-| Command | WCS Selected |
-|---------|--------------|
-| **`G54`** | System 1     |
-| **`G55`** | System 2     |
-| **...** | ...          |
-| **`G59.3`**| System 9     |
+	G54  
+	(run g-code for part 1)
 
-#### Common Example
-* **Running a job on two different vices on the machine bed:**
-  `G10 L20 P1 X0 Y0 Z0` (Set G54 origin on the first vice)  
-  `G10 L20 P2 X150 Y0 Z0` (Set G55 origin on the second vice, 150mm to the right)
+	G55
+	(run the same g-code for part 2)
+	```
 
-  `G54`  
-  `(run g-code for part 1)`
-
-  `G55`
-  `(run the same g-code for part 2)`
-
-#### Tips & Tricks
-- The origins for each WCS are set using the `G10 L2` or `G10 L20` commands or through the GUI by "zeroing" the axes.
-- WCS values are stored persistently.
-- Use different WCS for different fixtures, or even for different sides of the same part in a multi-stage operation.
+> [!TIP]
+> - The origins for each WCS are set using the `G10 L2` or `G10 L20` commands or through the GUI by "zeroing" the axes.
+> - WCS values are stored persistently.
+> - Use different WCS for different fixtures, or even for different sides of the same part in a multi-stage operation.
 
 ---
 
@@ -892,6 +891,7 @@ Selects one of the available work coordinate systems. A WCS defines a user-progr
 > `G61` (exact stop)  
 > `G61.1` (exact stop alias)  
 
+<!-- add proper documentation, what is G61.1? -->
 
 These commands control how the machine handles corners and transitions between sequential motion commands. This choice is a trade-off between speed and accuracy.
 
@@ -900,18 +900,14 @@ These commands control how the machine handles corners and transitions between s
 > - **`G61` (Exact Stop Mode):** The machine comes to a full stop at the end of each programmed move before starting the next. This ensures every corner is perfectly sharp but can cause jerky motion and slow down jobs significantly.
 > - **`G61.1` (Exact Stop Mode):** An alias for `G61`.
 
-| Command | Mode | Corner Behavior |
-|---------|------|-----------------|
-| **`G61`** | Exact Stop | Sharp corners, decelerates to zero at each vertex. |
-
-#### Common Examples
+#### Examples
 * **Engraving a precise technical drawing with sharp corners:**  
   `G61`  
   `(G-code for drawing)`
 
-#### Tips & Tricks
-- For most applications (2D profiling, 3D carving), `G64` is the preferred mode as it results in faster and smoother operation.
-- Use `G61` only when absolute corner sharpness is required, such as inlays or mechanical parts with tight tolerances. Be aware that it can leave "witness marks" or small circular divots at each corner on some materials due to the momentary stop.
+> [!TIP]
+> - For most applications (2D profiling, 3D carving), `G64` is the preferred mode as it results in faster and smoother operation.
+> - Use `G61` only when absolute corner sharpness is required, such as inlays or mechanical parts with tight tolerances. Be aware that it can leave "witness marks" or small circular divots at each corner on some materials due to the momentary stop.
 
 ---
 
@@ -970,35 +966,38 @@ M30
 
 `G66` acts like `G65` but is **modal**. The specified macro is called after every subsequent motion command (`G0`, `G1`, `G2`, `G3`, etc.) until cancelled by `G67`.
 
-> ℹ️ **Info**
-> - **Purpose:** Useful for drilling canned cycles, custom probing cycles, or repeating an operation at multiple locations.
-> - **Cancellation:** `G67` cancels the modal macro state.
+See [Subprograms](./o-code#g65-and-g66).
 
 ---
 ## `G76`, `G81` to `G89` – Canned Cycles {#canned-cycles}
 
 **Syntax:**  
-> `G81 Z- R-  `  
-> `G82 Z- R- P-  `  
-> `G83 Z- R- Q-  `  
-> `G73 Z- R- Q-  `  
-> `G85 Z- R-  `  
-> `G86 Z- R-  `  
-> `G89 Z- R- P-  `  
+> `G81 Z- R-`  
+> `G82 Z- R- P-`  
+> `G83 Z- R- Q-`  
+> `G73 Z- R- Q-`  
+> `G85 Z- R-`  
+> `G86 Z- R-`  
+> `G89 Z- R- P-`  
 > `G76 Z- R- I- J- K- L- P- Q- F-` (Lathe Threading)  
+<!--- G76 should be documented separately --->
+<!--- Add modal behaviour --->
 
 Canned cycles are powerful shortcuts that combine several distinct movements into a single G-code command, typically for hole-making operations like drilling, boring, and tapping. Instead of programming each feed, retract, and rapid move manually, you define the cycle's parameters once. The cycle then repeats at every new coordinate provided until a `G80` (Cancel Canned Cycle) is issued.
 
 > ℹ️ **Info**
 > - **Modal:** Once a canned cycle is active, it remains active. Every new position command for the axes on the active plane (`X` and `Y` in `G17`) will execute the full cycle at that location.
-> - **Parameters:**
-> - **`Z`**: The final depth of the hole (absolute or incremental).
-> - **`R`**: The retract position (the Z-height to which the tool rapids before starting the feed move).
-> - **`P`**: Dwell time (in seconds) at the bottom of the hole (used in `G82`, `G89`).
-> - **`Q`**: The peck depth for each cutting feed in `G73` and `G83`.
-> - **`F`**: The feed rate for the cutting portions of the cycle.
-> - **`L`**: **Optional:** Number of repeats (if supported by plugins).
-> - **Return Behavior:** The return height after the cycle is controlled by `G98` and `G99` (see below).
+
+| Parameters | Description |
+|:-----------|:------------|
+| **`Z`** | The final depth of the hole (absolute or incremental).|
+| **`R`** | The retract position (the Z-height to which the tool rapids before starting the feed move).|
+| **`P`** | Dwell time (in seconds) at the bottom of the hole (used in `G82`, `G89`).|
+| **`Q`** | The peck depth for each cutting feed in `G73` and `G83`.|
+| **`F`** | The feed rate for the cutting portions of the cycle.|
+| **`L`** | **Optional:** Number of repeats (?).|
+
+> - **Return Behavior:** The return height after the cycle is controlled by [G98 and G99](#G98-G99).
 > - **`G76` (Threading Cycle) and `G33` (Spindle Synced Motion):** These specialized lathe threading and spindle-synchronized cycles require a **spindle encoder** to synchronize spindle rotation with axis motion. Few grblHAL drivers/boards currently support this hardware requirement.
 
 #### Available Cycles in grblHAL
@@ -1011,17 +1010,19 @@ Canned cycles are powerful shortcuts that combine several distinct movements int
 *   **`G89`**: Boring Cycle with Dwell. Feeds to Z, dwells for time `P`, feeds back out to R.
 *   **`G76`**: Threading Cycle (Lathe). A specialized cycle for cutting threads.
 
-#### Canned Cycle Example (`G81`)
-* **Drill three holes at X10, X20, and X30:**
-  `G90 G21` (Absolute mode, millimeters)
-  `G0 X0 Y0 Z5` (Start above the workpiece)
-  `G99` (Set return plane to R-level)
-  `G81 Z-10 R2 F150` (Define the cycle: drill to Z-10, retract plane is Z+2, feed 150)
-  `X10 Y10` (Drills the first hole here)
-  `X20` (Drills the second hole at X20, Y10)
-  `X30` (Drills the third hole at X30, Y10)
-  `G80` (Cancel the cycle)
-  `G0 Z5` (Safely retract Z)
+#### Example (`G81`)
+* _Drill three holes at X10, X20, and X30:_
+	```gcode
+	G90 G21 (Absolute mode, millimeters)
+	G0 X0 Y0 Z5 (Start above the workpiece)
+	G99 (Set return plane to R-level)
+	G81 Z-10 R2 F150 (Define the cycle: drill to Z-10, retract plane is Z+2, feed 150)
+	X10 Y10 (Drills the first hole here)
+	X20 (Drills the second hole at X20, Y10)
+	X30 (Drills the third hole at X30, Y10)
+	G80 (Cancel the cycle)
+	G0 Z5 (Safely retract Z)
+	```
 
 ---
 
@@ -1032,20 +1033,20 @@ Canned cycles are powerful shortcuts that combine several distinct movements int
 
 Immediately cancels any active canned cycle mode (`G81`-`G89`). It is a critical safety command to ensure that subsequent motion commands are not interpreted as part of a cycle.
 
-
 > ℹ️ **Info**
 > - **Modal:** Part of the Motion Mode group. It reverts the machine to `G1` (Linear Motion) behavior.
 > - Always use `G80` after a series of canned cycle operations.
 > - Issuing any new motion command from the Motion Mode group (e.g., `G0`, `G1`, `G2`, `G3`) will also cancel an active canned cycle. For `G0` and `G1` commands, axis parameters are optional, meaning `G0` or `G1` on a line by itself will also cancel the canned cycle.
 
-
 #### Example
-* **Drill a series of holes and then cancel the cycle to move to a new area:**  
-  `G81 Z-10 R2 F100` (Start drilling cycle)  
-  `X10`  
-  `X20`  
-  `G80` (Cancel the drilling cycle)
-  `G0 X50 Y50` (Now a normal rapid move)
+* _Drill a series of holes and then cancel the cycle to move to a new area:_ 
+	```gcode
+	G81 Z-10 R2 F100` (Start drilling cycle)  
+	X10  
+	X20  
+	G80 (Cancel the drilling cycle)
+	G0 X50 Y50 (Now a normal rapid move)
+	```
 
 ---
 
@@ -1057,71 +1058,66 @@ Immediately cancels any active canned cycle mode (`G81`-`G89`). It is a critical
 
 Controls how coordinate values (`X`, `Y`, `Z`, etc.) are interpreted by the machine. This is one of the most fundamental G-code concepts.
 
-
 > ℹ️ **Info**
 > - **Modal:** Part of the Distance Mode group. This setting is persistent. `G90` is the default.
 > - **`G90` (Absolute Mode):** All coordinate values are interpreted as a position relative to the current work coordinate system's origin (e.g., `X10` means "move to the X=10 line").
 > - **`G91` (Incremental Mode):** All coordinate values are interpreted as a distance *from the current position* (e.g., `X10` means "move 10 units in the positive X direction from where you are now").
 
+#### Examples
+* _Moving to a specific point (10, 20) using Absolute mode:_
+	```gcode
+	G90
+	G0 X10 Y20
+	```
+* _Moving a rectangle 50 units wide and 30 units tall using Incremental mode:_
+	```gcode
+	G91
+	G1 X50 F300 (Move right 50)
+	G1 Y30 (Move up 30)
+	G1 X-50 (Move left 50)
+	G1 Y-30 (Move down 30)
+	```
 
-| Command | Mode | Interpretation of Coordinates |
-|---------|-------------|-------------------------------|
-| **`G90`** | Absolute    | As a destination from the WCS origin (0,0). |
-| **`G91`** | Incremental | As a distance and direction from the current point. |
-
-#### Common Examples
-* **Moving to a specific point (10, 20) using Absolute mode:**  
-  `G90`  
-  `G0 X10 Y20`
-
-* **Moving a rectangle 50 units wide and 30 units tall using Incremental mode:**  
-  `G91`  
-  `G1 X50 F300` (Move right 50)  
-  `G1 Y30` (Move up 30)  
-  `G1 X-50` (Move left 50)  
-  `G1 Y-30` (Move down 30)
-
-#### Tips & Tricks
-- Most CAM software generates code in `G90` (Absolute) mode.
-- `G91` is extremely useful for writing simple, repeatable subroutines and macros, such as probing routines or patterns, because they work correctly regardless of where they are started.
-- It is good practice to explicitly state `G90` or `G91` at the beginning of a program.
+> [!TIP]
+> - Most CAM software generates code in `G90` (Absolute) mode.
+> - `G91` is extremely useful for writing simple, repeatable subroutines and macros, such as probing routines or patterns, because they work correctly regardless of where they are started.
+> - It is good practice to explicitly state `G90` or `G91` at the beginning of a program.
 
 ---
 
-## `G92`, `G92.1`, `G92.2` – Coordinate System Offset {#G92-G92_1-G92_2}
+## `G92`, `G92.1`, `G92.2` and `G92.3` – Coordinate System Offset {#G92-G92_1-G92_2-G92_3}
 
 **Syntax:**  
 > `G92 axes`  
 > `G92.1` (cancel offset)  
 > `G92.2` (suspend offset)  
+> `G92.3` (restore offset)  
 
 `G92` applies a temporary, "volatile" offset to the machine's coordinate system. It makes the machine believe its current position is the value specified in the command. This is an older method of setting a work zero and is often discouraged in favor of `G10` and the persistent `G54-G59` work coordinate systems.
-
 
 > ℹ️ **Info**
 > - **Modal.**
 > - **`G92`**: Apply an offset. For example, `G92 X0 Y0` tells the machine "your current location is now X0, Y0".
 > - **`G92.1` or `G92.2`**: Clear any active `G92` offset, restoring the original coordinate system.
-> - **`G92.3`**: Restore a previously-cleared `G92` offset. (Less common).
+> - **`G92.3`**: Restore a previously-cleared `G92` offset.
 
+#### Example
+* _Temporarily set the corner of a workpiece as the origin:_
+	```gcode
+	G0 X100 Y50 (Move to the physical corner)  
+	G92 X0 Y0 Z0 (Tell grblHAL this spot is now the origin)  
+	(All subsequent moves are relative to this new temporary zero)
+	...
+	G92.1 (Clear the offset and return to the underlying G54/etc. system)
+	```
 
-| Command | Action |
-|---------|--------|
-| **`G92 X.. Y..`** | Sets the current point to the specified coordinate value. |
-| **`G92.1`** | Clears any active `G92` offset. |
+> [!WARNING]
+> `G92` offsets are easy to forget about and can lead to unexpected crashes. It's often safer to use a dedicated Work Coordinate System like `G55` for temporary setups.
 
-#### `G92` Example
-* **Temporarily set the corner of a workpiece as the origin:**  
-  `G0 X100 Y50` (Move to the physical corner)  
-  `G92 X0 Y0 Z0` (Tell grblHAL this spot is now the origin)  
-  `(All subsequent moves are relative to this new temporary zero)`
-  ...
-  `G92.1` (Clear the offset and return to the underlying G54/etc. system)
-
-#### Tips & Tricks
-- **Warning:** `G92` offsets are easy to forget about and can lead to unexpected crashes. It's often safer to use a dedicated Work Coordinate System like `G55` for temporary setups.
-- A `G92` offset is applied *on top of* the active G54-G59 WCS.
-- Some legacy CAM posts still use `G92`, particularly for multi-axis machines to reset a rotary axis's position (e.g., `G92 A0`).
+> [!TIP]
+> - A `G92` offset is applied *on top of* the active G54-G59 WCS.
+> - Some legacy CAM posts still use `G92`, particularly for multi-axis machines to reset a rotary axis's position (e.g., `G92 A0`).
+> - Setting [$384](./settings#384) controls `G92` offset persistence.
 
 ---
 
@@ -1132,15 +1128,13 @@ Controls how coordinate values (`X`, `Y`, `Z`, etc.) are interpreted by the mach
 > `G94` (units per minute)  
 > `G95` (units per revolution)  
 
-Determines how the `F` word (feed rate) is interpreted.
-
+Determines how the [F](#F) word (feed rate) is interpreted.
 
 > ℹ️ **Info**
 > - **Modal:** Part of the Feed Rate Mode group. `G94` is the default and most common mode for milling.
 > - **`G93` (Inverse Time Mode):** The `F` word represents "1 / minutes". The feed rate is calculated so that the move completes in `1/F` minutes. This is mainly used in 5-axis simultaneous motion where maintaining a constant tool-tip speed is complex.
 > - **`G94` (Units Per Minute Mode):** The `F` word is interpreted directly as linear units (mm or inches) per minute. This is the standard for most CNC mills, routers, and 3D printers.
 > - **`G95` (Units Per Revolution Mode):** The `F` word is interpreted as linear units per spindle revolution. This is the standard for CNC lathes, where chip load is directly tied to RPM.
-
 
 | Command | Feed Rate Interpretation | Primary Use |
 |---------|--------------------------|-------------|
@@ -1149,25 +1143,26 @@ Determines how the `F` word (feed rate) is interpreted.
 | **`G95`** | Units / Revolution       | Lathes, Threading |
 
 #### Examples
-* **Standard milling at 500 mm/min:**  
-  `G94`  
-  `G1 X100 F500`
-
-* **Lathe turning at 0.2 mm per revolution:**  
-  `G95`  
-  `S1000 M3` (Spindle at 1000 RPM)  
-  `G1 Z-50 F0.2` (The effective feed rate is 1000 RPM * 0.2 mm/rev = 200 mm/min)
-
+* _Standard milling at 500 mm/min:_ 
+	```gcode
+	G94 
+	G1 X100 F500
+	```
+* _Lathe turning at 0.2 mm per revolution:_
+	```gcode
+	G95
+	S1000 M3 (Spindle at 1000 RPM)
+	G1 Z-50 F0.2 (The effective feed rate is 1000 RPM * 0.2 mm/rev = 200 mm/min)
+	```
 ---
 
-## `G96`, `G97` – Spindle Speed Mode {#G96_G97}
+## `G96`, `G97` – Spindle Speed Mode {#G96-G97}
 
 **Syntax:**  
-> `G96 S- ` (constant surface speed)  
-> `G97 S-` (constant RPM)  
+> `G96` (constant surface speed)  
+> `G97` (constant RPM)  
 
-Controls how the `S` word (spindle speed) is interpreted. This is primarily for CNC lathes but can be useful in other specialized applications.
-
+Controls how the [S](#S) word (spindle speed) is interpreted. This is primarily for CNC lathes but can be useful in other specialized applications.
 
 > ℹ️ **Info**
 > - **Modal:** Part of the Spindle Speed Mode group. `G97` is the default.
@@ -1175,26 +1170,22 @@ Controls how the `S` word (spindle speed) is interpreted. This is primarily for 
 > - **`G96` (Constant Surface Speed - CSS):** The `S` word defines a desired surface speed (e.g., meters per minute in mm mode or feet per minute in inch mode). The controller will continuously adjust the spindle RPM based on the X-axis diameter to maintain this speed at the cutting edge. A maximum RPM must be set using `G50 S-` (Mach3 syntax) or by a `D` word on the `G96` line (e.g., `G96 S150 D1000`).
 > - **`G97` (Constant RPM Mode):** The `S` word is interpreted directly as revolutions per minute. The spindle speed is fixed until a new `S` command is issued. This is used for operations like drilling and tapping where a constant RPM is required.
 
+#### Example (Lathe)
+* _Facing a part on a lathe with a surface speed of 150 m/min:_
+	```gcode
+	G50 S4000 (Limit the spindle to a max of 4000 RPM for safety)
+	G96 S150 M3 (Turn on CSS mode at 150 m/min)
+	G1 X0 F0.2 (As X moves from a large diameter to zero, RPM will increase to maintain S150)
+	```
 
-| Command | Spindle Speed Interpretation | Primary Use |
-|---------|------------------------------|-------------|
-| **`G96`** | Constant Surface Speed (CSS) | Lathe Facing/Turning |
-| **`G97`** | Constant RPM                 | Milling, Drilling, Lathe Threading |
-
-#### `G96` Example (Lathe)
-* **Facing a part on a lathe with a surface speed of 150 m/min:**
-  `G50 S4000` (Limit the spindle to a max of 4000 RPM for safety)
-  `G96 S150 M3` (Turn on CSS mode at 150 m/min)
-  `G1 X0 F0.2` (As X moves from a large diameter to zero, RPM will increase to maintain S150)
-
-#### Tips & Tricks
-- Always use `G97` for drilling, tapping, and threading operations, as a constant, known RPM is required. `G97 S800 M3`.
-- `G96` provides a better surface finish and improved tool life on lathes when diameter is changing significantly.
-- Set a prudent RPM limit (with `G50 S-` or `D-` word) when using `G96` to prevent the spindle from exceeding safe speeds at small diameters.
+> [!TIP]
+> - Always use `G97` for drilling, tapping, and threading operations, as a constant, known RPM is required. `G97 S800 M3`.
+> - `G96` provides a better surface finish and improved tool life on lathes when diameter is changing significantly.
+> - Set a prudent RPM limit (with `G50 S-` or `D-` word) when using `G96` to prevent the spindle from exceeding safe speeds at small diameters.
 
 ---
 
-## `G98`, `G99` – Canned Cycle Return Mode {#G98_G99}
+## `G98`, `G99` – Canned Cycle Return Mode {#G98-G99}
 
 **Syntax:**  
 > `G98` (return to initial level)  
@@ -1202,36 +1193,32 @@ Controls how the `S` word (spindle speed) is interpreted. This is primarily for 
 
 Controls the Z-height that the tool retracts to *between holes* during a canned cycle sequence.
 
-
 > ℹ️ **Info**
 > - **Modal:** Part of the Canned Cycle Return group.
 > - **`G98` (Return to Initial Z):** At the end of each cycle, the tool retracts all the way to the Z-position that it was at *just before* the canned cycle was initiated. This is the safest mode, as it can clear clamps and other obstructions between hole locations.
-> - **`G99` (Return to R-Plane):** At the end of each cycle, the tool retracts only to the R-level specified in the canned cycle block. This is faster when drilling a series of holes on a flat, unobstructed surface, as it minimizes Z-axis travel.
-
-
-| Command | Retract Behavior in Canned Cycle |
-|---------|----------------------------------|
-| **`G98`** | Retract to initial Z-height.     |
-| **`G99`** | Retract to the `R` level.        |
+> - **`G99` (Return to R-Level):** At the end of each cycle, the tool retracts only to the R-level specified in the canned cycle block. This is faster when drilling a series of holes on a flat, unobstructed surface, as it minimizes Z-axis travel.
 
 #### Example
-* **Drilling two holes, one of which has a clamp in between:**
-  `G90 G0 X10 Y10 Z20` (Start high above the part, Z=20 is the "initial height")
+* _Drilling two holes, one of which has a clamp in between:_
+  ```gcode
+  G90 G0 X10 Y10 Z20 (Start high above the part, Z=20 is the "initial height")
 
-  `G98` (Use G98 to retract fully to Z=20, clearing the clamp)
-  `G81 Z-5 R2 F100` (Define cycle)
-  `X10 Y10` (Drill first hole, tool retracts to Z=20)
-  `X50 Y10` (Drill second hole across the clamp, tool retracts to Z=20)
-  `G80`
+  G98 (Use G98 to retract fully to Z=20, clearing the clamp)
+  G81 Z-5 R2 F100 (Define cycle)
+  X10 Y10 (Drill first hole, tool retracts to Z=20)
+  X50 Y10 (Drill second hole across the clamp, tool retracts to Z=20)
+  G80
+  ```
+* _Drilling a fast pattern on a flat plate:_
+  ```gcode
+  G90 G0 X10 Y10 Z5 (Start just above the part)
 
-* **Drilling a fast pattern on a flat plate:**
-  `G90 G0 X10 Y10 Z5` (Start just above the part)
-
-  `G99` (Use G99 to retract only to R-level for speed)
-  `G81 Z-5 R2 F100` (R-level is Z=2)
-  `X10 Y10` (Drill hole, retracts to Z=2)
-  `X20 Y10` (Drill hole, retracts to Z=2)
-  `G80`
+  G99 (Use G99 to retract only to R-level for speed)
+  G81 Z-5 R2 F100 (R-level is Z=2)
+  X10 Y10 (Drill hole, retracts to Z=2)
+  X20 Y10 (Drill hole, retracts to Z=2)
+  G80
+  ```
 
 ---
 
@@ -1275,7 +1262,7 @@ These commands control the execution and termination of a G-code program.
 > - Cutter compensation is turned off ([G40](#G40)).
 > - Overrides are enabled ([M48](#M48-M49)).
 
-#### Common Examples
+#### Examples
 * _Stop the program to allow for manual chip clearing:_
   ```gcode
   G0 Z20  
@@ -1288,7 +1275,6 @@ These commands control the execution and termination of a G-code program.
   (G-code for a finishing pass)  
   M1 (If Optional Stop is on, machine will pause here)
   ```
-
 * _Common way to end a G-code file:_   
   ```gcode
   G0 Z20 (Retract to a safe height)  
@@ -1296,52 +1282,51 @@ These commands control the execution and termination of a G-code program.
   ```
 
 > [!TIP]
-If ending a program running from an SD card with `M30`, you can enable rewind mode with [$FR](./commands#file-system) prior to starting it. A cycle start command (realtime or via a button) can then be used to restart it. A message is typically output at program end prompting for this.
+> If ending a program running from an SD card with `M30`, you can enable rewind mode with [$FR](./commands#file-system) prior to starting it. A cycle start command (realtime or via a button) can then be used to restart it. A message is typically output at program end prompting for this.
 
 ---
 
 ## `M3`, `M4`, `M5` – Spindle Control {#M3-M4-M5}
 
 **Syntax:**  
-> `M3 S-` (spindle on CW)  
-> `M4 S-` (spindle on CCW)  
+> `M3` (spindle on CW)  
+> `M4` (spindle on CCW)  
 > `M5` (spindle off)  
 
 These are the fundamental commands for controlling the spindle's rotation.
 
+<!--- add $ parameter for specifying the spindle? --->
 
 > ℹ️ **Info**
 > - **`M3` (Spindle On, Clockwise - CW):** Starts the spindle rotating in the clockwise direction (the standard direction for most right-hand tools). The speed is determined by the last active `S` word.
 > - **`M4` (Spindle On, Counter-Clockwise - CCW):** Starts the spindle rotating in the counter-clockwise direction. This is used for left-hand tools, such as some taps and specialty cutters.
 > - **`M5` (Spindle Off):** Stops the spindle's rotation.
 
+#### Examples
+* _Start the spindle at 10,000 RPM in the forward direction:_
+	```gcode
+	M3 S10000
+	```
+* _Stop the spindle:_ 
+	```gcode
+	M5
+	```
+* _Start the spindle for a left-hand thread tapping operation at 500 RPM:_
+	```gcode
+	S500
+	M4
+	```
 
-| Command | Spindle State | Direction |
-|---------|---------------|-----------|
-| **`M3 S`** | On | Clockwise (CW) |
-| **`M4 S`** | On | Counter-Clockwise (CCW) |
-| **`M5`** | Off | N/A |
-
-#### Common Examples
-* **Start the spindle at 10,000 RPM in the forward direction:**  
-  `S10000 M3`
-
-* **Stop the spindle:**  
-  `M5`
-
-* **Start the spindle for a left-hand thread tapping operation at 500 RPM:**  
-  `S500 M4`
-
-#### Tips & Tricks
-- It's good practice to command the `S` word on the same line or just before the `M3`/`M4` command.
-- The controller will wait for the spindle to reach the commanded speed before executing the next motion command if "Wait for Spindle at Speed" is enabled in the settings. This is crucial for tapping and heavy cuts.
+> [!TIP]
+> - It's good practice to command the [S](#S) word on the same line or just before the `M3`/`M4` command.
+> - The controller will wait for the spindle to reach the commanded speed before executing the next motion command if "Wait for Spindle at Speed" is enabled in the settings. This is crucial for tapping and heavy cuts.
 
 ---
 
 ## `M6` – Tool Change {#M6}
 
 **Syntax:**  
-> `M6 `
+> `M6`
 
 Initiates a tool change sequence. The behavior of `M6` is highly dependent on the machine's configuration and whether an automatic tool changer (ATC) is present, or if manual tool change protocols are enabled.
 
@@ -1355,28 +1340,24 @@ Initiates a tool change sequence. The behavior of `M6` is highly dependent on th
 > - If no specific protocol or macro is configured, `M6` may be handled directly by the sender application, or grblHAL can be configured to ignore `M6` commands.
 > - **Reference:** For more general information about M6, see [LinuxCNC documentation](https://linuxcnc.org/docs/2.5/html/gcode/m-code.html#sec:M6-Tool-Change).
 
+#### Examples
+* _Command a change to Tool #5:_
+	```gcode
+	T5 M6
+	```
+* _Simple manual tool change sequence:_
+	```gcode
+	M5 (Stop spindle)  
+	G53 G0 Z0 (Move Z to machine home)  
+	G53 G0 X0 Y0 (Move to front for access)  
+	T2 M6 (MSG, Change to tool 2) ; Select tool 2 and pause. A message "Change to tool 2" may appear in the GUI
+	M0
+	```
 
-| Parameter | Description |
-|-----------|-------------|
-| **`T`** | The tool number to be loaded. For example, `T3` selects tool #3. |
-
-#### Common Examples
-* **Command a change to Tool #5:**  
-  `T5 M6`
-
-* **Simple manual tool change sequence:**  
-  `M5` (Stop spindle)  
-  `G53 G0 Z0` (Move Z to machine home)  
-  `G53 G0 X0 Y0` (Move to front for access)  
-  `T2 M6` (Select tool 2 and pause. A message "Change to tool 2" may appear in the GUI)
-
-#### Tips & Tricks
-- The `T` word only *selects* the tool. `M6` is the command that *executes* the change.
-- The logic for the tool change process (both manual and automatic) is often defined in a system macro file, typically named `tc.macro` (tool change) or `P200.macro` (for RapidChange ATC) located on the controller's SD card or accessible by the sender. This allows for extensive customization of the tool change procedure. For an example, see projects like [Rapidchange ATC](https://services.rapidchangeatc.com/docs/).
-- After a tool change, a `G43` or `G43.1` command is typically used to apply the new tool's length offset.
-
-
----
+> [!TIP]
+> - The `T` word only *selects* the tool. `M6` is the command that *executes* the change.
+> - The logic for the tool change process (both manual and automatic) is often defined in a system macro file, typically named `tc.macro` (tool change) or `P200.macro` (for RapidChange ATC) located on the controller's SD card or accessible by the sender. This allows for extensive customization of the tool change procedure. For an example, see projects like [Rapidchange ATC](https://services.rapidchangeatc.com/docs/).
+> - After a tool change, a [G43](#G43) or `G43.1` command may be used to apply the new tool's length offset.
 
 ---
 
@@ -1389,36 +1370,31 @@ Initiates a tool change sequence. The behavior of `M6` is highly dependent on th
 
 These commands control the machine's coolant systems. In grblHAL, these are typically mapped to specific output pins which can control relays for pumps or solenoids.
 
-
 > ℹ️ **Info**
 > - **`M7` (Mist Coolant On):** Activates the mist coolant output pin. This is intended for an air/oil mist system.
 > - **`M8` (Flood Coolant On):** Activates the flood coolant output pin. This is the primary coolant command for most machines.
 > - **`M9` (Coolant Off):** Deactivates *both* the mist (`M7`) and flood (`M8`) outputs.
 
+#### Examples
+* _Turn on the flood coolant before a cutting move:_
+	```gcode
+	M8
+	G1 Z-5 F300
+	```
+* _Turn on both mist and flood (if the machine is equipped):_
+	```gcode
+	M7
+	M8 ; M7 and M8 cannot be in the same block since they are both in the same modal group
+	```
+* _Turn off all coolant at the end of the job:_
+	```gcode
+	G0 Z20
+	M9
+	```
 
-| Command | Mapped Output | Action |
-|---------|---------------|--------|
-| **`M7`** | Mist | On |
-| **`M8`** | Flood | On |
-| **`M9`** | Both | Off |
-
-#### Common Examples
-* **Turn on the flood coolant before a cutting move:**  
-  `M8`  
-  `G1 Z-5 F300`
-
-* **Turn on both mist and flood (if the machine is equipped):**  
-  `M7 M8`
-
-* **Turn off all coolant at the end of the job:**  
-  `G0 Z20`  
-  `M9`
-
-#### Tips & Tricks
-- The specific physical pins used for coolant are defined in the driver board's configuration file.
-- These outputs can be repurposed to control other accessories, like a vacuum clamp or an air blast, if coolant is not used.
-
-
+> [!TIP]
+> - The specific physical pins used for coolant are defined in the driver board's configuration file.
+> - These outputs can be repurposed to control other accessories, like a vacuum clamp or an air blast, if coolant is not used.
 
 ---
 
@@ -1430,25 +1406,20 @@ These commands control the machine's coolant systems. In grblHAL, these are typi
 
 Enables or disables the real-time feed rate, spindle speed, and rapid override switches. This allows the G-code program to enforce a specific speed or feed, preventing accidental changes by the operator.
 
-
 > ℹ️ **Info**
 > - **`M48` (Enable Overrides):** Allows the physical override switches/dials and GUI sliders to function normally. This is the default state.
 > - **`M49` (Disable Overrides):** Ignores all override controls. The machine will run at 100% of the programmed feed, rapid, and spindle speeds.
 
-
-| Command | Override State |
-|---------|----------------|
-| **`M48`** | Enabled |
-| **`M49`** | Disabled |
-
 #### Example
-* **Ensure a critical finishing pass is run at the exact programmed feed rate:**  
-  `... (roughing passes with M48 active) ...`  
-  `M49` (Disable overrides)  
-  `G1 X100 F150` (This move will be exactly 150 units/min)  
-  `... (finishing path) ...`  
-  `M48` (Re-enable overrides for the next operation)
-
+* _Ensure a critical finishing pass is run at the exact programmed feed rate:_
+	```gcode
+	... (roughing passes with M48 active) ...`  
+	M49 (Disable overrides)  
+	G1 X100 F150 (This move will be exactly 150 units/min)  
+	... (finishing path) ...`  
+	M48 (Re-enable overrides for the next operation)
+	```
+	
 ---
 
 ## `M50`, `M51`, `M53` – Feed, Spindle, Rapid Override Control {#M50-M51-M53}
@@ -1460,7 +1431,6 @@ Enables or disables the real-time feed rate, spindle speed, and rapid override s
 
 These commands provide granular control over enabling or disabling specific override functions (feed rate, spindle speed, rapid rate). This is in contrast to `M48`/`M49` which enable/disable all overrides simultaneously.
 
-
 > ℹ️ **Info**
 > - **Non-Modal:** These commands are executed immediately upon being read.
 > - **Purpose:** Allow a G-code program to selectively prevent operator override of feed rate, spindle speed, or rapid rate for critical operations. This ensures predictable machine behavior.
@@ -1470,28 +1440,24 @@ These commands provide granular control over enabling or disabling specific over
 > - **Re-enabling:** To re-enable these overrides, the corresponding `M48` command (Enable Overrides) would typically be used, or a specific override enable M-code if supported by a plugin. In a standard grblHAL configuration, `M48` re-enables all of them.
 > - **Reference:** For more details, see the [LinuxCNC M-code documentation on M50-M53](https://linuxcnc.org/docs/2.5/html/gcode/m-code.html#sec:M50-Feed-Override).
 
+#### Examples
+* _Run a critical finishing pass with exact programmed feed and spindle speed:_
+	```gcode
+	M50 M51 (Disable feed and spindle overrides)  
+	G1 X100 F150 S5000 M3 (Ensures exact feed and speed)  
+	(Finishing path)`  
+	M48 (Re-enable all overrides)
+	```
+* _Prevent rapid moves from being slowed down during a tool change sequence:_
+	```gcode
+	M53  
+	G53 G0 X0 Y0 Z0 (Rapid moves will be at full speed)  
+	M48
+	```
 
-| Command | Action |
-|---------|--------|
-| **`M50`** | Disable Feed Rate Override |
-| **`M51`** | Disable Spindle Speed Override |
-| **`M53`** | Disable Rapid Override |
-
-#### Common Examples
-* **Run a critical finishing pass with exact programmed feed and spindle speed:**  
-  `M50 M51` (Disable feed and spindle overrides)  
-  `G1 X100 F150 S5000 M3` (Ensures exact feed and speed)  
-  `(Finishing path)`  
-  `M48` (Re-enable all overrides)
-
-* **Prevent rapid moves from being slowed down during a tool change sequence:**  
-  `M53`  
-  `G53 G0 X0 Y0 Z0` (Rapid moves will be at full speed)  
-  `M48`
-
-#### Tips & Tricks
-- Use these commands sparingly and only when absolute control over speed or feed is required, as they limit operator intervention.
-- Always remember to re-enable overrides with `M48` after the critical operation is complete.
+> [!TIP]
+> - Use these commands sparingly and only when absolute control over speed or feed is required, as they limit operator intervention.
+> - Always remember to re-enable overrides with `M48` after the critical operation is complete.
 
 ---
 
@@ -1512,18 +1478,19 @@ This is a special grblHAL extension command used to enable or disable the contro
 
 | Parameter | Description |
 |-----------|-------------|
-| **`P1`** | Enable parking motion. |
-| **`P0`** | Disable parking motion. |
+| **`P`**   | `0` - disable parking motion, `1` - enable parking motion. |
 
 #### Example
-* **Temporarily disable parking motion during a critical part of a program:**  
-  `M56 P0` (Disable parking)  
-  `(Critical cutting moves)`  
-  `M56 P1` (Re-enable parking)
+* _Temporarily disable parking motion during a critical part of a program:_
+	```gcode
+	M56 P0 (Disable parking)  
+	(Critical cutting moves)`  
+	M56 P1 (Re-enable parking)
+	```
 
-#### Tips & Tricks
-- Use `M56` when you need to prevent the machine from automatically moving to a park position during operations where such a move would be undesirable or unsafe.
-- Always re-enable parking motion when it's safe and beneficial, such as before tool changes or at program end.
+> [!TIP]
+> - Use `M56` when you need to prevent the machine from automatically moving to a park position during operations where such a move would be undesirable or unsafe.
+> - Always re-enable parking motion when it's safe and beneficial, such as before tool changes or at program end.
 
 ---
 
@@ -1550,12 +1517,14 @@ These are advanced commands for controlling digital output pins, either synchron
 | **`M65 P`** | Turn Output `n` OFF | Immediate |
 
 #### Synchronized Example (Laser Engraving)
-* **Turn on the laser just as the cut starts, and turn it off just as it ends:**  
-  `G0 X10 Y10` (Move to start position)  
-  `M62 P1` (Queue "Laser ON" for output pin 1)  
-  `G1 X20 F500` (Laser turns on at the start of this move)  
-  `M63 P1` (Queue "Laser OFF")  
-  `G0 X30` (Laser turns off at the start of this rapid move)
+* _Turn on the laser just as the cut starts, and turn it off just as it ends:_
+	```gcode
+	G0 X10 Y10 (Move to start position)  
+	M62 P1 (Queue "Laser ON" for output pin 1)  
+	G1 X20 F500 (Laser turns on at the start of this move)  
+	M63 P1 (Queue "Laser OFF")  
+	G0 X30 (Laser turns off at the start of this rapid move)
+	```
 
 > [!IMPORTANT]
 > The plasma plugin may shadow some outputs when its [virtual outputs](/docs/reference/plugins#virtual-ports) are enabled.
@@ -1568,7 +1537,7 @@ These are advanced commands for controlling digital output pins, either synchron
 > `M66 E- <L->`  
 > `M66 P- L- <Q->`  
 
-This command pauses program execution until a specified input pin changes state, or a timeout occurs. It is supported if auxiliary inputs (analog or digital) are available and configured.
+This command pauses program execution until a specified input pin changes state, or a timeout occurs. It is supported if auxiliary inputs (analog or digital) are available and configured. The value read is stored in parameter [5399](./parameters/#predefined-numbered-parameters) and output in the next [status report](./commands#status-report-fields) in the `In:` field. If the read failed the value is set to `-1`.
 
 > ℹ️ **Info**
 > - **Non-Modal:** Executed when encountered.
@@ -1592,38 +1561,40 @@ This command pauses program execution until a specified input pin changes state,
 	M66 P2 L3 Q10` 
 	(Program will pause here until pin 2 goes high or 10s passes)
 	```
- 
+
 ---
 
 ## `M67`, `M68` – Set Analog Output {#m67-m68}
 
 **Syntax:**  
-> `M67 P- Q-` (synchronized analog output)  
-> `M68 P- Q-` (asynchronous analog output)  
+> `M67 E- Q-` (synchronized analog output)  
+> `M68 E- Q-` (asynchronous analog output)  
 
 These commands control analog output pins, either synchronized with motion or immediately. They are supported if analog outputs are available and configured.
 
 > ℹ️ **Info**
 > - **Non-Modal:** Executed when encountered.
 > - **Requires Analog Output:** These commands are only functional if your grblHAL setup has auxiliary analog outputs available and configured.
-> - **`P`**: The analog output pin number to control.
+> - **`E`**: The analog output pin number to control.
 > - **`Q`**: The target analog value. Typically, `Q0` is minimum, and `Q255` (for 8-bit) or `Q1023` (for 10-bit) is maximum, depending on the DAC resolution.
 > - **`M67` (Synchronized):** The analog output change is queued with motion commands. The output will switch its state at the *exact moment* the next motion command begins. This is useful for laser power control or material flow.
 > - **`M68` (Asynchronous):** The analog output change happens immediately when the command is read, without waiting for motion. This is for general-purpose analog control.
 
 
-| Command | Action | Timing |
-|---------|--------|----------|
-| **`M67 P Q`** | Set Analog Output `n` to `value` | Synchronized with next motion |
-| **`M68 P Q`** | Set Analog Output `n` to `value` | Immediate |
+| Parameter | Description |
+|:---------:|:------------|
+| **`E`**   | Analog output pin number |
+| **`Q`**   | Value to set   |
 
 #### Synchronized Example (Laser Power Control)
-* **Set laser power (on analog output 0) just as the cut starts, and turn it off just as it ends:**  
-  `G0 X10 Y10` (Move to start position)  
-  `M67 P0 Q150` (Queue "Laser Power 150" for analog output 0)  
-  `G1 X20 F500` (Laser power sets to 150 at the start of this move)  
-  `M67 P0 Q0` (Queue "Laser Power OFF")  
-  `G0 X30` (Laser turns off at the start of this rapid move)
+* _Set laser power (on analog output 0) just as the cut starts, and turn it off just as it ends:_
+	```gcode
+	G0 X10 Y10 (Move to start position)  
+	M67 E0 Q150 (Queue "Laser Power 150" for analog output 0)  
+	G1 X20 F500 (Laser power sets to 150 at the start of this move)  
+	M67 E0 Q0 (Queue "Laser Power OFF")  
+	G0 X30 (Laser turns off at the start of this rapid move)
+	```
 
 > [!IMPORTANT]
 > The plasma plugin may shadow some outputs when its [virtual outputs](/docs/reference/plugins#virtual-ports) are enabled.
@@ -1649,80 +1620,35 @@ These are powerful but advanced M-codes that allow the controller to save and re
 > - **`M72` (Restore Modal State):** Pops the last saved state from the memory stack, restoring the machine to exactly how it was before the `M70` call.
 > - **`M73` (Save and Auto-Restore):** A more advanced feature used for subprograms.
 
-
 #### Example: A Safe Probing Macro
 Imagine you have a macro to find the center of a hole. This macro needs to use `G91` (incremental mode) and `G1` with a specific feed rate. However, the main program might be running in `G90` with a different feed rate. Using `M70`/`M72` ensures the macro doesn't mess up the main program's state.
+* _Macro G-code (`find_center.nc`):_
+	```gcode
+	M70 (Save the state of the main program)
 
-* **Macro G-code (`find_center.nc`):**  
-  `M70` (Save the state of the main program)
+	G91 G1 F100 (Switch to incremental, set a slow feed rate for probing)  
+	(G-code for probing in X and Y to find the center...)`
 
-  `G91 G1 F100` (Switch to incremental, set a slow feed rate for probing)  
-  `(G-code for probing in X and Y to find the center...)`
-
-  `M72` (Restore the original state. The machine is now back in G90/G91, G54, etc., with its original feed rate)
-
+	M72 (Restore the original state. The machine is now back in G90/G91, G54, etc., with its original feed rate)
+	```
 
 ---
 
-## `M98`, `M99` – Subroutine Call & Return {#M98-M99}
-
-**Syntax:**
-> `M98 P- <L->` (Call Subprogram)
-> `M99` (Return)
-
-Executes a subprogram (a separate block of G-code or an external file) and then returns to the main program.
-
-
-> ℹ️ **Info**
-> - **`M98 P`:** Jumps to the subroutine with the specified number.
-> - If **Scan Current (`$700=1`)** is enabled, it first looks for a label `O sub` in the current file.
-> - If not found (or `$700=0`), it looks for an external file named `xxx` (or `xxx.nc`, `xxx.gcode`, etc.) on the SD card/filesystem.
-> - **`L`:** Optional repeat count. The subroutine will run **`L`** times before returning.
-> - **`M99`:** Marks the end of the subroutine. Control returns to the line following the `M98` call.
-> - If `M99` is used in the main program (not in a sub), it acts as a "Rewind and Loop" command, jumping back to the beginning of the file.
-
-
-| Parameter | Description
-|-----------|-------------|
-| **`P`** | The subroutine number or filename to call. |
-| **`L`** | (Optional) Number of times to repeat the subroutine. |
-
-#### Examples
-*   **External Subroutine:**
-    *   `M98 P1001` (Calls file `1001.gcode` from SD card)
-*   **Internal Subroutine (with `$700=1`):**
-    ```gcode
-    M98 P100 L3   ; Call sub 100 three times
-    M30           ; End main program
-
-    O100 sub      ; Define subroutine 100
-    G91 G0 X10    ; Move X
-    M99           ; Return
-    ```
-
-
-## `M98` – Subprogram Call
+## `M98` – Subprogram Call {#M98}
 
 **Syntax:**
 > `M98 P- <L->`
 
-Call a [subprogram](/docs/reference/o-code#m98).
+Call a [subprogram](./o-code#M98).
 
 ---
 
-## `M99` – Return from Subprogram
+## `M99` – Return from Subprogram {#M98}
 
 **Syntax:**  
 > `M99 `
 
-Marks the [end of a subprogram](/docs/reference/o-code#m99-return-from-subprogram) and returns execution to the main program or the calling subprogram.
-
-#### Example
-* **Returning from a tool change macro:**  
-  `(Inside tc.macro or P200.macro)`  
-  `...`  
-  `G53 G0 X-50 Y-50 Z-5` (Move to tool change position)  
-  `M99` (Return to main program after tool change)
+Marks the [end of a subprogram](./o-code#M98) and returns execution to the main program or the calling subprogram.
 
 ---
 

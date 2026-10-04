@@ -2504,8 +2504,13 @@ If the module is already configured for correct operation (baud rate set to 1152
 
 ---
 
-## `$378` - `$373` – Laser plugin settings {#378--383}
-These are settings for (CO2) lasers, they are provided by the [Laser plugin](/docs/reference/plugins#laser-settings).
+## `$384` – G92 Persistence {#384}
+TBC
+
+---
+
+## `$385` – Keep Last Tool {#385}
+Enables the persistence of the last used tool number across restarts.
 
 ---
 

@@ -667,7 +667,7 @@ When you send `?`, status reports are streamed back. The format is a structured 
     -   `Run:`: `1`=Feed hold pending, `2`=Probing.
     -   `Alarm:`: Current alarm code (always added for `0x87` report).
 
-## Report Fields
+## Report Fields {#status-report-fields}
 
 | Field | Description | Format/Details |
 |:------------:| :--- | :--- |

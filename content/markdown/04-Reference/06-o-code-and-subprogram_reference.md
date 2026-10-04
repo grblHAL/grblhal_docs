@@ -25,7 +25,7 @@ There are five kinds of subprograms available in grblHAL, callable via `G65`, `G
 
 ## G65 and G66
 
-#### Numbered parameters passed as arguments to G65 and G66 subprograms
+#### Numbered parameters passed as arguments to G65 and G66 subprograms {#G65-G66-arguments}
 
 | Word | Parameter | Word | Parameter | Word | Parameter |
 |------|-----------|------|-----------|------|-----------|
@@ -40,37 +40,37 @@ There are five kinds of subprograms available in grblHAL, callable via `G65`, `G
 > ℹ️ **Info**
 > Parameters not set by the caller are set to 0 by the parser prior to the call.
 
-## G65
+## G65 {#G65}
 
-Syntax: `G65 P- [L-] [A- B- C- ...]`
+Syntax: `G65 P- <L-> <A- B- C- ...>`
 
 | Parameter | Description |
 |-----------|-------------|
-| **P** | The number of the subprogram (e.g., `P100` runs the `P100.macro`). |
-| **L** | **Optional:** Repeat count, default `1`. The macro will be run `L` times. (Available since build 20260125). |
-| **A, B, C, X, Y, Z...** | Values to be passed to the subprogram. These become local variables inside the macro. |
+| **`P`** | The number of the subprogram (e.g., `P100` runs the `P100.macro`). |
+| **`L`** | **Optional:** Repeat count, default `1`. The macro will be run `L` times. (Available since build 20260125). |
+| **`A`, `B`, `C`, `...`** | Values to be passed to the subprogram. These become [local parameters](#G65-G66-arguments) inside the macro. |
 
 `G65` is non-modal and is executed by running the external subprogram `P<number>.macro` `L` number of times.
 
-## G66
+## G66 {#G66}
 
-`G66 P- [A- B- C- ...]`
+`G66 P- <A- B- C- ...>`
 
 | Parameter | Description |
-|-----------|-------------|
-| **P** | The number of the subprogram (e.g., `P100` runs the `P100.macro`). |
-| **A, B, C, X, Y, Z...** | Values to be passed to the subprogram. These become local variables inside the macro. |
+|:---------:|:------------|
+| **`P`** | The number of the subprogram (e.g., `P100` runs the `P100.macro`). |
+| **`A`, `B`, `C`, `...`** | Values to be passed to the subprogram. These become [local parameters](#G65-G66-arguments) inside the macro. |
 
 `G66` is modal, it will run `P<number>.macro` for each block _following_ the `G66` block until a `G67` block is encountered. The initial `G66` will only set the local parameters from the arguments passed, and each subsequent execution will run the actual code with the supplied parameter values even if they are changed within the subprogram.
 
-## M98
+## M98 {#M98}
 
-Syntax: `M98 P- [L-]` 
+Syntax: `M98 P- <L->`
 
 | Parameter | Description |
 |-----------|-------------|
-| **P** | The number of the internal subprogram. |
-| **L** | **Optional:** Repeat count, default `1`. The macro will be run `L` times. (Available from build 20260125). |
+| **`P`** | The number of the internal subprogram. |
+| **`L`** | **Optional:** Repeat count, default `1`. The macro will be run `L` times. (Available from build 20260125). |
 
 `M98` will run a subprogram embedded in the main program or an external program depending on the [$700](/docs/reference/settings#700) setting. When configured for running an embedded routine the whole program is scanned for subprograms which are to be delimited by `O<number>` and `M99`. Embedded subprograms may be placed anywhere in the program but normal practice is to embed them after the main program code. If not configured for running an embedded routine it will run the external program `P<number>.macro`.
 
@@ -79,30 +79,30 @@ Syntax: `M98 P- [L-]`
 
 <sup>1</sup> In check mode non-inbuilt `G65` macros will not be run, only file availability will be checked.
 
-## `M99` – Return from Subprogram
+## `M99` – Return from Subprogram {#M99}
 
 **Syntax:**  
-> `M99 `
+> `M99`
 
 Marks the end of a subprogram and returns execution to the main program or the calling subprogram.
-
 
 > ℹ️ **Info**
 > - **Purpose:** This command is essential for controlling program flow when using subprograms.
 > - **`G65` Calls:** `M99` is used to return from a `G65` subprogram call, restoring the modal state and returning to the line immediately after the `G65` call.
-> - **`tc.macro`:** If your tool change (`M6`) logic is implemented as a macro (e.g., `tc.macro` or `P200.macro` for RapidChange ATC), `M99` is used at the end of that macro to return control to the main G-code program.
-> - **Optional `P` word:** The optional `P` word is typically used to specify the line number within the calling program to return to, but its specific implementation can vary.
-
+> - **`tc.macro`:** If your tool change (`M6`) logic is implemented as a macro (e.g., `tc.macro` or `P200.macro` for RapidChange ATC), `M99` is 
+> - Do not use `M99` to return from `O SUB` ... `O ENDSUB` subprograms or subprograms called by `O CALL`, it may lead to unpredicable results.
 
 #### Example
-* **Returning from a tool change macro:**  
-  `(Inside tc.macro or P200.macro)`  
-  `...`  
-  `G53 G0 X-50 Y-50 Z-5` (Move to tool change position)  
-  `M99` (Return to main program after tool change)
+* _Returning from a tool change macro:_
+	```gcode
+	(Inside tc.macro or P200.macro) 
+	...
+	G53 G0 X-50 Y-50 Z-5 (Move to tool change position)  
+	...
+	M99 (Return to main program after tool change)
+	```
 
-
-## O CALL
+## O CALL  {#O-CALL}
 
 Subprogram code must be delimited by `O- SUB` and `O- ENDSUB`. To exit a subprogram early, or return a value, use the `RETURN[]` statement. Do **not** terminate a subprogram with `M2` or `M30` as this will likely cause issues.  
 If a value is returned the parameter `_value_returned` is set to `1` and `_value` to the returned value, if not `_value_returned` is set to `0`.  
@@ -274,7 +274,7 @@ Call from the senders MDI or gcode program:
 
 ## Built in G65 subprograms
 
-### G65P1
+### G65P1 {#G65P1}
 
 **Syntax:** `G65P1Q-`
 
@@ -282,10 +282,9 @@ Read numeric setting value. Alternatively the `PRM[]` function can be used.
 
 | Parameter | Description         |
 |-----------|---------------------|
-| **Q**     | The setting number. |
+| **`Q`**   | The setting number. |
 
 If the setting exists and is numerical `_value_returned` is set to `1` and `_value` to the setting value, if not `_value_returned` is set to `0`.  
-
 **Examples:**
 ```gcode
 ; Read current X-axis max rate ($110)
@@ -309,8 +308,8 @@ Set numeric setting value. Available from build 20251028.
 
 | Parameter | Description         |
 |-----------|---------------------|
-| **Q**     | The setting number. |
-| **S**     | The new value.      |
+| **`Q`**   | The setting number. |
+| **`S`**   | The new value.      |
 
 If the setting exists, is numerical, and the value is allowed `_value_returned` is set to `1` and `_value` to the new setting value, if not `_value_returned` is set to `0`.  
 
@@ -322,7 +321,7 @@ G65 P1 Q110 S5000
 (PRINT, X-axis max rate: #100 mm/min)
 ```
 
-### G65P2
+### G65P2 {#G65P2}
 
 **Syntax:** `G65P2Q-R-`
 
@@ -330,8 +329,8 @@ Read tool offset from tool table.
 
 | Parameter | Description                    |
 |-----------|--------------------------------|
-| **Q**     | The tool number.               |
-| **R**     | Axis number. 0 = X, 1 = Y, ... |
+| **`Q`**   | The tool number.               |
+| **`R`**   | Axis number. 0 = X, 1 = Y, ... |
 
 If a tool table is present and the tool is available `_value_returned` is set to `1` and `_value` to the axis offset, if not `_value_returned` is set to `0`.  
 
@@ -343,7 +342,7 @@ G65 P2 Q3 R2
 (PRINT, Tool 3 Z offset: #100 mm)
 ```
 
-### G65P4
+### G65P4 {#G65P4}
 
 **Syntax:** `G65P4`
 
@@ -368,7 +367,7 @@ o100 IF [#<_value> NE 0]
 o100 ENDIF
 ```
 
-### G65P5
+### G65P5 {#G65P5}
 
 **Syntax:** `G65P5Q-`
 
@@ -376,7 +375,7 @@ Select probe input, available from build 20250514.
 
 | Parameter | Description   |
 |-----------|---------------|
-| **Q**     | The probe id. |
+| **`Q`**   | The probe id. |
 
 | Probe id | Description     |
 |----------|-----------------|
@@ -399,7 +398,7 @@ G65 P5 Q1
 G38.2 Z-100 F50  ; Probe tool length
 ```
 
-### G65P6
+### G65P6 {#G65P6}
 
 **Syntax:** `G65P6`
 
@@ -418,7 +417,7 @@ M3 S10000  ; Start spindle
 G1X100F300  ; Starts cutting immediately, no delay
 ```
 
-### G65P7
+### G65P7 {#G65P7}
 
 **Syntax:**  
 `G65P7 S- F- R- <X->` for function codes 1-4.  
@@ -430,13 +429,13 @@ Send Modbus message, available from build 20260215.
 
 | Parameter | Description                    |
 |-----------|--------------------------------|
-| **S**     | Modbus server address              |
-| **F**     | Modbus function code, 1-7, 16 and 17 are supported  |
-| **R**     | Register base address  |
-| **X**     | Nnumber of registers or bits to read or write |
-| **A**     | First value |
-| **B**     | Second value |
-| **C**     | Third value |
+| **`S`**   | Modbus server address |
+| **`F`**   | Modbus function code, 1-7, 16 and 17 are supported  |
+| **`R`**   | Register base address  |
+| **`X`**   | Number of registers or bits to read or write |
+| **`A`**   | First value |
+| **`B`**   | Second value |
+| **`C`**   | Third value |
 
 Allowed range the X parameter is for 1 - 3 for function codes 3 and 4 and 1 - 16 for function codes 1, 2 and 15. Defaults to 1.  
 
@@ -444,7 +443,6 @@ On exceptions `_value_returned` is set to `0` and `_value` to the exception code
 On success `_value_returned` is set to the number of values received and `_value`, `_value2` and `_value3` is set accordingly.
 
 #### Supported Modbus Function Codes:  
-
 
 Resources:
 - [Modbus Protocol Specification](https://www.modbustools.com/modbus.html)
