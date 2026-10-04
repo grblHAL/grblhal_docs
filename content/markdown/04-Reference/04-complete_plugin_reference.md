@@ -33,7 +33,7 @@ The FS Stream plugin sits on top of VFS and provides a number of $-commands for 
 | **`$FU`**         | Unmount SD card |
 | **`$FD=[file]`**  | Delete file |
 
-The commands are documented in more detail [here](/docs/reference/commands#file-system-commands).
+The commands are documented in more detail [here](./commands#file-system).
 
 #### Examples:
 ```gcode

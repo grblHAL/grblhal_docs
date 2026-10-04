@@ -495,7 +495,7 @@ The Embedded filing system is read only and is added to flash at compile time.
 ### RAM
 The RAM filing system uses the heap to store transient data. Typically files are automatically deleted after first read.
 
-### File System Commands
+### File System Commands {#file-system}
 These commands allow navigation and management of the file system.
 
 | Command           | Description |
@@ -611,12 +611,12 @@ Alters the programmed spindle speed (`S`).
 | `0x9C` | **+1%** | Increases spindle override by 1%. |
 | `0x9D` | **-1%** | Decreases spindle override by 1%. |
 
-### Spindle Stop Override
+### Spindle Stop Override {#spindle-stop-override}
 | Hex | Command | Description |
 | :---: | :--- | :--- |
 | `0x9E` | **Toggle&nbsp;Spindle&nbsp;Stop** | - **Only valid in HOLD state.** - Toggles the spindle On/Off while paused. - **Safety:** Ignored during motion to prevent crashing. - **Resume:** When Cycle Start (`~`) is issued, the spindle automatically restores its previous state. The system waits 4.0 seconds (configurable) for the spindle to spin up before resuming motion. |
 
-### Coolant Overrides
+### Coolant Overrides {#coolant-overrides}
 Toggles coolant states directly.
 -   **State:** Valid in standard states (Idle, Run, Hold).
 -   **Parser Update:** These commands **update the modal state** of the G-code parser. A `$G` report will reflect the change.
