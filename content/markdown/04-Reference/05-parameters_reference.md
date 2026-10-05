@@ -4,6 +4,8 @@ slug: reference/parameters
 
 # Parameters (variables)
 
+## Introduction
+
 grblHAL supports parameters in the format defined by RS247/NGC. There are three basic types of parameters: numbered, named with local scope and named with global scope. Numbered parameters in the range 1 - 5000 are volatile and will not survive a reboot, 5001 - 5599 are predefined and are read-only. There are also a number of global predefined read-only named parameters.
 
 All predefined parameters defined in NIST RS274NGC version 3 (ref section 3.2.1) are implemented.  
@@ -23,16 +25,16 @@ To set a parameter use the `#` character followed by `=` and a value, a paramete
 #_avalue=#100
 ```
 
-### Scope
+## Parameter Scope
 
-Non-global named parameters and numbered parameters in the range 1-31 defined within a subroutine (call level) are local to the subroutine and goes out of scope when the the routine exits. Numbered parameters in the range 1-31 passed to a subroutine (`G65`, `G66` or `O- CALL`) are local to the called routine and will return to their original values when it returns.
+Non-global named parameters and numbered parameters in the range 1-31 defined within a subprogram (call level) are local to the subprogram and goes out of scope when the the routine exits. Numbered parameters in the range 1-31 passed to a subprogram ([`G65`](./o-code#G65), [`G66`](./o-code#G65) or [`O-CALL`](./o-code#O-CALL)) are local to the called routine and will return to their original values when it returns.
 
-### Default value
+## Default Value
 
 Uninitialized numbered parameters returns 0, uninitialized named parameters an error.  
 Presence of named parameters can be checked for by the `EXIST[]` [function](/docs/reference/o-code#functions).
 
-#### Predefined numbered parameters
+## Predefined Numbered Parameters
 
 | Parameters  | Usage                                                    | Persistent              |
 |-------------|----------------------------------------------------------|-------------------------|
@@ -58,7 +60,7 @@ Presence of named parameters can be checked for by the `EXIST[]` [function](/doc
 | 5420 - 5427 | Current position including all offsets \(X, Y, Z, ...\). | No                      |
 | 5599        | Debug output, 1 if enabled else 0.                       | Yes                     |
 
-#### Predefined named parameters
+## Predefined Named Parameters
 
 | Name                 | Usage                                                              | Comment                   |
 |----------------------|--------------------------------------------------------------------|---------------------------|
@@ -116,9 +118,9 @@ Presence of named parameters can be checked for by the `EXIST[]` [function](/doc
 | _current_pocket      | Same value as *_current_tool* unless file based tooltable enabled. | Available from 20250618.  |
 | _selected_tool       | Current value of T.                                                | Default -1.               |
 | _selected_pocket     | Same value as *_selected_tool* unless file based tooltable enabled.| Available from 20250618.  |
-| _value               | Return value from the last G65 macro or O subroutine call.         | Set to 0 on entry.        |
-| _value_returned      | 1 if last G65 macro or subroutine call returned a value, 0 if not. |                           |
-| _call_level          | Current nesting level for G65 macro calls or O subroutines.        |                           |
+| _value               | Return value from the last G65 macro or O subprogram call.         | Set to 0 on entry.        |
+| _value_returned      | 1 if last G65 macro or subprogram call returned a value, 0 if not. |                           |
+| _call_level          | Current nesting level for G65 macro calls or O subprograms.        |                           |
 | _probe_state         | Current probe input state. -1 if not available.<sup>2</sup>        | Available from 20250116.  |
 | _probe2_state        | Current probe 2 input state. -1 if not available.<sup>2</sup>      | Available from 20251018.  |
 | _active_probe        | Current active probe. -1 if not available.<sup>2</sup>             | Available from 20260125.  |
@@ -128,9 +130,11 @@ Presence of named parameters can be checked for by the `EXIST[]` [function](/doc
 | _tool_table_size     | Tool table size, 0 if not enabled.<sup>2</sup>                     | Available from 20250731.  |
 | _free_memory         | Free memory in KBytes, -1 if not available.<sup>2</sup>            | Available from 20251102.  |
 
-### Comments with parameter substitution
+## Comments with Parameter Substitution
 
 Numbered and named parameters referenced in the comment string will be substituted in the generated output.
+
+<!-- document formatting -->
 
 `(print, ...)`
 
@@ -157,7 +161,7 @@ outputs
 
 when metric mode \(G21\) is on and the current coordinate system is G54.
 
-### Generate error with user defined message
+## Generate Error with User Defined Message
 
 `(abort, ...)`
 

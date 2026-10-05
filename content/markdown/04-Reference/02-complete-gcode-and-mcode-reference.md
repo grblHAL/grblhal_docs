@@ -71,6 +71,9 @@ Use the table of contents on the right to navigate, or use your browser's search
 
 ## Syntax {#syntax}
 
+#### `axisletters` - Axis letters {#axisletters}
+One or more axis letter: `X`, `Y`, `Z`, `A`, `B`, `C`, `U`, `V` or `W` from the range supported by the firmware.  
+
 #### `axes` - Axis words {#axes}
 One or more axis letter: `X`, `Y`, `Z`, `A`, `B`, `C`, `U`, `V` or `W` from the range supported by the firmware followed by a value.
 
@@ -151,14 +154,18 @@ Moves the machine at the maximum possible travel speed to a specified coordinate
 | [axes](#axes) | Target coordinates. If no axis words are supplied the motion modal state is set. |
 
 #### Examples
-* **Move to X=100, Y=50 in machine rapids (absolute mode):**  
-  `G90 G0 X100 Y50`
-
-* **Move Z axis up by 10mm and rotate A axis to 90 degrees rapidly (incremental mode):**  
-  `G91 G0 Z10 A90`
-
-* **Full rapid move of a 5-axis machine:**  
-  `G90 G0 X15.5 Y32.75 Z-2.0 B45 C-180`
+* _Move to X=100, Y=50 in machine rapids (absolute mode):_
+	```gcode
+	G90 G0 X100 Y50
+	```
+* _Move Z axis up by 10mm and rotate A axis to 90 degrees rapidly (incremental mode):_
+	```gcode
+	G91 G0 Z10 A90
+	```
+* _Full rapid move of a 5-axis machine:_
+	```gcode
+	G90 G0 X15.5 Y32.75 Z-2.0 B45 C-180
+	```
 
 > [!TIP]
 > - Always ensure the path is clear before executing a `G0` command to avoid collisions. It's common practice to retract the Z-axis to a safe height first.
@@ -184,13 +191,18 @@ Moves the machine in a straight line at a defined feed rate (`F`). This is the p
 
 #### Examples
 * _Cut a straight line to X=200 at a feed rate of 500 mm/min:_  
-  `G1 X200 F500`
-
-* **Perform a 4-axis tapered cut:**  
-  `G1 X100 A30 F300`
-
-* **Complex 6-axis move:**  
-  `G1 X50 Y25 Z-5 A90 B45 C180 F150`
+	```gcode
+	G1 X200 F500
+	```
+* _Perform a 4-axis tapered cut:_
+	```gcode
+	G1 X100 A30 F300
+	```
+* _Complex 6-axis move:_
+	```gcode
+	F150
+	G1 X50 Y25 Z-5 A90 B45 C180
+	```
 
 > [!TIP]
 > - The `F` value is modal. Once you set it, all subsequent `G1` moves will use that feed rate until a new `F` value is commanded.
@@ -215,10 +227,10 @@ Moves the machine along a circular arc (`G2` = Clockwise, `G3` = Counter-Clockwi
 
 | Parameter | Description |
 |-----------|-------------|
-| **X, Y, Z** | The destination coordinates of the arc on the selected plane. |
-| **I, J, K** | **Offset Mode:** The X, Y, or Z offset from the *start point* to the arc's *center point*. `I` for X, `J` for Y, `K` for Z. Only the two axes on the active plane are used (e.g., `I` and `J` for the [G17](#G17-G18-G19) XY plane). |
-| **R** | **Radius Mode:** The radius of the arc. Positive `R` for arcs  180°. |
-| **P** | **Optional:** Number of full circles to make. See also the LinuxCNC documentation - the initial circle does not have to be complete. http://linuxcnc.org/docs/html/gcode/g-code.html#gcode:g2-g3 |
+| **`X, Y, Z`** | The destination coordinates of the arc on the selected plane. |
+| **`I, J, K`** | **Offset Mode:** The X, Y, or Z offset from the *start point* to the arc's *center point*. `I` for X, `J` for Y, `K` for Z. Only the two axes on the active plane are used (e.g., `I` and `J` for the [G17](#G17-G18-G19) XY plane). |
+| **`R`** | **Radius Mode:** The radius of the arc. Positive `R` for arcs  180°. |
+| **`P`** | **Optional:** Number of full circles to make. See also the LinuxCNC documentation - the initial circle does not have to be complete. http://linuxcnc.org/docs/html/gcode/g-code.html#gcode:g2-g3 |
 
 #### `IJK` (Offset) Mode Example
 * _Cut a 90° clockwise arc in the XY plane from (0,0) to (10,10) with the center at (10,0):_
@@ -264,7 +276,7 @@ Pauses the machine for a specified period of time. Any buffered motion is comple
 
 | Parameter | Description |
 |-----------|-------------|
-| **P** | Dwell time in seconds. |
+| **`P`**   | Dwell time in seconds. |
 
 #### Examples
 * _Pause for 2.5 seconds:_  
@@ -298,15 +310,14 @@ These commands enable the machine to move along complex curves defined by contro
 > - **`G5.1` (Cubic Spline):** Defines a cubic spline segment. This provides even greater control over the curve's shape, often using multiple control points.
 > - **Reference:** For more detailed syntax and usage, refer to the [LinuxCNC documentation](http://linuxcnc.org/docs/html/gcode/g-code.html#gcode:g5).
 
-
 | Parameter | Description |
 |-----------|-------------|
-| **X, Y, Z** | End point of the spline segment. |
-| **I, J, K, L** | Control points for shaping the spline. The specific combination depends on the spline type and implementation. |
-| **P** | For `G5`, defines the second control point (intermediate point). |
+| **`X, Y, Z`** | End point of the spline segment. |
+| **`I, J, K, L`** | Control points for shaping the spline. The specific combination depends on the spline type and implementation. |
+| **`P`** | For `G5`, defines the second control point (intermediate point). |
 
 #### Example
-* _Creating smooth curves using a quadratic spline:_
+* _Creating smooth curves using quadratic splines:_
 	```gcode
 	G90 G17
 	G0 X0 Y0
@@ -335,11 +346,6 @@ These commands are used exclusively in lathe operations to define whether X-axis
 > - **Modal:** Part of the Lathe Diameter Mode group. Only active if grblHAL is configured with lathe support (setting [$32=2](settings#32)).
 > - **`G7` (Diameter Mode):** All X-axis coordinates and movements are interpreted as diameters. If you command `G1 X50`, the tool moves to a position where the workpiece diameter will be 50 units.
 > - **`G8` (Radius Mode):** All X-axis coordinates and movements are interpreted as radii. If you command `G1 X25`, the tool moves to a position where the workpiece radius will be 25 units (meaning a 50-unit diameter).
-
-| Command | X-Axis Interpretation |
-|---------|-----------------------|
-| **`G7`** | Diameter             |
-| **`G8`** | Radius               |
 
 #### Examples
 * _Turn a shaft to a 20mm diameter:_
@@ -496,11 +502,6 @@ Sets the G-code interpreter's units for all position, feed rate, and offset data
 > - **`G20`**: Inches. All values are interpreted as inches, and feed rates are in inches/minute.
 > - **`G21`**: Millimeters. All values are interpreted as millimeters, and feed rates are in mm/minute.
 
-| Command | System Units  |
-|---------|---------------|
-| **`G20`** | Inches      |
-| **`G21`** | Millimeters |
-
 #### Examples
 * _Set the machine to work in millimeters:_ 
 	```gcode
@@ -523,10 +524,8 @@ Sets the G-code interpreter's units for all position, feed rate, and offset data
 ## `G28`, `G30` – Go to Pre-Defined Position {#G28-G30}
 
 **Syntax:**  
-> `G28`  
-> `G28 axes`
-> `G30`  
-> `G30 axes`
+> `G28 <axes>`  
+> `G30 <axes>`  
 
 Commands the machine to perform a rapid move to a stored, user-defined position. This is often used as a safe "home" or tool change position.
 
@@ -885,25 +884,25 @@ Selects one of the available work coordinate systems. A WCS defines a user-progr
 
 ---
 
-## `G61`, `G61.1` – Path Control Mode {#G61-G61_1}
+## `G61` – Path Control Mode {#G61}
 
 **Syntax:**  
 > `G61` (exact stop)  
-> `G61.1` (exact stop alias)  
 
-<!-- add proper documentation, what is G61.1? -->
+<!-- add proper documentation -->
 
 These commands control how the machine handles corners and transitions between sequential motion commands. This choice is a trade-off between speed and accuracy.
 
 > ℹ️ **Info**
 > - **Modal:** Part of the Control Mode group.
 > - **`G61` (Exact Stop Mode):** The machine comes to a full stop at the end of each programmed move before starting the next. This ensures every corner is perfectly sharp but can cause jerky motion and slow down jobs significantly.
-> - **`G61.1` (Exact Stop Mode):** An alias for `G61`.
 
 #### Examples
-* **Engraving a precise technical drawing with sharp corners:**  
-  `G61`  
-  `(G-code for drawing)`
+* _Engraving a precise technical drawing with sharp corners:_
+	```gcode
+	G61
+	(G-code for drawing)
+	```
 
 > [!TIP]
 > - For most applications (2D profiling, 3D carving), `G64` is the preferred mode as it results in faster and smoother operation.
@@ -922,39 +921,32 @@ These commands control how the machine handles corners and transitions between s
 > - **User-provided macros should generally start with a `P` word value of 100 or greater** to avoid conflicts with [built-in subprograms](/docs/reference/o-code#built-in-g65-subprograms) (currently P1-P7).
 > - **Argument Passing:** Arguments (e.g., `A`, `B`, `C`, `X`, `Y`, `Z`, etc.) passed with `G65` are assigned to named variables within the called subprogram.
 > - **Nesting:** Nesting of `G65` macros is allowed.
-> - **Reference:** For more details on G65 macros, refer to the [G65 and G66 documentation](/docs/reference/o-code#g65-and-g66). Also, a reference for G65 in other systems: [cnczone.com](https://www.cnczone.com/forums/attachments/2/0/6/1/9/22462.attach).
+> - **Reference:** For more details on G65 macros, refer to the [G65 and G66 documentation](./o-code#g65-and-g66). Also, a reference for G65 in other systems: [cnczone.com](https://www.cnczone.com/forums/attachments/2/0/6/1/9/22462.attach).
 
-| Parameter | Description |
-|-----------|-------------|
-| **P** | The number of the subprogram to call (e.g., `P100` calls `P100.macro`). |
-| **L** | **Optional:** Repeat count. The macro will be executed `L` times. (Available from build 20260125). |
-| **A, B, C, X, Y, Z...** | Arguments to be passed to the subprogram. These become local variables inside the macro. |
+#### Subprogram Example (P100+)
 
-### User Subprogram Example (P100+)
-
-* **Call a custom macro `P100.macro` to drill a hole with a specific depth and feed rate:**  
-
+* _Call a custom macro `P100.macro` to drill a hole with a specific depth and feed rate:_  
 Content of P100.macro, stored in a local (controller based) file system:  
-```gcode
-#<depth> = #1 ; A argument (drill depth)
-#<feed> = #2 ; B argument (feed rate)  
-G91 G1 Z-#<depth> F#<feed>
-G0 Z#<depth>
-M99` (Return from subprogram)
-```
-Main program, can be sent from a sender or run from a local file system:  
-```gcode
-G0 X10 Y10`  
-G65 P100 A5.0 B200` (Call P100.macro, drill 5mm deep at 200mm/min)  
-G0 X20 Y20`  
-G65 P100 A8.0 B150` (Call P100.macro, drill 8mm deep at 150mm/min)
-M30
-```
+	```gcode
+	#<depth> = #1 ; A argument (drill depth)
+	#<feed> = #2 ; B argument (feed rate)  
+	G91 G1 Z-#<depth> F#<feed>
+	G0 Z#<depth>
+	M99` (Return from subprogram)
+	```
+	Main program, can be sent from a sender or run from a local file system:  
+	```gcode
+	G0 X10 Y10`  
+	G65 P100 A5.0 B200` (Call P100.macro, drill 5mm deep at 200mm/min)  
+	G0 X20 Y20`  
+	G65 P100 A8.0 B150` (Call P100.macro, drill 8mm deep at 150mm/min)
+	M30
+	```
 
-### Tips & Tricks
-- `G65` is a powerful tool for creating reusable, modular G-code for complex operations.
-- Variables are assigned to [numbered parameters](/docs/reference/o-code#g65-and-g66) based on their letter, e.g., `A` maps to `#1`, `B` to `#2`, `X` to `#24`, etc.
-- **Reserve P1-P99 for built-in macros** - Start your custom macros at P100 or higher.
+> [!TIP]
+> - `G65` is a powerful tool for creating reusable, modular G-code for complex operations.
+> - Variables are assigned to [numbered parameters](./o-code#g65-and-g66) based on their letter, e.g., `A` maps to `#1`, `B` to `#2`, `X` to `#24`, etc.
+> - **Reserve P1-P99 for built-in macros** - Start your custom macros at P100 or higher.
 
 ---
 
@@ -1398,6 +1390,12 @@ These commands control the machine's coolant systems. In grblHAL, these are typi
 
 ---
 
+## `M42` – Set digital output {#M42}
+
+This command is provided by the [OpenPNP](./plugins#openpnp-mcodes) plugin.
+
+---
+
 ## `M48`, `M49` – Override Control {#M48-M49}
 
 **Syntax:**  
@@ -1611,7 +1609,6 @@ These commands control analog output pins, either synchronized with motion or im
 
 These are powerful but advanced M-codes that allow the controller to save and restore its current modal state. This includes the active G-codes (like `G0`/`G1`, `G17`/`G18`, `G54`, `G90`/`G91`), feed rate, spindle speed, etc.
 
-
 > ℹ️ **Info**
 > - These are part of the grblHAL core but are considered advanced features.
 > - They are extremely useful for writing "safe" subroutines or macros that can perform an action without permanently altering the machine's state from the main G-code program.
@@ -1658,129 +1655,89 @@ This section provides a comprehensive list of G-code and M-code commands introdu
 
 Also see the grblHAL [plugin reference](/docs/reference/plugins).
 
----
+## `M104` – Select spindle (Spindle) {#M104}
 
-## Plugin: Plasma / Torch Height Control (THC)
-Repo: `https://github.com/grblHAL/Plugin_plasma`
-
-| M-Code | Syntax | Description |
-|--------|--------|-------------|
-| `M62` | `M62 P[port]` | Disable THC, synchronized with motion |
-| `M63` | `M63 P[port]` | Enable THC, synchronized with motion |
-| `M64` | `M64 P[port]` | Disable THC, immediate |
-| `M65` | `M65 P[port]` | Enable THC, immediate |
-| `M67` | `M67 E[port] Q[percent]` | Immediate velocity reduction |
-| `M68` | `M68 E[port] Q[percent]` | Velocity reduction synchronized |
+This command is provided by the [Spindle](./plugins#spindle-mcode) plugin.
 
 ---
 
-## `M106` and `M107` – Fan Control
+## `M106` and `M107` – Fan Control (Fan)
 
 These commands are provided by the [fan plugin](/docs/reference/plugins#fan-mcodes).
 
 ---
 
-## `M150` - RGB LED Strip Control
+## `M114` and `M115` – Report Position and Report Firmware (OpenPNP) {#M114-M115}
+
+These commands are provided by the [OpenPNP](./plugins#openpnp-mcodes) plugin.
+
+---
+
+## `M122` – Stepper Driver Init/Report (Trinamic) {#M122}
+
+This command is provided by the [Trinamic](./plugins#trinamic-mcodes) plugin.
+
+---
+
+## `M143` - `M145` – Read/Scale Input (OpenPNP) {#M143--M145}
+
+These commands are provided by the [OpenPNP](./plugins#openpnp-mcodes) plugin.
+
+---
+
+## `M150` - RGB LED Strip Control (RGB) {#M150}
 
 This command is provided by the [RGB LED plugin](/docs/reference/plugins#rgb-led-mcode).
 
 ---
 
-## `M220` - Feed Override
+## `M204` and `M205` – Acceleration and Jerk Override (OpenPNP) {#M204-M205}
+
+These commands are provided by the [OpenPNP](./plugins#openpnp-mcodes) plugin.
+
+---
+
+## `M220` - Feed Override {#M220}
 
 This command is provided by the [Feed override plugin](/docs/reference/plugins#feed-override-mcode).
 
 ---
 
-## `M280` – Set Servo Position
+## `M280` – Set Servo Position (Servo) {#M280}
 
 This command is provided by the [PWM servo plugin](/docs/reference/plugins#pwm-servo-mcode).
 
-#### Example
-* **Deploy a touch probe connected to servo #0:**  
-  `M280 P0 S90` (Move servo 0 to the 90-degree position)
+---
 
-* **Stow the touch probe:**  
-  `M280 P0 S0` (Move servo 0 back to the 0-degree position)
+## `M400` – Finish Moves (OpenPNP) {#M400}
+
+This command is provided by the [OpenPNP](./plugins#openpnp-mcodes) plugin.
 
 ---
 
-## Plugin: OpenPNP (`Plugin_OpenPNP`)
-Repo: `https://github.com/grblHAL/Plugin_OpenPNP`
-
-| M-Code | Syntax | Description |
-|--------|--------|-------------|
-| `M42` | `M42 P[ioport] S[0/1]` | Set digital output |
-| `M204` | `M204 P[axes] S[accel]` | Set axis acceleration |
-| `M205` | `M205 [axes]` | Set jerk |
-| `M143` | `M143 P[port] Q[scale] R[offset]` | Read Analog/Digital input |
-| `M144` | `M144 P[port]` | Read Digital input |
-| `M145` | `M145 P[port] Q[scale] R[offset]` | Read Analog input |
-| `M400` | `M400` | Wait for buffered moves to complete, equivalent to `G4P0` |
-
-## `M400` – Finish Moves
-
-**Syntax:**  
-> `M400`
-
-Waits for all moves in the planner buffer to complete before processing the next command. It is functionally similar to a `G4 P0` (zero-second dwell).
-
-
-> ℹ️ **Info**
-> - **Origin:** Marlin / OpenPnP.
-> - This command ensures the machine is completely stationary before the next G-code line is executed. This is useful when an external action needs to happen at a precise location, like taking a picture for a computer vision system.
-
-
-#### Example
-* **Move to a location, wait until stopped, then trigger an output:**  
-  `G0 X50 Y50`  
-  `M400` (Wait for the move to finish completely)  
-  `M64 P1` (Immediately turn on output 1 to trigger a camera)
-
----
-
-## `M401` and `M402` – BLTouch Probe Control
+## `M401` and `M402` – BLTouch Probe Control (BLTouch) {#M401-M402}
 
 These commands are provided by the [BLTouch probe plugin](/docs/reference/plugins#bltouch-mcodes).
 
 ---
 
-## Plugin: Motor / Trinamic (`Plugins_motor`)
-Repo: `https://github.com/grblHAL/Plugins_motor`
+## `M569` – Stepper Driver Mode (Trinamic) {#M569}
 
-| M-Code | Syntax | Description |
-|--------|--------|-------------|
-| `M122` | `M122 [axes]` | Driver report/debug |
-| `M569` | `M569 [axis] S[0/1]` | Set driver mode: StealthChop / SpreadCycle |
-| `M906` | `M906 [axes] S[current]` | Set RMS current |
-| `M911` | `M911` | Report prewarn flags |
-| `M912` | `M912` | Clear prewarn flags |
-| `M913` | `M913 [axes]` | Hybrid threshold |
-| `M914` | `M914 [axes]` | Homing sensitivity |
+This command is provided by the [Trinamic](./plugins#trinamic-mcodes) plugin.
 
 ---
 
-## Plugin: Spindle (`Plugins_spindle`)
-Repo: `https://github.com/grblHAL/Plugins_spindle`
+## `M906` – Set Stepper Driver Current (Trinamic) {#M906}
+## `M911` and `M912` – Report/Clear Prewarn Flags (Trinamic) {#M911-M912}
+## `M913` – Set Hybrid Threshold (Trinamic) {#M913}
+## `M914` – Set Homing Sensitivity (Trinamic) {#M906}
 
-| M-Code | Syntax | Description |
-|--------|--------|-------------|
-| `M104` | `M104 P[n]` | Select spindle |
-| `M51` | `M51 [options]` | Enable spindle features (Plugin_spindle specific) |
-
----
-
-## Plugin: Encoder (`Plugin_encoder`)
-Repo: `https://github.com/grblHAL/Plugin_encoder`
-
-| M-Code | Syntax | Description |
-|--------|--------|-------------|
-| `M114` | `M114` | Report current position (includes spindle encoder if available) |
+These commands are provided by the [Trinamic](./plugins#trinamic-mcodes) plugin.
 
 ---
 
-## `M960` - Keepout Zone Control
+## `M960` - Keepout Zone Control (Scienci ATCi) {#M960}
 
-This command is provided by the [Sienci ATCi plugin](/docs/reference/plugins#sienci-atci-mcode).
+This command is provided by the [Sienci ATCi plugin](./plugins#sienci-atci-mcode).
 
 ---

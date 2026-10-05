@@ -12,6 +12,17 @@ This page is a comprehensive reference for all known grblHAL settings. It is des
 
 Bitmask settings are using the separate bits of a setting [value](https://en.wikipedia.org/wiki/Byte) to control options. Add values from the value column to get the settings value to use.
 
+#### Axismask setting {#axismask}
+
+An axismask is a [bitmask](#bitmask) that represent the axes the controller supports. The value to use is the sum of 2^[Axis id](#axisid) for the axes to represent.
+
+| Axis  | Value |
+|-------|-------|
+| X     | 1     |
+| Y     | 2     |
+| Z     | 4     |
+| Other axes | 2^[axis index](#axisid) |
+
 #### Axis id {#axisid}
 
 Axis settings are indexed with the tree basic axes X, Y and Z always corresponding to index `0`, `1` and `2`. Additional axes are assigned consecutive indices from `3`, based on their lettter, in the order A, B, C, U, V and W. E.g. a four axis machine configuted as `XYZC` will have indices `0` - `3` assigned.
@@ -98,7 +109,7 @@ This affects whether motors **hold position** when idle or are allowed to releas
 
 ---
 
-## `$2` – Step Pulse Invert [(bitmask)](#bitmask) {#2}
+## `$2` – Step Pulse Invert [(axismask)](#axismask) {#2}
 
 Controls the polarity of the **step pulses** for each axis.  
 Some stepper drivers require the step signal to be inverted (active-low instead of active-high).  
@@ -139,7 +150,7 @@ This setting allows you to configure that per axis.
 
 ---
 
-## `$3` – Direction Invert [(bitmask)](#bitmask) {#3}
+## `$3` – Direction Invert [(axismask)](#axismask) {#3}
 
 Controls the polarity of the **direction signal** for each axis.  
 If an axis moves in the opposite direction than expected, invert it here instead of rewiring the motor.
@@ -179,7 +190,7 @@ If an axis moves in the opposite direction than expected, invert it here instead
 
 ---
 
-## `$4` – Invert Stepper Enable [(bitmask)](#bitmask) {#4}
+## `$4` – Invert Stepper Enable [(axismask)](#axismask) {#4}
 
 Controls the polarity of the **enable signal** for stepper drivers.  
 Some drivers expect an **active-low** enable, while others expect **active-high**.  
@@ -216,14 +227,13 @@ This setting lets you match the signal to what your driver requires.
 
 ---
 
-## `$5` – Invert Limit Inputs [(bitmask)](#bitmask) {#5}
+## `$5` – Invert Limit Inputs [(axismask)](#axismask) {#5}
 
 Controls the polarity of the **limit switch inputs**.  
 If your limit switches trigger in reverse (always “on” when idle, “off” when pressed), invert them here.
 
 
 > ℹ️ **Info**
-> - Expressed as a **bitmask** (X, Y, Z, A, B, C).
 > - Related to `$18` (Pull-up Disable Limit Inputs).
 
 | Axis  | Value | Description |
@@ -2551,7 +2561,6 @@ Adds a delay after the safety door is closed before the spindle is automatically
 
 ## `$393` – Door Coolant On Delay (sec) {#393}
 Adds a mandatory delay after the safety door is closed before coolant outputs are re-activated.
-
 
 > ℹ️ **Info**
 > - This is a safety feature, similar to `$392` (Door Spindle On Delay).

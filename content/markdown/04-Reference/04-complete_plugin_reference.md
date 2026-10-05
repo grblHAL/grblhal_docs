@@ -84,6 +84,8 @@ Uploading (available since build 20260916) is initiated by the `$YUP=filename` s
 ## Spindle plugins {#spindles}
 Github Repository: https://github.com/grblHAL/Plugins_spindle
 
+#### M-Code {#spindle-mcode}
+
 | M-Code | Syntax | Description |
 |:------:|:------:|:------------|
 | `M104` | `M104 P-` | Select spindle, available when more than one spindle is enabled |
@@ -108,7 +110,6 @@ The firmware can be compiled with support for one or more spindles of which up t
 #### `$460` – VFD Modbus Address
 Sets the Modbus slave address for the primary VFD.
 
-
 > ℹ️ **Info**
 > - This is used by VFD plugins (e.g., GS20, YL620A) to communicate with the VFD via Modbus RTU.
 > - This address *must* match the ID configured in the VFD's parameters.
@@ -128,7 +129,7 @@ Provides additional slots for defining Modbus addresses for up to four VFDs.
 > - `$478`: Address for VFD 2
 > - `$479`: Address for VFD 3
 
-#### Common Examples
+#### Examples
 *   **Typical VFD Address:**
     *   `$460=1`
 
@@ -146,7 +147,7 @@ Configures the RPM-to-frequency conversion for some VFD plugins.
 > - `$460`: VFD Modbus Address (This appears to be a duplicate of `$360` for some drivers).
 > - `$461`: **RPM per Hz:** The core conversion factor.
 
-#### Common Examples for `$461`
+#### Examples for `$461`
 *   **2-pole spindle motor (50 Hz → 3000 RPM):**
     *   `3000 RPM / 50 Hz = 60`.
     *   `$461=60`
@@ -182,7 +183,7 @@ The modbus function codes used for writing registers is `6`, reading is done wit
 > [!IMPORTANT]
 > These value **must** match the specific register addresses, command values and conversion values defined in your VFD's manual.
 
-**Common Examples**
+**Examples**
 
 Add example here.
 
@@ -224,7 +225,7 @@ When you switch to a laser spindle (or a spindle designated as a laser), grblHAL
 - The "Update G92 on spindle change" option (`$772=2`) is generally preferred if you want your G-code programs to continue relative to the workpiece origin, regardless of which tool (spindle or laser) is active. This makes the tool change "transparent" to the work coordinates.
 - Test these options carefully with your setup to understand how your work zero behaves when switching between the primary spindle and the laser.
 
-**Common Examples**
+**Examples**
 * _A laser is mounted 50.5mm to the right (positive X) and  10.0mm towards the front (positive Y) of the primary spindle:_
   * `$770=50.5`
   * `$771=10.0`
@@ -238,20 +239,197 @@ When you switch to a laser spindle (or a spindle designated as a laser), grblHAL
 ## Motor (Trinamic)
 Github Repository: https://github.com/grblHAL/Plugins_motor
 
-| M-Code | Syntax | Description |
-|--------|--------|-------------|
-| `M122` | `M122 [axes]` | Driver report/debug |
-| `M569` | `M569 [axis] S[0|1]` | Set driver mode: StealthChop / SpreadCycle |
-| `M906` | `M906 [axes] S[current]` | Set RMS current |
-| `M911` | `M911` | Report prewarn flags |
-| `M912` | `M912` | Clear prewarn flags |
-| `M913` | `M913 [axes]` | Hybrid threshold |
-| `M914` | `M914 [axes]` | Homing sensitivity |
+This plugin adds settings, M-Code extensions and reports for TMC2130, TMC2209, TMC2240, TMC2660 and TMC5160 stepper drivers.
 
+> [!IMPORTANT]
+> Trimamic drivers are not able to respond to configuration commands sent via SPI or UART before motor power is present. The controller will retry configuration for 0.5s on startup, if it fails the drivers can be configured manually with `M122I` after motor power is up.
+
+### M-codes {#trinamic-mcodes}
+
+Some Marlin-style M-codes are supported: [M122](https://marlinfw.org/docs/gcode/M122.html), [M569](https://marlinfw.org/docs/gcode/M569.html), [M911](https://marlinfw.org/docs/gcode/M911.html),
+ [M912](https://marlinfw.org/docs/gcode/M912.html), [M913](https://marlinfw.org/docs/gcode/M913.html), [M914](https://marlinfw.org/docs/gcode/M914.html)
+ and [M919](https://marlinfw.org/docs/gcode/M919.html) - some with extensions and some with a sligthly different syntax.
+
+#### `M122` - Output Debug Info or Reset Driver {#M122}
+\
+**Syntax:**  
+> `M122 axisletters <H-> <S-> <Q-> <I>`
+
+| Parameter | Description |
+|-----------|-------------|
+| [axisletters](./gcode#axisletters) | Axis motors to apply command to. |
+| **`H`** | `0` = SFILT off, 1 = SFILT on \(not available for TMC2209\). |
+| **`I`** | Reinitialize driver. |
+| **`S`** | `0` = disable StallGuard and live output of sg-value, `1` = enable StallGuard and live output. |
+| **`Q`** | Not yet implemented. |
+
+> [!IMPORTANT]
+> - Do not enable live outout when running regular g-code jobs, it is for tuning only.
+> - Report output is plain text, not formatted Grbl style. Some senders may not tolerate that, use a terminal program if it cause issues.
+
+**Examples**
+* _Output debug info for all enabled drivers:_
+	```gcode
+	M122
+	```
+* _Output debug info for Y axis only:_
+	```gcode
+	M122 Y
+	```
+* _Reset drivers:_
+	```gcode
+	M122 I
+	```
+* _Enable live output of StallGuard value for tuning:_
+	```gcode
+	M122 X S1
+	```
+
+---
+
+#### `M569` - Set/Toggle Chopper Timing {#M569}
+\
+Toggle between, or switch to, _StealthChop&trade;_ and/or _SpreadCycle&trade;_ mode. Available for TMC2130, TMC2209 and TMC5160 drivers.
+
+**Syntax:**  
+> `M569 axisletters <S->`
+
+| Parameter | Description |
+|-----------|-------------|
+| [axisletters](./gcode#axisletters) | Axis motors to apply command to. |
+| **`S`**   | `0` = disable StealthChop, `1` = enable StealthChop |
+
+**Examples**
+* _Set X-axis mode to StealthChop:_
+	```gcode
+	M569 X S1
+	```
+* _Toggle X-axis mode:_
+	```gcode
+	M569 X
+	```
+* _Set X- and Y-axis mode to StealthChop:_
+	```gcode
+	M569 XY S1  
+	```
+* _Output the current configuration:_
+	```gcode
+	M569
+	```
+---
+
+#### `M906` - Set Stepper Surrent {#M906}
+\
+**Syntax:**  
+> `M906 axes`
+
+| Parameter | Description |
+|-----------|-------------|
+| [axes](./gcode#axes) | Axis motors to set current for, value is milliampere (mA) RMS. |
+
+> [!NOTE]
+> Stepper current is not permanently stored.
+
+**Example**
+* _Set stepper current for X-motors to 700mA RMS and Y-motors to 950mA:_
+	```gcode
+	M906 X700 Y950
+	```
+
+---
+
+#### `M911` - Report Prewarn Flags {#M911}
+\
+**Syntax:**  
+> `M911`  
+
+---
+
+#### `M912` - Clear Prewarn Flags {#M912}
+\
+**Syntax:**  
+> `M912`
+
+---
+
+#### `M913` - Set Hybrid Threshold {#M913}
+\
+**Syntax:**  
+> `M913 axes`
+
+| Parameter | Description |
+|-----------|-------------|
+| [axes](./gcode#axes) | Axis motors to set hybrid threshold for. |
+
+> [!NOTE]
+> Hybrid threshold is not permanently stored.
+
+**Example**
+* _Set stepper current for X-motors to 700mA RMS and Y-motors to 950mA:_
+	```gcode
+	M913 X31
+	```
+
+---
+
+ #### `M914` - Set Homing Sensitivity {#M914}
+\
+**Syntax:**  
+> `M913 axes`
+
+`M914 axes`
+
+| Parameter | Description |
+|-----------|-------------|
+| [axes](./gcode#axes) | Axis motors to set homing densitivity for. |
+
+> [!NOTE]
+> Homing sensitivity is not permanently stored.
+
+**Example**
+* _Set homing densitivity for X-motors to 31:_
+	```gcode
+	M914 X31
+	```
+
+---
+
+#### `M919` - Set Chopper Timing {#M919}
+\
+**Syntax:**  
+`M919 axisletters <O-> <P-> <S->`
+
+| Parameter | Description |
+|-----------|-------------|
+| [axisletters](./gcode#axisletters) | Axis motors to apply command to. |
+| **`O`** | Time-off \(toff: 1..15\) value, if omitted reset to default value. |
+| **`P`** | Hysteresis end \(hend: -3..12\) value, if omitted reset to default value. |
+| **`S`** | Hysteresis start \(hstart: 1..8\) value, if omitted reset to default value. |
+
+* `O` - Time-off \(_toff_: 1..15\) value, if omitted reset to default value.
+* `P` - Hysteresis end \(_hend_: -3..12\) value, if omitted reset to default value.
+* `S` - Hysteresis start \(_hstart_: 1..8\) value, if omitted reset to default value.
+
+> [!NOTE]
+> - _hstart_ + _hend_ must be &le; 15.
+> - Currently default values are common for all axes and changing the configuration via $-settings will overwrite any values set by M919.
+> - Chopper timings are not permanently stored.
+
+**Examples**
+* _Set X-axis time-off to 4:_
+	```gcode
+	M919 X O4
+	```
+* _Output the current configuration:_
+	```gcode
+	M919
+	```
+
+#### Settings {#trinamic-settings}
 
 #### `$200` – `$207` StallGuard2 Fast Threshold (TMC) {#200--207}
 Sets the sensitivity of StallGuard for an axis during the initial, fast-moving phase of a sensorless homing cycle.
-The last digit in the setting number corresponds to the [axis id](#axisid).
+The last digit in the setting number corresponds to the [axis id](./settings#axisid).
 
 > ℹ️ **Info**
 > - This is a core setting for **ensorless homing**, allowing the driver to detect a motor stall against a physical end-stop.
@@ -270,97 +448,83 @@ The last digit in the setting number corresponds to the [axis id](#axisid).
 
 ---
 
-#### Settings {#trinamic-settings}
-
-#### `$338` – Trinamic Driver Enable (mask)
+#### `$338` – Trinamic Driver Enable ([axismask](./settings#axismask))
 Configures which axes are controlled by Trinamic stepper drivers and enables their advanced features.
 The bit number number corresponds to the [axis id](/docs/reference/settings#axisid).
 
-
 > ℹ️ **Info**
-> - This setting is a [bitmask](/docs/reference/settings#bitmask) used to specify which individual axes are equipped with Trinamic stepper drivers (e.g., TMC2209, TMC5160).
+> - This setting is an [axismask](./settings#axismask) used to specify which individual axes are equipped with Trinamic stepper drivers (e.g., TMC2209, TMC5160).
 > - Enabling a bit for an axis allows grblHAL to utilize Trinamic-specific features for that axis, such as programmable current control (`$210`-`$217`) and StallGuard for sensorless homing (`$339`).
-> - This setting is typically available for boards which have pluggable or software-configurable drivers.
 
-| Bit | Value | Axis |
-|:---:|:-----:|:-----|
-| 0   | 1     | X-Axis has Trinamic driver |
-| 1   | 2     | Y-Axis has Trinamic driver |
-| 2   | 4     | Z-Axis has Trinamic driver |
-| 3   | 8     | A-Axis has Trinamic driver |
-| 4   | 16    | B-Axis has Trinamic driver |
-| 5   | 32    | C-Axis has Trinamic driver |
-| 6   | 64    | U-Axis has Trinamic driver |
-| 7   | 128   | V-Axis has Trinamic driver |
 
-#### Common Examples
-*   **X and Y axes using Trinamic drivers:**
-    *   `$338=3` (1 for X + 2 for Y)
-*   **All primary 3 axes using Trinamic drivers:**
-    *   `$338=7` (1 for X + 2 for Y + 4 for Z)
+#### Examples
+* _X and Y axes using Trinamic drivers::_
+	```gcode
+	$338=3 (1 for X + 2 for Y)
+	```
+* _All primary 3 axes using Trinamic drivers:_
+	```gcode
+	$338=7 (1 for X + 2 for Y + 4 for Z)
+	```
 
-#### Tips & Tricks
-- Only enable the bits corresponding to axes that genuinely use Trinamic drivers on your board and for which you intend to use their advanced features. Incorrectly enabling this can lead to unexpected behavior.
-- Refer to your specific board's documentation to confirm which axes are wired to Trinamic-compatible drivers.
+> [!TIP]
+> - Only enable the bits corresponding to axes that genuinely use Trinamic drivers on your board and for which you intend to use their advanced features. Incorrectly enabling this can lead to unexpected behavior.
+> - Refer to your specific board's documentation to confirm which axes are wired to Trinamic-compatible drivers.
 
 ---
 
-#### `$339` – Sensorless Homing [(bitmask)](#bitmask)
+#### `$339` – Sensorless Homing [[axismask](./settings#axismask)]
 The master switch to enable sensorless homing for each axis.
 
 > ℹ️ **Info**
 > - This setting tells grblHAL to use the Trinamic StallGuard feature for homing instead of physical limit switches.
 > - It requires the StallGuard thresholds (`$200`-`$22x`) to be properly tuned.
-> - **Spindle Ramp Down:** If `$9` bit 3 is set, this setting (`$339 > 0`) also enables Spindle Ramp Down for spindle off.
 
-> 🔥 **Danger**
+> [!WARNING]
 > StallGuard should not be used unless the machine manufacturer has tuned the associated Trinamic parameters beforehand - the procedure for that is not simple. If enabled it is for advanced users that has a good understanding of how to tune the parameters.
 
-| Bit | Value | Axis |
-|:---:|:-----:|:-----|
-| 0   | 1     | X-Axis |
-| 1   | 2     | Y-Axis |
-| 2   | 4     | Z-Axis |
-| 3   | 8     | A-Axis |
-| 4   | 16    | B-Axis |
-| 5   | 32    | C-Axis |
-| 4   | 64    | U-Axis |
-| 5   | 128   | V-Axis |
+**Examples**
+* _Sensorless Homing on X and Y::_
+	```gcode
+	$339=3  (1 for X + 2 for Y)
+	```
+* _Sensorless on All Axes:_
+	```gcode
+    $339=7 (1 for X + 2 for Y + 4 for Z)
+	```
 
-#### Common Examples
-*   **Sensorless Homing on X and Y:**
-    *   Common for CoreXY printers or CNCs where Z has a physical switch.
-    *   `1` (X) + `2` (Y) → `$339=3`
-*   **Sensorless on All Axes:**
-    *   `1` (X) + `2` (Y) + `4` (Z) → `$339=7`
+> [!IMPORTANT]
+> Sensorless homing **only works for the homing cycle**. If you want Hard Limits (`$21`), you **must** still have physical switches installed.
 
-#### Tips & Tricks
-- **Crucial:** Sensorless homing **only works for the homing cycle**. If you want Hard Limits (`$21`), you **must** still have physical switches installed.
+---
 
 #### `$210` – `$217` Hold Current (TMC) {#210--217}
 Sets the percentage of the full running current that the **X-axis** driver will supply to the motor when it is idle.
 The last digit in the setting number corresponds to the [axis id](#axisid).
 
 > ℹ️ **Info**
-> - This is a Trinamic-specific power-saving and heat-reduction feature. It works with the `$1` (Step Idle Delay).
-> - After the idle delay expires, the driver will reduce the motor current to this percentage.
+> - This is a Trinamic-specific power-saving and heat-reduction feature. It only works with if the `$1` (Step Idle Delay) is set to 255.
 > - `0%` is the minimum, `100%` means no current reduction.
+
+<!-- TMC2260 does not support this natively... -->
 
 | Value (%) | Meaning | Description |
 |:---------:|:--------|:------------|
 | 0 - 100   | Percent | The percentage of running current to use for holding torque. |
 
-#### Common Examples
-*   **Aggressive Power Saving:**
-    *   Reduces heat significantly but has very low holding torque.
-    *   `$210=25`
-*   **Balanced Hold and Heat (Recommended Start):**
-    *   A good compromise for most axes.
-    *   `$210=50`
+**Examples**
+* _Aggressive Power Saving, reduces heat significantly but has very low holding torque:_
+	```gcode
+	$210=25
+	```
+* _Balanced Hold and Heat (Recommended Start), a good compromise for most axes:_
+	```gcode
+	$210=50
+	```
 
-#### Tips & Tricks
-- This is a fantastic feature for reducing motor temperature on long jobs.
-- If you notice the X-axis drifting or being easily moved by hand when idle, increase this value.
+> [!TIP]
+> - This is a fantastic feature for reducing motor temperature on long jobs.
+> - If you notice the X-axis drifting or being easily moved by hand when idle, increase this value.
 
 ---
 
@@ -373,7 +537,7 @@ The last digit in the setting number corresponds to the [axis id](#axisid).
 > - After the initial fast search, the machine backs off and re-approaches the end-stop at the `$24` (Homing Locate Rate).
 > - This setting defines the StallGuard sensitivity for that slow, precise move, allowing for more accurate homing.
 
-> 🔥 **Danger**
+> [!WARNING]
 > StallGuard should not be used unless the machine manufacturer has tuned the associated Trinamic parameters beforehand - the procedure for that is not simple. If enabled it is for advanced users that has a good understanding of how to tune the parameters.
 
 | Value | Meaning | Description |
@@ -381,27 +545,27 @@ The last digit in the setting number corresponds to the [axis id](#axisid).
 | 0     | Disabled| Stall detection is off for this phase. |
 | 1-127 | Sensitivity | A lower value makes the driver more sensitive to stalls. |
 
-#### Common Examples
-*   **Precise Homing:**
-    *   Often set to be more sensitive (lower) than the fast threshold, as there is less risk of false triggers from acceleration.
-    *   `$220=30`
+#### Example
+* _Precise homing, often set to be more sensitive (lower) than the fast threshold, as there is less risk of false triggers from acceleration.:_
+	```gcode
+	$220=30
+	```
 
-#### Tips & Tricks
-- Tuning this value is key to repeatable sensorless homing. It should be as sensitive as possible without triggering before the axis makes firm contact with the end-stop.
-- This value is almost always different from the fast threshold (`$200`).
+> [!TIP]
+> - Tuning this value is key to repeatable sensorless homing. It should be as sensitive as possible without triggering before the axis makes firm contact with the end-stop.
+> - This value is almost always different from the fast threshold (`$200`).
 
-
+<!--
 #### Example
 ```gcode
 ; Check driver status on X/Y
 M122 XY
-
 ; Set StealthChop mode for X axis
 M569 X S1
-
 ; Set RMS current for all axes
 M906 X100 Y100 Z100
 ```
+-->
 
 ---
 
@@ -456,7 +620,7 @@ The master switch for enabling or disabling network-related services (daemons).
 > [!TIP]
 > - This is a **critical** setting for any network-enabled board. Even if you configure all the IP address and WiFi settings (`$300+`), the services **will not run** unless they are enabled here.
 
-#### Common Examples
+#### Examples
 *   **All Services Disabled (Default):**
     *   `$70=0`
 *   **Enable Common Services for a GUI:**
@@ -495,7 +659,7 @@ This is the name your controller will announce on the network.
 It can be used to connect via mDNS (e.g., `grblHAL.local`) if [$70](#70) has mDNS enabled.
 It also helps identify the device in your router's client list.
 
-**Common Examples**
+**Examples**
 * _Default Hostname:_
   * `$300=grblHAL`
 * _Custom Hostname for a specific machine:_
@@ -701,7 +865,7 @@ Sets the password for the `admin` account.
 |:------|:--------|:------------|
 | String| The password. |
 
-#### Common Examples
+#### Examples
 *   **Set a new admin password:**
     *   `$330=MySecurePassword123`
 *   **Clear the password:**
@@ -724,7 +888,7 @@ Sets the password for the `user` account.
 |:------|:--------|:------------|
 | String| The password. |
 
-#### Common Examples
+#### Examples
 *   **Set a new user password:**
     *   `$331=Guest123`
 *   **Clear the password:**
@@ -780,14 +944,14 @@ Fan 0 can be configured be turned off automatically on program completion, or sp
 > [!NOTE]
 > If set to 0 fan 0 is not automatically turned off by program end and is turned off immediately if linked to spindle enable.
 
-#### M-Codes{#fan-mcodes}
+#### M-Codes {#fan-mcodes}
 
 | M-Code | Syntax | Description |
 |--------|--------|-------------|
 | `M106` | `M106 P[fan] S[speed]` | Turn fan ON, set PWM speed (0–255) |
 | `M107` | `M107 P[fan]` | Turn fan OFF |
 
-#### $-Settings{#fan-settings}
+#### $-Settings {#fan-settings}
 
 | $-Setting | Description |
 |-----------|-------------|
@@ -841,7 +1005,7 @@ Configures which real-time system state change will activate each of the ten ava
 | **10** | **Single Stepping Mode** | Activates when the controller is in Single Stepping (Single Block) mode. |
 | **11** | **Block delete toggle**  | Activates when the Block Delete (/ skip) state is toggled ON. |
 
-#### Common Examples
+#### Examples
 *   **Activate Event Slot 0 when the Spindle is enabled:**
     *   `$750=1`
 *   **Activate Event Slot 1 when the controller enters an Alarm state:**
@@ -871,7 +1035,7 @@ Assigns a physical auxiliary digital output port to be controlled by each of the
 | ...     | ...                            | ...                                  |
 | `$769`  | Event Slot 9 (Trigger defined by `$759`) | Hardware auxiliary output pin number |
 
-#### Common Examples
+#### Examples
 *   **When Event Slot 0 is active, control auxiliary I/O Port 5:**
     *   `$760=5` (If `$750=1`, then Port 5 activates when Spindle is enabled. This could trigger a dust collector).
 *   **When Event Slot 1 is active, control auxiliary I/O Port 7:**
@@ -1045,7 +1209,7 @@ Assigns a physical auxiliary digital output port to control a relay for the tool
 | -1    | Disabled (no relay output for toolsetter) |
 | 0-N   | The hardware auxiliary digital output port number to control the toolsetter relay. |
 
-#### Common Examples
+#### Examples
 *   **Default (Toolsetter relay disabled):**
     *   `$678=-1`
 *   **Control a toolsetter relay via auxiliary port 2:**
@@ -1071,7 +1235,7 @@ Assigns a physical auxiliary digital output port to control a relay for the seco
 | -1    | Disabled (no relay output for secondary probe) |
 | 0-N   | The hardware auxiliary digital output port number to control the secondary probe relay. |
 
-#### Common Examples
+#### Examples
 *   **Default (Secondary probe relay disabled):**
     *   `$679=-1`
 *   **Control a secondary probe relay via auxiliary port 3:**
@@ -1107,7 +1271,7 @@ Github Repository: https://github.com/grblHAL/Plugin_OpenPNP
 
 Under development. Adds some M-codes to allow grblHAL to be used for [OpenPNP](https://openpnp.org/) machines.
 
-#### M-codes{#openpnp-mcodes}
+#### M-codes {#openpnp-mcodes}
 | M-Code | Syntax | Description |
 |:------:|:------:|:------------|
 | `M42`  | `M42 P- S-` | Set digital output |
@@ -1254,7 +1418,7 @@ Sets the feed rate (in mm/min) to be used for step-style jogging moves.
 |:--------------:|:--------|
 | 1 - N          | The feed rate for short, precise jogging moves. |
 
-#### Common Examples
+#### Examples
 *   **Precise Positioning Speed:**
     *   `$50=100`
 
@@ -1275,7 +1439,7 @@ Sets the feed rate (in mm/min) to be used for continuous slow jogging.
 |:--------------:|:--------|
 | 1 - N          | The feed rate for continuous slow jogging. |
 
-#### Common Examples
+#### Examples
 *   **Controlled Slow Jog:**
     *   A speed that is fast enough to cover distance but slow enough for precise stopping.
     *   `$51=500`
@@ -1293,7 +1457,7 @@ Sets the feed rate (in mm/min) to be used for continuous fast jogging.
 |:--------------:|:--------|
 | 1 - N          | The feed rate for continuous fast jogging. |
 
-#### Common Examples
+#### Examples
 *   **Rapid Manual Positioning:**
     *   Typically set to a high percentage of the axis max rate.
     *   `$52=2500`
@@ -1311,7 +1475,7 @@ Sets the smallest incremental distance for step-style jogging.
 |:----------:|:------------|
 | 0.001 - N  | The incremental distance for the smallest jog step. |
 
-#### Common Examples
+#### Examples
 *   **Default for fine adjustments:**
     *   `$53=0.01`
 *   **For ultra-fine positioning:**
@@ -1333,7 +1497,7 @@ Sets the medium incremental distance for step-style jogging.
 |:----------:|:------------|
 | 0.01 - N   | The incremental distance for medium jog steps. |
 
-#### Common Examples
+#### Examples
 *   **Default for general positioning:**
     *   `$54=0.1`
 *   **For slightly coarser adjustments:**
@@ -1356,7 +1520,7 @@ Sets the largest incremental distance for step-style jogging.
 |:----------:|:------------|
 | 0.1 - N    | The incremental distance for the largest jog step. |
 
-#### Common Examples
+#### Examples
 *   **Default for rapid positioning:**
     *   `$55=1.0`
 *   **For very large machines or long rapid moves:**
@@ -1385,7 +1549,7 @@ Assigns custom M-codes (from M100 upwards) to execute specific G-code sequences 
 | ...     | ...    | ...         |
 | `$499`  | M109   | Executes the G-code sequence stored in setting $499 |
 
-#### Common Examples
+#### Examples
 *   **Move to a origin position when M100 is called:**
     *   `$490=G90 G0 Z0 X0 Y0`
 *   **Perform a simple Z probe when M101 is called:**
@@ -1418,7 +1582,7 @@ Assigns a specific system action to be performed when a physical input mapped to
 | 9     | Optional Stop Toggle | Toggles the optional stop (`M1`) functionality. |
 | 10    | Single Block Mode Toggle | Toggles single-block execution mode. |
 
-#### Common Examples
+#### Examples
 *   **Pressing a button on MacroPort 0 runs its custom macro (M100):**
     *   `$590=0` (`$490` contains the `M100` G-code)
 *   **Pressing a button on MacroPort 1 triggers a Feed Hold:**
@@ -1454,7 +1618,7 @@ Selects the primary function for the first encoder (Encoder 0).
 | 8     | Rapid Rate Override | Use the encoder to adjust the rapid rate override. |
 | 9     | Spindle Speed Override | Use the encoder to adjust the spindle speed override. |
 
-#### Common Examples
+#### Examples
 *   **Jog Z-Axis with an MPG:**
     *   `$400=3`
 *   **Control Feed Rate with a Knob:**
@@ -1474,7 +1638,7 @@ Sets the Counts Per Revolution (CPR) of the Encoder 0 hardware.
 |:-----:|:--------|
 | 1-N   | The CPR value of the encoder. |
 
-#### Common Examples
+#### Examples
 *   **Standard 100-PPR MPG Pendant:**
     *   100 Pulses Per Revolution = 400 Counts Per Revolution.
     *   `$401=400`
@@ -1589,7 +1753,7 @@ Sets the maximum time to wait for the "Arc OK" signal after the torch is fired (
 |:----------:|:--------|:------------|
 | 0.1 - N    | Timeout | The duration to wait for the "Arc OK" signal. |
 
-#### Common Examples
+#### Examples
 *   **Wait up to 5 seconds for the arc:**
     *   This provides ample time for the plasma cutter to fire and for the arc to transfer and stabilize.
     *   `$358=5.0`
@@ -1611,7 +1775,7 @@ Sets the delay between a failed arc attempt and the next attempt.
 |:----------:|:--------|:------------|
 | 0.1 - N    | Delay | The pause duration between retry attempts. |
 
-#### Common Examples
+#### Examples
 *   **Wait 3 seconds between retries:**
     *   This gives the system time to reset before trying again.
     *   `$359=3.0`
@@ -1633,7 +1797,7 @@ Sets the number of times to attempt to fire the torch *after* the initial failur
 | 0     | No Retries | If the first attempt fails, the job will alarm immediately. |
 | 1-N   | # of Retries | The number of additional attempts to make. |
 
-#### Common Examples
+#### Examples
 *   **Allow 2 retries:**
     *   The system will try to fire the torch a total of 3 times (the initial attempt + 2 retries).
     *   `$360=2`
@@ -1938,7 +2102,7 @@ Configures the operating modes for the Sienci Automatic Tool Changer Interface p
 | 1   | 2     | **Monitor Rack Presence** | Only enforce Keepout if the rack sensor (`AUXINPUT7`) is triggered. |
 | 2   | 4     | **Monitor TC Macro** | Automatically disable Keepout when a tool change macro is active. |
 
-**Common Examples**
+**Examples**
 * _Enable Basic Keepout:_
   * `$683=1`
 * _Enable Full Automation (Rack Sensor + Macro Awareness):_

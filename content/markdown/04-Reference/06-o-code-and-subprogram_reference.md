@@ -23,7 +23,7 @@ There are five kinds of subprograms available in grblHAL, callable via `G65`, `G
 > ℹ️ **Info**
 > - External subprograms are stored in files located by searching the following directories in order `/` (root), `/littlefs` and finally `/embedded`.
 
-## G65 and G66
+## G65 and G66 Arguments
 
 #### Numbered parameters passed as arguments to G65 and G66 subprograms {#G65-G66-arguments}
 
@@ -40,7 +40,7 @@ There are five kinds of subprograms available in grblHAL, callable via `G65`, `G
 > ℹ️ **Info**
 > Parameters not set by the caller are set to 0 by the parser prior to the call.
 
-## G65 {#G65}
+## G65 - Non-modal Subprogram Call {#G65}
 
 Syntax: `G65 P- <L-> <A- B- C- ...>`
 
@@ -52,7 +52,9 @@ Syntax: `G65 P- <L-> <A- B- C- ...>`
 
 `G65` is non-modal and is executed by running the external subprogram `P<number>.macro` `L` number of times.
 
-## G66 {#G66}
+---
+
+## G66 - Modal Subprogram Call {#G66}
 
 `G66 P- <A- B- C- ...>`
 
@@ -63,14 +65,22 @@ Syntax: `G65 P- <L-> <A- B- C- ...>`
 
 `G66` is modal, it will run `P<number>.macro` for each block _following_ the `G66` block until a `G67` block is encountered. The initial `G66` will only set the local parameters from the arguments passed, and each subsequent execution will run the actual code with the supplied parameter values even if they are changed within the subprogram.
 
-## M98 {#M98}
+## G67 Cancel G66 Modal State {#G67}
+
+Syntax: `G67`
+
+Cancel `G66` modal state.
+
+---
+
+## M98 - (Embedded) Subprogram Call {#M98}
 
 Syntax: `M98 P- <L->`
 
 | Parameter | Description |
 |-----------|-------------|
 | **`P`** | The number of the internal subprogram. |
-| **`L`** | **Optional:** Repeat count, default `1`. The macro will be run `L` times. (Available from build 20260125). |
+| **`L`** | **Optional:** Repeat count, default `1`. The sbprogram will be run `L` times. (Available from build 20260125). |
 
 `M98` will run a subprogram embedded in the main program or an external program depending on the [$700](/docs/reference/settings#700) setting. When configured for running an embedded routine the whole program is scanned for subprograms which are to be delimited by `O<number>` and `M99`. Embedded subprograms may be placed anywhere in the program but normal practice is to embed them after the main program code. If not configured for running an embedded routine it will run the external program `P<number>.macro`.
 
@@ -78,6 +88,8 @@ Syntax: `M98 P- <L->`
 > - When configured for running an embedded routine `M98` can only be used in programs stored in a local file system.
 
 <sup>1</sup> In check mode non-inbuilt `G65` macros will not be run, only file availability will be checked.
+
+---
 
 ## `M99` – Return from Subprogram {#M99}
 
@@ -102,13 +114,15 @@ Marks the end of a subprogram and returns execution to the main program or the c
 	M99 (Return to main program after tool change)
 	```
 
+---
+
 ## O CALL  {#O-CALL}
 
 Subprogram code must be delimited by `O- SUB` and `O- ENDSUB`. To exit a subprogram early, or return a value, use the `RETURN[]` statement. Do **not** terminate a subprogram with `M2` or `M30` as this will likely cause issues.  
 If a value is returned the parameter `_value_returned` is set to `1` and `_value` to the returned value, if not `_value_returned` is set to `0`.  
 `[arguments]` must be expressions, to pass constant values enclose them in square brackets, e.g. `o100 call [1] [2] [#<_xpos>]`. Up to 30 arguments can be passed and they will be assigned to the local parameters in ascending order (`#1, #2, #3, ...`). The values of remaining local parameters will be assigned from the callers context and all will be restored to their original values on return.
 
-### Numbered O CALL
+### Numbered O CALL <!-- toc -->
 
 **Syntax** `O- call [arguments]`
 
@@ -181,7 +195,7 @@ g0 z1
 M30
 ```
 
-### Named O CALL
+### Named O CALL <!-- toc -->
 
 **Syntax:** `O<-> call [arguments]`  
 
@@ -215,9 +229,11 @@ Call from the senders MDI or gcode program:
 
 `o<namedsub> call`
 
+---
+
 ## Operators, functions and flow control
 
-### Operators and precedence {#operators}
+### Operators and Precedence <!-- toc --> {#operators}
 
 | Operators                 | Precedence |
 |---------------------------|------------|
@@ -227,7 +243,7 @@ Call from the senders MDI or gcode program:
 | EQ, NE, GT, GE, LT and LE |            |
 | AND, OR and XOR           | Lowest     |
 
-### Functions
+### Functions <!-- toc --> {#functions}
 
 | Name            | Result                                       | Comment                        |
 |-----------------|----------------------------------------------|--------------------------------|
@@ -246,9 +262,9 @@ Call from the senders MDI or gcode program:
 | SQRT[arg]       | Square root.                                 |                                |
 | TAN[arg]        | Tanget.                                      |                                |
 | PRM[arg]        | Value of numeric setting.<sup>1</sup>        | Available from build 20241025. |
-| PRM[arg,bit]    | Value of bit in integer setting.<sup>1</sup> | Available from build 20241025. |
+| PRM[arg, bit]   | Value of bit in integer setting.<sup>1</sup> | Available from build 20241025. |
 
-### Flow control statements {#flow-control}
+### Flow Control Statements <!-- toc --> {#flow-control}
 
 | Statement         | Local file | Streamed G-Code | Comment                                                  |
 |-------------------|------------|-----------------|----------------------------------------------------------|
@@ -272,11 +288,13 @@ Call from the senders MDI or gcode program:
 
 <sup>1</sup> grblHAL specific extension.
 
-## Built in G65 subprograms
+---
 
-### G65P1 {#G65P1}
+## Built in G65 Subprograms
 
-**Syntax:** `G65P1Q-`
+### G65P1 - Read or Set Numeric Setting Value <!-- toc --> {#G65P1}
+
+**Syntax:** `G65P1 Q-`
 
 Read numeric setting value. Alternatively the `PRM[]` function can be used.
 
@@ -302,7 +320,7 @@ G65 P1 Q110
 (PRINT, Homing enabled: #100)
 ```
 
-**Syntax:** `G65P1Q-S-`
+**Syntax:** `G65P1 Q- S-`
 
 Set numeric setting value. Available from build 20251028.
 
@@ -321,9 +339,9 @@ G65 P1 Q110 S5000
 (PRINT, X-axis max rate: #100 mm/min)
 ```
 
-### G65P2 {#G65P2}
+### G65P2 - Read Tool Offset from Tool Table <!-- toc --> {#G65P2}
 
-**Syntax:** `G65P2Q-R-`
+**Syntax:** `G65P2 Q- R-`
 
 Read tool offset from tool table.
 
@@ -342,11 +360,11 @@ G65 P2 Q3 R2
 (PRINT, Tool 3 Z offset: #100 mm)
 ```
 
-### G65P4 {#G65P4}
+### G65P4 - Get Current Machine State <!-- toc --> {#G65P4}
 
 **Syntax:** `G65P4`
 
- Get current machine state, available from build 20250107.
+Get current machine state, available from build 20250107.
 
 | State | Description              |
 |-------|--------------------------|
@@ -367,9 +385,9 @@ o100 IF [#<_value> NE 0]
 o100 ENDIF
 ```
 
-### G65P5 {#G65P5}
+### G65P5 - Select Probe Input <!-- toc --> {#G65P5}
 
-**Syntax:** `G65P5Q-`
+**Syntax:** `G65P5 Q-`
 
 Select probe input, available from build 20250514.
 
@@ -398,7 +416,7 @@ G65 P5 Q1
 G38.2 Z-100 F50  ; Probe tool length
 ```
 
-### G65P6 {#G65P6}
+### G65P6 - Disable Spindle on/off Delays <!-- toc --> {#G65P6}
 
 **Syntax:** `G65P6`
 
@@ -417,7 +435,7 @@ M3 S10000  ; Start spindle
 G1X100F300  ; Starts cutting immediately, no delay
 ```
 
-### G65P7 {#G65P7}
+### G65P7 - Send Modbus Message <!-- toc --> {#G65P7}
 
 **Syntax:**  
 `G65P7 S- F- R- <X->` for function codes 1-4.  
@@ -706,14 +724,11 @@ o100 else
 o100 endif
 ```
 
----
+> [!WARNING] 
+> This feature has only been tested with a Modbus simulator. Use with caution in production environments and report any issues to the grblHAL development team.
 
-> ℹ️ **Warning** 
-This feature has only been tested with a Modbus simulator. Use with caution in production environments and report any issues to the grblHAL development team.
-
-> ℹ️ **Tip** 
-Ensure your grblHAL firmware is compiled with Modbus support enabled and that the Modbus communication parameters (baud rate, parity, stop bits) match your slave devices. Modbus settings are typically configured via grblHAL settings `$3xx` range.
-
-> ℹ️ **Info**  
+> [!TIP] 
+> Ensure your grblHAL firmware is compiled with Modbus support enabled and that the Modbus communication parameters (baud rate, parity, stop bits) match your slave devices. Modbus settings are typically configured via grblHAL settings `$3xx` range.
+>
 > Additional resources:
 > - [grblHAL Modbus Plugin Documentation](https://github.com/grblHAL/Plugins_spindle)
