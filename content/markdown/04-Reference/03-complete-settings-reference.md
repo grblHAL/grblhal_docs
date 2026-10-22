@@ -1120,6 +1120,7 @@ Specifies which axes should ignore the `$1` idle delay and remain energized at a
 
 > ℹ️ **Info**
 > - This is a grblHAL-specific feature that provides per-axis control over the motor idle state.
+> - Selected motors also remain enabled during E-Stop and alarm states.
 > - It is useful for axes that must resist external forces even when idle (e.g., a Z-axis subject to gravity, or a heavy gantry).
 
 | Axis  | Value | Description |
