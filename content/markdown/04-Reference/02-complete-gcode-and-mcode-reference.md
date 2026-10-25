@@ -403,7 +403,7 @@ Provides a way to programmatically set and offset work coordinate systems (G54-G
 > - `G10` is extremely powerful for automated setups, especially with multiple identical fixtures.
 > - The values are stored persistently so they survive a reset.
 > - You can omit axes. `G10 L2 P1 X50` will only change the X value for `G54` and leave Y, Z, etc., unchanged.
-> - `G59.1`, `G59.2` and `G59.3` can be [locked](./settings/#486) against accidental change.
+> - `G59.1`, `G59.2` and `G59.3` can be [locked](./settings#486) against accidental change.
 
 ---
 
@@ -921,7 +921,11 @@ These commands control how the machine handles corners and transitions between s
 > - **User-provided macros should generally start with a `P` word value of 100 or greater** to avoid conflicts with [built-in subprograms](/docs/reference/o-code#built-in-g65-subprograms) (currently P1-P7).
 > - **Argument Passing:** Arguments (e.g., `A`, `B`, `C`, `X`, `Y`, `Z`, etc.) passed with `G65` are assigned to named variables within the called subprogram.
 > - **Nesting:** Nesting of `G65` macros is allowed.
+<<<<<<< Updated upstream
 > - **Reference:** For more details on G65 macros, refer to the [G65 and G66 documentation](./o-code#g65-and-g66-arguments). Also, a reference for G65 in other systems: [cnczone.com](https://www.cnczone.com/forums/attachments/2/0/6/1/9/22462.attach).
+=======
+> - **Reference:** For more details on G65 macros, refer to the [G65 and G66 documentation](./o-code#G65). Also, a reference for G65 in other systems: [cnczone.com](https://www.cnczone.com/forums/attachments/2/0/6/1/9/22462.attach).
+>>>>>>> Stashed changes
 
 #### Subprogram Example (P100+)
 
@@ -945,6 +949,7 @@ Content of P100.macro, stored in a local (controller based) file system:
 
 > [!TIP]
 > - `G65` is a powerful tool for creating reusable, modular G-code for complex operations.
+<<<<<<< Updated upstream
 > - Variables are assigned to [numbered parameters](./o-code#g65-and-g66-arguments) based on their letter, e.g., `A` maps to `#1`, `B` to `#2`, `X` to `#24`, etc.
 > - **Reserve P1-P99 for built-in macros** - Start your custom macros at P100 or higher.
 
@@ -958,6 +963,7 @@ Content of P100.macro, stored in a local (controller based) file system:
 
 `G66` acts like `G65` but is **modal**. The specified macro is called after every subsequent motion command (`G0`, `G1`, `G2`, `G3`, etc.) until cancelled by `G67`.
 
+<<<<<<< Updated upstream
 See [Subprograms](./o-code#g65-and-g66-arguments).
 
 ---
@@ -1492,7 +1498,7 @@ This is a special grblHAL extension command used to enable or disable the contro
 
 ---
 
-## `M62`, `M63`, `M64` and  `M65` – Synchronized and Asynchronous I/O {#m62-m65}
+## `M62`, `M63`, `M64` and  `M65` – Synchronized and Asynchronous I/O {#M62--M65}
 
 **Syntax:**  
 > `M62 P-` (sync output on)  
@@ -1529,7 +1535,7 @@ These are advanced commands for controlling digital output pins, either synchron
 
 ---
 
-## `M66` – Wait for Input {#m66}
+## `M66` – Wait for Input {#M66}
 
 **Syntax:**  
 > `M66 E- <L->`  
@@ -1562,7 +1568,7 @@ This command pauses program execution until a specified input pin changes state,
 
 ---
 
-## `M67`, `M68` – Set Analog Output {#m67-m68}
+## `M67`, `M68` – Set Analog Output {#M67-M68}
 
 **Syntax:**  
 > `M67 E- Q-` (synchronized analog output)  
