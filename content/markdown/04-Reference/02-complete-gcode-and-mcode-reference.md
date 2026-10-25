@@ -918,7 +918,7 @@ These commands control how the machine handles corners and transitions between s
 `G65` allows calling a subprogram (macro) and passing arguments to it. This is a common feature in industrial controllers, enabling highly parameterized and reusable code.
 
 > ℹ️ **Info**
-> - **User-provided macros should generally start with a `P` word value of 100 or greater** to avoid conflicts with [built-in subprograms](/docs/reference/o-code#built-in-g65-subprograms) (currently P1-P7).
+> - **User-provided macros should generally start with a `P` word value of 100 or greater** to avoid conflicts with [built-in subprograms](./o-code#built-in-g65-subprograms) (currently P1-P7).
 > - **Argument Passing:** Arguments (e.g., `A`, `B`, `C`, `X`, `Y`, `Z`, etc.) passed with `G65` are assigned to named variables within the called subprogram.
 > - **Nesting:** Nesting of `G65` macros is allowed.
 <<<<<<< Updated upstream
@@ -965,6 +965,7 @@ Content of P100.macro, stored in a local (controller based) file system:
 
 <<<<<<< Updated upstream
 See [Subprograms](./o-code#g65-and-g66-arguments).
+See [Subprograms](./o-code#G65).
 
 ---
 ## `G76`, `G81` to `G89` – Canned Cycles {#canned-cycles}
