@@ -921,11 +921,7 @@ These commands control how the machine handles corners and transitions between s
 > - **User-provided macros should generally start with a `P` word value of 100 or greater** to avoid conflicts with [built-in subprograms](./o-code#built-in-g65-subprograms) (currently P1-P7).
 > - **Argument Passing:** Arguments (e.g., `A`, `B`, `C`, `X`, `Y`, `Z`, etc.) passed with `G65` are assigned to named variables within the called subprogram.
 > - **Nesting:** Nesting of `G65` macros is allowed.
-<<<<<<< Updated upstream
-> - **Reference:** For more details on G65 macros, refer to the [G65 and G66 documentation](./o-code#g65-and-g66-arguments). Also, a reference for G65 in other systems: [cnczone.com](https://www.cnczone.com/forums/attachments/2/0/6/1/9/22462.attach).
-=======
-> - **Reference:** For more details on G65 macros, refer to the [G65 and G66 documentation](./o-code#G65). Also, a reference for G65 in other systems: [cnczone.com](https://www.cnczone.com/forums/attachments/2/0/6/1/9/22462.attach).
->>>>>>> Stashed changes
+> - **Reference:** For more details on G65 macros, refer to the [G65 and G66 documentation](./o-code#g65-and-g66-arguments). Also, a reference for G65 in other systems: [cnczone.com]
 
 #### Subprogram Example (P100+)
 
@@ -949,11 +945,8 @@ Content of P100.macro, stored in a local (controller based) file system:
 
 > [!TIP]
 > - `G65` is a powerful tool for creating reusable, modular G-code for complex operations.
-<<<<<<< Updated upstream
 > - Variables are assigned to [numbered parameters](./o-code#g65-and-g66-arguments) based on their letter, e.g., `A` maps to `#1`, `B` to `#2`, `X` to `#24`, etc.
-=======
 > - Variables are assigned to [numbered parameters](./o-code#G65) based on their letter, e.g., `A` maps to `#1`, `B` to `#2`, `X` to `#24`, etc.
->>>>>>> Stashed changes
 > - **Reserve P1-P99 for built-in macros** - Start your custom macros at P100 or higher.
 
 ---
@@ -966,11 +959,7 @@ Content of P100.macro, stored in a local (controller based) file system:
 
 `G66` acts like `G65` but is **modal**. The specified macro is called after every subsequent motion command (`G0`, `G1`, `G2`, `G3`, etc.) until cancelled by `G67`.
 
-<<<<<<< Updated upstream
 See [Subprograms](./o-code#g65-and-g66-arguments).
-=======
-See [Subprograms](./o-code#G65).
->>>>>>> Stashed changes
 
 ---
 ## `G76`, `G81` to `G89` – Canned Cycles {#canned-cycles}
