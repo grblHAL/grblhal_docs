@@ -951,6 +951,9 @@ Content of P100.macro, stored in a local (controller based) file system:
 > - `G65` is a powerful tool for creating reusable, modular G-code for complex operations.
 <<<<<<< Updated upstream
 > - Variables are assigned to [numbered parameters](./o-code#g65-and-g66-arguments) based on their letter, e.g., `A` maps to `#1`, `B` to `#2`, `X` to `#24`, etc.
+=======
+> - Variables are assigned to [numbered parameters](./o-code#G65) based on their letter, e.g., `A` maps to `#1`, `B` to `#2`, `X` to `#24`, etc.
+>>>>>>> Stashed changes
 > - **Reserve P1-P99 for built-in macros** - Start your custom macros at P100 or higher.
 
 ---
@@ -965,7 +968,9 @@ Content of P100.macro, stored in a local (controller based) file system:
 
 <<<<<<< Updated upstream
 See [Subprograms](./o-code#g65-and-g66-arguments).
+=======
 See [Subprograms](./o-code#G65).
+>>>>>>> Stashed changes
 
 ---
 ## `G76`, `G81` to `G89` – Canned Cycles {#canned-cycles}
