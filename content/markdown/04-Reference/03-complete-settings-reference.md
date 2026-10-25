@@ -2369,9 +2369,9 @@ Disables the internal pull-up resistors on the generic digital input pins.
 #### Tips & Tricks
 - Use the `$PINS` command to list all pins including auxiliary I/O ports.
 - `$PINSTATE` command can be used to check pin capabilities and current state.
-- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](/docs/reference/gcode#m62-m65)
--  [M66 – Wait for Input Signal](/docs/reference/gcode#m66)
--  [M67, M68 – Set Analog Output](/docs/reference/gcode#m67-m68)
+- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](./gcode#M62--M65)
+-  [M66 – Wait for Input Signal](./gcode#M66)
+-  [M67, M68 – Set Analog Output](./gcode#M67-M68)
 
 ---
 
@@ -2392,9 +2392,9 @@ Inverts the logic for the generic digital output pins.
 #### Tips & Tricks
 - Use the `$PINS` command to list all pins including auxiliary I/O ports.
 - `$PINSTATE` command can be used to check pin capabilities and current state.
-- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](/docs/reference/gcode#m62-m65)
--  [M66 – Wait for Input Signal](/docs/reference/gcode#m66)
--  [M67, M68 – Set Analog Output](/docs/reference/gcode#m67-m68)
+- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](./gcode#M62--M65)
+-  [M66 – Wait for Input Signal](./gcode#M66)
+-  [M67, M68 – Set Analog Output](./gcode#M67-M68)
 
 ---
 
@@ -2408,9 +2408,9 @@ Configures generic output pins to operate in "open-drain" mode.
 #### Tips & Tricks
 - Use the `$PINS` command to list all pins including auxiliary I/O ports.
 - `$PINSTATE` command can be used to check pin capabilities and current state.
-- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](/docs/reference/gcode#m62-m65)
--  [M66 – Wait for Input Signal](/docs/reference/gcode#m66)
--  [M67, M68 – Set Analog Output](/docs/reference/gcode#m67-m68)
+- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](./gcode#M62--M65)
+-  [M66 – Wait for Input Signal](./gcode#M66)
+-  [M67, M68 – Set Analog Output](./gcode#M67-M68)
 
 ---
 
