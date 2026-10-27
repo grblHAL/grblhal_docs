@@ -35,7 +35,7 @@ System commands are special start with `$`. They are used to configure, control,
 | **`$J=...`** | **Jogging.** Execute a jogging motion. |
 | [`$RST=`](#restore-settings) | Restore settings. |
 | **`$SLP`** | **Sleep.** Put the machine to sleep. |
-| [`$SD`](#spindle-data) | Output spindle encoder data. |
+| [`$SD`](#spindle-data) | Output spindle encoder data. |$EM
 | [`$SR`](#spindle-data-reset) | Reset spindle encoder data. |
 
 ### Additional Commands <!--toc-->
@@ -84,7 +84,7 @@ grblHAL provides advanced reporting commands for Senders to query up to date dat
 | **`$EE`** | **Enumerate Errors.** Lists all supported error codes and descriptions. |
 | **`$ES`** | **Enumerate Settings.** Lists all supported settings with types, ranges, and descriptions. |
 | **`$EG`** | **Enumerate Setting Groups.** Lists the hierarchy of setting groups. |
-| **`$PINS`** | **Enumerate Pins.** Lists processor pin mappings. |
+| [**`$PINS`**](#pins) | **Enumerate Pins.** Lists processor pin and port mappings. |
 | **`$PINSTATE`** | **Enumerate Pin States.** Lists current state of auxiliary pins. |
 | **`$PORTS`** | **Enumerate Serial Ports.** Lists available UART ports. |
 | **`$SPINDLES`** | **Enumerate Spindles.** Lists available spindles. |
@@ -477,10 +477,9 @@ Output value of [numbered](./parameters#numbered) or [named](./parameters#named)
 	[PARAM:_homed_state=0]
 	```
 
-
 ---
 
-### `$PINS` – Report Pin Status
+### `$PINS` – Report Pin Mappings {#pins}
 Debug command to show the current hardware mapping of input/output pins.
 
 **Syntax:** `$PINS`
@@ -501,7 +500,7 @@ Debug command to show the current hardware mapping of input/output pins.
 
 ---
 
-### `$PINSTATE` – Detailed Pin Enumeration
+### `$PINSTATE` – Detailed Pin Enumeration {#pinstate}
 Enumerates auxiliary pins with type, description, mode (input/output, inverted, pull-up/down), and capabilities.
 
 **Syntax:** `$PINSTATE`
@@ -746,7 +745,7 @@ These functionality codes are specific extensions or part of the extended ASCII 
 
 ---
 
-### Realtime Report <!--toc-->
+### Realtime Report {#realtime-report} <!--toc-->
 
 When you send `?`, status reports are streamed back. The format is a structured text string enclosed in ``, with fields separated by pipe `|` characters.
 
@@ -795,3 +794,278 @@ When you send `?`, status reports are streamed back. The format is a structured 
 
 > 📝 **Note**
 > When a full status (`0x87`) is requested the `SD:x` mount status is always reported, **not** the streaming state. Plugins may add additional fields to the report.
+
+### Enumerations <!--toc-->
+
+Code sets and translations can be fetched from the controller, superseding the use of files that has to be kept in sync.
+Since grblHAL supports plugins and driver specific extensions it will be hard to keep senders up to date via files that has to be updated.
+
+| Command | Description |
+|---------|-------------|
+| [**`$EA`**](#enumerate-alarms) | Outputs all supported alarm codes and descriptions in grblHAL format. |
+| [**`$EAG`**](#enumerate-grbl-alarms) | Outputs all supported alarm codes and descriptions in legacy Grbl format. |
+| [**`$EE`**](#enumerate-errors) | Outputs all supported error codes and descriptions in grblHAL format. |
+| [**`$EEG`**](#enumerate-grbl-errors) | Outputs all supported error codes and descriptions in legacy Grbl format. |
+| [**`$ES`**](#enumerate-settings) | Outputs all supported settings with name, type, format, unit, ranges, and description in grblHAL format. |
+| [**`$ESG`**](#enumerate-grbl-settings) | Outputs all supported settings with name, unit, and description in legacy Grbl format. |
+| [**`$ESH`**](#enumerate-tab-settings) | Outputs all supported settings in grblHAL tab separated format. |
+| [**`$EG`**](#enumerate-groups) | Outputs the setting groups. |
+| [**`$E*`**](#enumerate-all) | Outputs all supported alarm, error codes and settings in grblHAL format. |
+
+### `$E*` – Enumerate all {#enumerate-all}
+Outputs [alarm](#enumerate-alarms), [error](#enumerate-errors), [setting groups](#enumerate-groups) and [setting](#enumerate-settings) codes in one combined `ok` terminated transaction.
+
+**Syntax:**  
+`$E*`
+
+---
+
+### `$EA` – Enumerate and output alarms {#enumerate-alarms}
+Outputs alarm codes with a short message and a longer description.
+
+**Syntax:**  
+`$EA`
+
+**Format:**  
+`[ALARMCODE:<code>|<v1.0->|<description>]`
+
+| Element | Description |
+|:-------:|:------------|
+| **`<code>`** | The numeric alarm code. |
+| **`<v1.0->`** | Always empty, for compatability with legacy Grbl. |
+| **`<description>`** | A longer form description of the alarm, it may include action to take to clear it. |
+
+**Example:**
+* _Output alarm codes:_
+	```text
+	[ALARMCODE:1||Hard limit has been triggered. Machine position is likely lost due to sudden halt. Re-homing is highly recommended.]
+	[ALARMCODE:2||Soft limit alarm. G-code motion target exceeds machine travel. Machine position retained. Alarm may be safely unlocked.]
+	...
+	ok
+	```
+
+---
+
+### `$EAG` – Enumerate and output alarms in legacy Grbl file format {#enumerate-grbl-alarms}
+Outputs alarm codes in legacy [Grbl comma separated file](https://github.com/gnea/grbl/blob/master/doc/csv/alarm_codes_en_US.csv) format.
+
+**Syntax:**  
+`$EAG`
+
+**Format:**  
+`"<code>","<v1.0->","<description>"`
+
+| Element | Description |
+|:-------:|:------------|
+| **`<code>`** | The numeric alarm code. |
+| **`<v1.0->`** | Always "N/A" for Not Available, Grbl 1.0 and earlier format is not supported. |
+| **`<description>`** | A description of the alarm code, it may include action to take to clear it. |
+
+**Example:**
+* _Output alarm codes:_
+	```text
+	"Alarm Code in v1.1+"," Alarm Message in v1.0-"," Alarm Description"
+	"1","N/A","Hard limit has been triggered. Machine position is likely lost due to sudden halt. Re-homing is highly recommended."
+	"2","N/A","Soft limit alarm. G-code motion target exceeds machine travel. Machine position retained. Alarm may be safely unlocked."
+	...
+	ok
+	```
+
+---
+
+### `$EE` – Enumerate and output error codes {#enumerate-errors}
+Outputs error (status) codes with a description.
+
+**Syntax:**  
+`$EE`
+
+**Format:**  
+`[ERRORCODE:<code>|<v1.0->|<description>]`
+
+| Element | Description |
+|:-------:|:------------|
+| **`<code>`** | The numeric error code. |
+| **`<v1.0->`** | Always empty, for compatability with legacy Grbl. |
+| **`<description>`** | A description of the error. |
+
+**Example:**
+* _Output error codes:_
+	```text
+	[ERRORCODE:0||]
+	[ERRORCODE:1||G-code words consist of a letter and a value. Letter was not found.]
+	[ERRORCODE:2||Missing the expected G-code word value or numeric value format is not valid.]
+	...
+	ok
+	```
+
+---
+
+### `$EEG` – Enumerate and output error codes in legacy Grbl file format {#enumerate-grbl-errors}
+Outputs error (status) codes in legacy [Grbl comma separated file](https://github.com/gnea/grbl/blob/master/doc/csv/error_codes_en_US.csv) format.
+
+**Syntax:**  
+`$EEG`
+
+**Format:**  
+`"<code>","<v1.0->","<description>"`
+
+| Element | Description |
+|:-------:|:------------|
+| **`<code>`** | The numeric alarm code. |
+| **`<v1.0->`** | Always "N/A" for Not Available, Grbl 1.0 and earlier format is not supported. |
+| **`<description>`** | A description of the alarm code, it may include action to take to clear it. |
+
+**Example:**
+* _Output alarm codes:_
+	```text
+	"Error Code in v1.1+","Error Message in v1.0-","Error Description"
+	"0","N/A",""
+	"1","N/A","G-code words consist of a letter and a value. Letter was not found."
+	"2","N/A","Missing the expected G-code word value or numeric value format is not valid."
+	...
+	ok
+	```
+
+---
+
+### `$EE` – Enumerate and output $-setting codes {#enumerate-settings}
+Outputs error (status) codes with a description.
+
+**Syntax:**  
+`$EE`
+
+**Format:**  
+`[SETTING:<id>|<group id>|<name>|{<unit>}|<data type>|{<format}]|{<min>}|{<max>}|{<reboot required>}|{<null allowed>}]`
+
+| Element | Description |
+|:-------:|:------------|
+| **`<id>`** | The numeric setting number. |
+| **`<group id>`** | Group id of the [setting group](#enumerate-groups) the setting belongs to. For advanced settings handling. |
+| **`<name>`** | Name or short description of setting. |
+| **`<unit>`** | Optional unit for setting. |
+| [**`<data type>`**](#setting-data-types) | Code for data type. |
+| **`<format>`** | Format string or comma separated list of allowed values/labels for data type 1, 2, and 3. |
+| **`<min>`** | Optional minimum value allowed. |
+| **`<max>`** | Optional maximum value allowed. |
+| **`<reboot required>`** | `0` - reboot not required, `1` - required for the setting to take effect |
+| **`<null allowed>`** | `0` - blank or `0` not not allowed if a `<min>` - `<max>` range is defined, `1` - allowed in addition to the `<min>` - `<max>` range of values. |
+
+#### Data types {#setting-data-types}
+
+| Code | Description |
+|:----:|:------------|
+| **`0`** | Boolean, typically rendered as a check box.|
+| **`1`** | Bitfield, typically rendered as a column of check boxes. The `<format>` field contains a comma separated list of labels: the first corresponds to bit 0, second to bit 1 and so on. Labels named "N/A" are for unavailable fields and should not be shown in the UI.|
+| **`2`** | Exclusive bitfield, typically rendered as a column of check boxes.The `<format>` field contains a comma separated list of labels: the first corresponds to bit 0, second to bit 1 and so on. Labels named "N/A" are for unavailable fields and should not be shown in the UI. When bit 0 is not set checkboxes for other bits should be disabled.|
+| **`3`** | Radio buttons. The `<format>` field contains a comma separated list of labels: the first corresponds to the value 0, second to value 1 and so on. Labels named "N/A" are for unavailable options and should not be shown in the UI.|
+| **`4`** | [Axis mask](settings#axismask), a bit field typically rendered as a column of check boxes. Number of check boxes corresponds to number of axes. Latters assigned to the axes is available in the [`$I`](#firmware-info) element `[AXS::]` |
+| **`5`** | Integer, typically rendered as a numeric input field. |
+| **`6`** | Decimal, typically rendered as a numeric input field. |
+| **`7`** | String. |
+| **`8`** | Password, as string except data entry could be hidden. |
+| **`9`** | IPv4, IP v4 address as a string in dot notation. |
+
+#### Data types {#setting-data-formats}
+
+* Numeric data types (5 and 6):  start with `-` if negative values are allowed, a number of `#` or `0` characters, `.` for decimal point followed by a number of `0` characters.  
+`#` - suppress if character in position is `0`  
+`0` - do not suppress if character in position is `0`
+* Strings: `x(<n>)` where `<n>` is the maximum number of characters allowed. E.g. `x(32)`.
+
+**Example:**
+* _Output setting codes:_
+	```text
+	$ES
+	[SETTING:0|35|Step pulse time|microseconds|6|#0.0|2.0||0|0]
+	[SETTING:1|35|Step idle delay|milliseconds|5|####0||65535|0|0]
+	[SETTING:2|35|Step pulse invert||4||||0|0]
+	...
+	ok
+	```
+
+---
+
+### `$ESG` –Enumerate and output $-setting codes  in legacy Grbl file format {#enumerate-grbl-settings}
+Outputs error (status) codes in legacy [Grbl comma separated file](https://github.com/gnea/grbl/tree/master/doc/csv) format.
+
+**Syntax:**  
+`$ESG`
+
+**Format:**  
+`"<code>","<name>","<unit>","<description>"`
+
+| Element | Description |
+|:-------:|:------------|
+| **`<code>`** | The numeric $-setting number. |
+| **`<name>`** | Name of setting. |
+| **`<unit>`** | Optional unit for setting. |
+| **`<description>`** | Optional description of the setting. |
+
+**Example:**
+* _Output alarm codes:_
+	```text
+	$ESG
+	"$-Code"," Setting"," Units"," Setting Description"
+	"0","Step pulse time","microseconds","Step pulse length in microseconds.\nMinimum depends on the processor and is typically in the range of 1 - 2.5.\n\nThe length has to be reduced from the default value of 5 when max. step rate exceed approximately 140 kHz.",
+	"1","Step idle delay","milliseconds","Sets a short hold delay when stopping to let dynamics settle before disabling steppers. Value 255 keeps motors enabled.",
+	"2","Step pulse invert","","Inverts the step signals (active low).",
+	...
+	ok
+	```
+
+---
+
+### `$ESG` – Enumerate and output $-setting codes in tab separated file format {#enumerate-tab-settings}
+Outputs error (status) codes in tab separated format, with header.  
+The format is identical to the [$ES]() format minus the `[SETTING:...]` encapsulation and with the `|` element separator replaced with the ASCII tab character (`0x09`).
+
+### `$EG` – Enumerate and output setting groups {#enumerate-groups}
+Outputs setting with name and hierarchical relationship.
+
+**Syntax:**  
+`$EG`
+
+**Format:**  
+`[SETTINGGROUP:<id>|<parent id>|<name>]`
+
+| Element | Description |
+|:-------:|:------------|
+| **`<id>`** | The numeric group id. |
+| **`<parent id>`** | The numeric group id of the parent group. |
+| **`<name>`** | Group name. |
+
+**Example:**
+* _Output setting groups codes:_
+	```text
+	$EG
+	[SETTINGGROUP:0|0|Root]
+	[SETTINGGROUP:1|0|General]
+	[SETTINGGROUP:2|0|Control signals]
+	[SETTINGGROUP:3|0|Limits]
+	...
+	ok
+	```
+---
+
+### `$EM` – Enumerate and output plasma materials {#enumerate-plasma-materials}
+Outputs Plasma materials, requires the [plasma plugin](./plugins#plasma-materials) and a material file loaded.
+
+**Syntax:**  
+`$EM`
+
+**Format:**  
+`[MATERIAL:<magic comment>]`
+
+| Element | Description |
+|:-------:|:------------|
+| **`<magic comment>`** | Data in LinuxCNC [magic comment](./plugins#plasma-materials-example) format with `\|` separated elements instead of comma separated. |
+
+**Example:**
+* _Output setting groups codes:_
+	```text
+	$EM
+	[MATERIAL:o:2|nu:0|na:Basic default Material|th:1|ph:3|pd:0.1|fr:1000|ch:1|cv:100|pe:0|jh:0|jd:0|kw:1|ca:45|gp:0|cm:1]
+	[MATERIAL:o:2|nu:1|na:Mild Steel - 45 A - 2 MM|th:1|ph:3.8|pd:0.2|fr:5560|ch:1.5|cv:128|pe:0|jh:0|jd:0|kw:1.4|ca:45|gp:0|cm:1]
+	...
+	ok
+	```

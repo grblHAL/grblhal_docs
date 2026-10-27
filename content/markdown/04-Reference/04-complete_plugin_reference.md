@@ -1667,153 +1667,259 @@ Github Repository: https://github.com/grblHAL/Plugin_plasma
 
 Under development. Based on [LinuxCNC specification](http://linuxcnc.org/docs/2.8/html/plasma/plasmac-user-guide.html#config-panel), with limitations.
 
-### Settings:{#plasma-settings}
+### Materials {#plasma-materials}
 
-#### `$350` – _THC Mode_
-The master switch and mode selector for the Torch Height Control system.
+> [!IMPORTANT]
+> Material support in grblHAL prior to build 20261020 was not complete and does _not_ match this documentation.
+ 
+Controlles with local storage (SD card or littlefs) can make a LinuxCNC or Sheetcam material file available to the plugin.
+If a file is available it will be automatically loaded when the SD card or littlefs is mounted, the file searched for is:
 
-> ℹ️ **Info**
-> - This setting is used by the Plasma/THC plugin.
-> - THC automatically adjusts torch height to maintain a constant arc voltage, which is critical for cut quality.
+* `/linuxcnc/material.cfg` for [LinuxCNC format](https://linuxcnc.org/docs/2.8/html/plasma/plasmac-user-guide.html#material-handling) files.
+* `/sheetcam/default.tools` For Sheetcam format files. __NOTE:__ Only fields corresponding to the LinuxCNC format elements are loaded, on save other fields will be lost.
 
-| Value | Meaning |
-|:-----:|:--------|
-| 0     | Disabled |
-| 1     | Automatic |
-| ...   | Plugin-specific modes |
+LinuxCNC style ["magic" comments](https://linuxcnc.org/docs/2.8/html/plasma/plasmac-user-guide.html#magic-comments) is supported by the controller in order to add or edit the material file, and to add temporary materials. The following fields are supported:
+
+| Function | Field | LinuxCNC | Sheetcam | Named parameter | Remark |
+|------|----|-----------|----------| ----------|-----------|
+| Material number | `nu` | from header | `Tool\ number` ||| 
+| Material name | `na` | `NAME` | `Name` |||
+| Feed rate | `fr` | `CUT_SPEED` | `Feed\ rate` | `_hal[plasmac.cut-feed-rate]` | Mandatory |
+| Pierce height | `ph` | `PIERCE_HEIGHT` | `Pierce\ height` || Mandatory |
+| Pierce delay | `pd` | `PIERCE_DELAY` | `Pierce\ delay` || Mandatory |
+| Cut height | `ch` | `CUT_HEIGHT` | `Cut\ height` || Mandatory |
+| Cut voltage | `cv` | `CUT_VOLTS` | `Preset\ volts` |||
+| Pause at end | `pe` | `PAUSE_AT_END` | `Pause\ at\ end\ of\ cut` |||
+| THC enable | `th` | `THC` | `NO\ DTHC\ -\ 0"` |||
+| Kerf width | `kw` | `KERF_WIDTH` | `Kerf\ width` | `_hal[plasmac_run.kerf-width-f]` ||
+| Puddle jump heigth | `ph` | `PUDDLE_JUMP_HEIGHT` | - |||
+| Puddle jump delay | `pj` | `PUDDLE_JUMP_DELAY` | - |||
+| Cut current | `ca` | `CUT_AMPS` | `Preset\ current` || PowerMax |
+| Gas pressure | `gp` | `GAS_PRESSURE` | - || PowerMax |
+| Cut Mode | `cm` | `CUT_MODE` | - || PowerMax |
+
+> [!NOTE]
+> * THC mode parameter is `0` - _off_, `1` - _on_ for LinuxCNC and `0` - _not disable_, `1` - _disable_ for Sheetcam.
+> * Fields remaked with "PowerMax" are for a potential Modbus integration via a sub plugin.
+
+The macic comment must start with an `o=<option>` field where `<option>` is one of the following values:
+
+| Option | Function |
+|-------|----------|
+| `0`   | Add a temporary material. Temporary materials will be deleted on reboot or a reload with the $MLOAD command. |
+| `1`   | Create a new material if it does not exist. |
+| `2`   | Modify an existing material or create a new if it does not exsist. | 
+
+> [!IMPORTANT]
+> * The comment must start with `(o=`, the order of the other fields is not important.
+> * It must end with `)`.
+> * No spaces are allowed between the field name and the equal sign.
+> * There can be any number of temporary materials defined in a g-code file (memory permitting), the last defined will automatically become the active.
+> * `nu` is ignored for temporary materials added with the `0` option, they will be automatically numbered starting with `1000000`.
+
+#### Full example: {#plasma-materials-example} 
+`(o=1, nu=2, na=5mm Mild Steel 40A, ph=3.1, pd=0.1, ch=0.75, fr=3000, kw=0.5, th=1, ca=45, cv=110, pe=0.1, gp=5, cm=1, jh=0, jd=0)`
+
+**Examples:**  
+* _Define a temporary material to set up a job:_
+	```gcode
+	(o=0, ph=3.1, pd=0.5, ch=1, fr=3000, th=1)
+	F#<_hal[plasmac.cut-feed-rate]>
+	G0Z10
+	G0X10Y10
+	; run probe here
+	M3S1
+	G1X30
+	M5
+	G0Z10
+	M30
+	```
+* _Use data from predefined material #3 to set up a job:_
+	```gcode
+	M190P3
+	F#<_hal[plasmac.cut-feed-rate]>
+	G0Z10
+	G0X10Y10
+	; run probe here
+	M3S1
+	G1X30
+	M5
+	G0Z10
+	M30
+	```
+
+### M-codes {#plasma-mcodes}
+
+#### `M190 P-` - Select material {#M190}
+\
+**Syntax:**  
+> `M122 P-`
+
+| Parameter | Description |
+|:---------:|:------------|
+| **`P`**   | Number of material to select, if `-1` then switch back to default settings. |
+
+**Examples:**
+
+* _Select material #3:_
+	```gcode
+	M190P3
+	```
+* _Deleselct the current material and switch back to default settings:_
+	```gcode
+	M190P-1
+	```
+---
+
+It is possible to enable [virtual ports](#virtual-ports) with a [$674](#674) option to control the behaviour of the plugin via `M62`-`M65` and `M67`/`M68`.
 
 ---
 
-#### `$351` – _THC Delay_
+### $-commands{#plasma-commands}
+| Command | Description |
+|:-------:|:------------|
+|**`$MLOAD`** | Clear temporary materials and reload file. |
+|[**`$EM`**](./commands#enumerate-plasma-materials) | Output material list formatted for sender use. |
+
+### Settings:{#plasma-settings}
+
+#### Overview
+
+| Setting            | [Modes](#350) | Description |
+|:------------------:|:-----:|:------|
+| [**`$350`**](#350) |       | Mode of operation |
+| [**`$351`**](#351) | 1,2   | THC on celay |
+| [**`$352`**](#352) | 1     | THC threshold (V) |
+| [**`$353`**](#353--355) | 1     | P Gain  |
+| [**`$354`**](#353--355) | 1     | I Gain  |
+| [**`$355`**](#353--355) | 1     | D Gain  |
+| [**`$356`**](#356) | 1     | VAD Threshold |
+| [**`$357`**](#357) | 1,2   | Void Override |
+| [**`$358`**](#358) | 1,2,3 | Arc on timeout |
+| [**`$359`**](#359) | 1,2,3 | Arc on retry delay |
+| [**`$360`**](#360) | 1,2,3 | Arc on max retries |
+| [**`$361`**](#361-362) | 1     | Voltage Scale |
+| [**`$362`**](#361-362) | 1     | Voltage Offset  |
+| [**`$363`**](#363) | 1     | Height Per Volt |
+| [**`$364`**](#364-365) | N/A   | Ok Low Voltage |
+| [**`$365`**](#364-365) | N/A   | Ok High Voltage |
+| [**`$366`**](#366) | 1     | Arc voltage port |
+| [**`$367`**](#367) | 1,2,3 | Arc ok port |
+| [**`$368`**](#368-369) | 2     | Cutter down port |
+| [**`$369`**](#368-369) | 2     | Cutter up port |
+| [**`$682`**](#682) | 1,2   | Z feed factor |
+| [**`$674`**](#674) | | Plugin options |
+
+#### `$350` – Plasma Mode {#350}
+The master switch and mode selector for the Plasma plugin.
+
+| Value | Description |
+|:----:|:--------|
+| **`0`**    | Disabled.|
+| **`1`**    | Requires an external arc voltage input to calculate Arc Voltage (for Torch Height Control) and an external Arc OK input for Arc OK.|
+| **`2`**    | Requires an external Arc OK input for Arc OK and external up/down signals for Torch Height Control.|
+| **`3`**    | Requires an external Arc OK input for Arc OK.|
+
+> [!IMPORTANT]
+> The ports required for the various modes must be configured with [**`$366`**](#366) - _Arc voltage port_, [**`$367`**](#367) - _Arc ok port_, [**`$368`**](#368) - _Cutter down port_ and [**`$369`**](#369) - _Cutter up port_ as required before the chosen mode can be activated.
+
+---
+
+#### `$351` – THC Delay {#351}
 Sets a delay after the "Arc OK" signal is received before THC becomes active.
-
-These settings are provided by the [Plasma plugin](/docs/reference/plugins#plasma-settings).
-
-> ℹ️ **Info**
-> - This is the "pierce delay." It allows the torch to pierce the material completely before height control begins, preventing the torch from diving into molten metal.
-
 
 | Value (seconds)| Description |
 |:--------------:|:------------|
-| 0.0 - N        | The delay time. |
+| **`0.1`** - **`N`** | The delay time in seconds. |
 
 ---
 
-#### `$352` – _THC Threshold_
-Sets the voltage "deadband" for THC corrections.
+#### `$352` – THC Threshold {#352}
+This sets the voltage variation allowed from the target voltage before for THC makes movements to correct the torch height.
 
-> ℹ️ **Info**
-> - This is the +/- voltage window around the target arc voltage where no Z-axis correction will be made.
-> - It prevents the Z-axis from constantly jittering ("hunting") due to tiny voltage fluctuations.
+> [!NOTE]
+> It prevents the Z-axis from constantly jittering ("hunting") due to tiny voltage fluctuations.
 
-| Value (Volts) | Description |
+| Value | Description |
 |:-------------:|:------------|
-| 0.0 - N       | The allowable voltage deviation before a correction is made. |
+| **`0`** - **`N`** | The allowable voltage deviation before height correction is made. |
 
 ---
 
-#### `$353` - `$355` – _THC PID Gains_
+#### `$353` - `$355` – THC PID Gains {#353--355}
 Sets the P, I, and D gains for the THC's Z-axis correction PID controller.
 
-> ℹ️ **Info**
-> - `$353`: P-Gain (Proportional)
-> - `$354`: I-Gain (Integral)
-> - `$355`: D-Gain (Derivative)
-> - These values are used to tune how aggressively and smoothly the Z-axis responds to changes in arc voltage. This is a very advanced tuning process.
+- `$353`: P-Gain (Proportional)
+- `$354`: I-Gain (Integral)
+- `$355`: D-Gain (Derivative)
+
+These values are used to tune how aggressively and smoothly the Z-axis responds to changes in arc voltage.
 
 ---
 
-#### `$356` – _THC VAD Threshold_
-Voltage-based Anti-dive threshold.
-
-
-> ℹ️ **Info**
-> - A feature to prevent "torch diving" at corners. When the machine slows down, this helps the THC logic to avoid misinterpreting the resulting voltage change.
+#### `$356` – THC VAD Threshold {#356}
+(VAD - Velocity Anti Dive) This sets the percentage of the current cut feed rate the machine can slow to before locking the THC to prevent torch dive.
 
 ---
 
-#### `$357` – _THC Void Override_
-Enables THC override when crossing voids or previously cut kerfs.
+#### `$357` – THC Void Override {#357}
+This sets the size of the change in cut voltage necessary to lock the THC to prevent torch dive \(higher values need greater voltage change to lock THC\)
 
-> ℹ️ **Info**
+
+> [!NOTE]
 > - When the torch crosses a void, voltage spikes and a simple THC will dive. This feature helps prevent that.
 
 ---
 
-#### `$358` – _Arc Fail Timeout (sec)_
-Sets the maximum time to wait for the "Arc OK" signal after the torch is fired (`M3`).
+#### `$358` – Arc Fail Timeout {#358}
+Sets the time to wait for the "Arc OK" (or transfer) signal after the torch is fired (`M3`).  
+If the "Arc Ok" signal is not asserted during this time a _arc delay_ message or a _arc failed_ message is output depending on number of retries has been exceeded.
+If exceeded the controller will enter "Hold" mode waiting for a _Cycle Start_ command to either restart a new cycle or a _Stop_ or _Reset_ command to cancel the job.
 
-> ℹ️ **Info**
-> - After the torch is commanded to fire, the controller starts this timer.
-> - It then waits for a valid "Arc OK" signal to be received on the input pin defined by `$367`.
-> - If the "Arc OK" signal is not received before this timer expires, grblHAL will declare a fault and begin the retry sequence.
-> - This prevents the machine from running a cutting path without the torch being properly lit and cutting.
-
-| Value (sec)| Meaning | Description |
-|:----------:|:--------|:------------|
-| 0.1 - N    | Timeout | The duration to wait for the "Arc OK" signal. |
-
-#### Examples
-*   **Wait up to 5 seconds for the arc:**
-    *   This provides ample time for the plasma cutter to fire and for the arc to transfer and stabilize.
-    *   `$358=5.0`
-
-#### Tips & Tricks
-- This value should be long enough to account for your plasma cutter's entire pierce sequence.
-- If it's too short, you may get false "misfire" alarms. If it's too long, the machine will wait unnecessarily before starting a retry.
+| Value      | Description |
+|:----------:|:------------|
+| **`0.1`** - **`N`** | The duration in seconds to wait for the "Arc OK" signal. |
 
 ---
 
-#### `$359` – _Arc Retry Delay_ (sec)
+#### `$359` – Arc Retry Delay {#359}
 Sets the delay between a failed arc attempt and the next attempt.
 
-> ℹ️ **Info**
+> [!NOTE]
 > - If the `$358` timer expires, grblHAL will turn off the torch, wait for this delay period, and then try to fire the torch again.
 > - This delay allows the plasma cutter's internal systems to reset and for any post-flow air to stop before the next attempt.
 
-| Value (sec)| Meaning | Description |
-|:----------:|:--------|:------------|
-| 0.1 - N    | Delay | The pause duration between retry attempts. |
+| Value (sec)| Description |
+|:----------:|:------------|
+| **`0.1`** - **`N`** | The delay in seconds between retry attempts. |
 
-#### Examples
-*   **Wait 3 seconds between retries:**
-    *   This gives the system time to reset before trying again.
-    *   `$359=3.0`
 
-#### Tips & Tricks
-- Check your plasma cutter's manual for a recommended "post-flow" time, and set this delay to be slightly longer than that.
+> [!TIP]
+> Check your plasma cutter's manual for a recommended "post-flow" time, and set this delay to be slightly longer than that.
 
 ---
 
-#### `$360` – _Arc Max Retries_
+#### `$360` –  Arc Max Retries {#360}
 Sets the number of times to attempt to fire the torch *after* the initial failure.
 
-> ℹ️ **Info**
-> - This setting controls how many times the retry cycle (`$359` delay -> fire torch -> `$358` timeout) will be repeated.
-> - If the arc still fails after all retry attempts, grblHAL will abort the job and enter an alarm state.
+> [!NOTE]
+> If the torch fails after all retry attempts, grblHAL will enter "Hold" state waiting for either a _Cycle Start_ command to start a new arc on sequence or a _Stop_ or _Reset_ command to terminate the job.
 
-| Value | Meaning | Description |
-|:-----:|:--------|:------------|
-| 0     | No Retries | If the first attempt fails, the job will alarm immediately. |
-| 1-N   | # of Retries | The number of additional attempts to make. |
+| Value | Description |
+|:-----:|:------------|
+| **`0`** - **`N`** | The number of attempts to fire the torch after a failed initial attempt. |
 
-#### Examples
-*   **Allow 2 retries:**
-    *   The system will try to fire the torch a total of 3 times (the initial attempt + 2 retries).
-    *   `$360=2`
-
-#### Tips & Tricks
-- Setting this to `1` or `2` can often recover from intermittent misfires caused by moisture or worn consumables, saving a large job from being ruined.
-- If you are getting frequent misfires that require multiple retries, it is a sign that your plasma consumables (nozzle, electrode) need to be replaced.
+> [!TIP]
+> - Setting this to `1` or `2` can often recover from intermittent misfires caused by moisture or worn consumables, saving a large job from being ruined.
+> - If you are getting frequent misfires that require multiple retries, it is a sign that your plasma consumables (nozzle, electrode) need to be replaced.
 
 ---
 
-#### `$361` and `$362` – _Arc Voltage Scale & Offset_
+#### `$361` and `$362` – Arc Voltage Scale & Offset {#361-362}
 Applies a scale factor and offset to the raw analog voltage reading from the THC.
 
-> ℹ️ **Info**
+> [!NOTE]
 > - These settings are used to calibrate the analog input (`$366`) to match the true arc voltage.
-> - This allows you to correct for inaccuracies in the voltage divider or analog reading circuitry.
 > - **Formula:** `True_Voltage = (Raw_ADC_Reading * Scale) + Offset`
 
 | Setting | Description |
@@ -1821,165 +1927,112 @@ Applies a scale factor and offset to the raw analog voltage reading from the THC
 | `$361`  | **Voltage Scale:** A multiplier (e.g., `1.01` to increase reading by 1%). |
 | `$362`  | **Voltage Offset:** A value to add or subtract (e.g., `-0.5` to subtract 0.5V). |
 
+> [!TIP]
+> The real arc voltage together with status flags are added to the [realtime report](./commands#realtime-report) `THC:` element. To be documented....
+
 ---
 
-#### `$363` – _Arc Height Per Volt_
+#### `$363` – Arc Height Per Volt {#361}
 Defines the relationship between arc voltage and torch height.
 
-> ℹ️ **Info**
+> [!NOTE]
 > - A fundamental tuning parameter for THC. It tells the controller how much to move the Z-axis for a given change in voltage.
-> - The value is typically expressed in mm/Volt or inches/Volt.
+> - The value is expressed in mm/Volt.
 > - This value is specific to your plasma cutter, material, and consumables.
 
 ---
 
-#### `$364` & `$365` – _Arc OK Voltage Range_
-Defines the acceptable voltage window for the "Arc OK" signal.
+#### `$364` and `$365` – Arc OK Voltage Range {#364-365}
+Defines the acceptable voltage window for using the arc voltage as a substitute for the "Arc OK" signal.
 
-> ℹ️ **Info**
-> - In some systems without a dedicated "Arc OK" digital input, grblHAL can infer the signal by monitoring the arc voltage.
-> - `$364`: **Arc OK High Voltage:** The upper voltage limit.
-> - `$365`: **Arc OK Low Voltage:** The lower voltage limit.
-> - If the measured arc voltage is within this window, the arc is considered stable.
+> [!Important]
+> Not yet implemented.
 
 ---
 
-#### `$366` – _Arc Voltage Analog Input Port_
-Maps the physical analog input pin for reading the torch voltage.
-
-> ℹ️ **Info**
-> - This setting is used by the Plasma/THC plugin.
-> - It tells the plugin which analog-to-digital converter (ADC) pin on the controller is connected to the plasma torch's voltage divider output.
+#### `$366` – Arc Voltage Analog Input Port {#366}
+Maps the analog input port for reading the torch voltage. Set it to -1 if voltage based THC is not used.
 
 | Value | Meaning |
 |:-----:|:--------|
-| Pin # | The hardware ADC pin number. |
+| Pin # | The hardware ADC port number. |
 
-#### Tips & Tricks
-- This is a hardware-specific mapping. You **must** consult the documentation for your specific controller board to find the correct pin number.
-
----
-
-#### `$367` – _Arc OK Digital Input Port_
-Maps the physical digital input pin for the "Arc OK" signal.
-
-> ℹ️ **Info**
-> - This setting is used by the Plasma/THC plugin.
-> - The "Arc OK" (or "Arc Transfer") signal is a digital output from the plasma cutter that confirms a stable cutting arc has been established.
-> - grblHAL will not begin motion until this signal becomes active.
-
-| Value | Meaning |
-|:-----:|:--------|
-| Pin # | The hardware digital input pin number. |
-
-#### Tips & Tricks
-- This is a hardware-specific mapping. You **must** consult the documentation for your specific controller board to find the correct pin number.
+> [!TIP]
+> Use the [$pins](./commands#pins) command to list available port numbers. Analog ports are annotated with `En` and when the port has been assigned it will be annotated as `Arc voltage`.
 
 ---
 
-#### `$368` – _Torch Down Digital Output Port_
-Maps the physical digital output pin to an external "Torch Down" signal.
+#### `$367` – Arc OK Digital Input Port {#367}
+Maps the digital input port for reading the arc ok (transfer) signal. Set it to `-1` if not used.
 
+> [!TIP]
+> Use the [$pins](./commands#pins) command to list available port numbers. Digital ports are annotated with `Aux in n` and when the port has been assigned it will be labeled as `Arc ok`.
 
-> ℹ️ **Info**
-> - This setting is used by some advanced THC systems.
-> - Instead of controlling the Z-axis motor directly, grblHAL can output simple "Up" and "Down" signals to an external, dedicated torch height controller.
-> - This setting defines the pin for the "Down" signal.
-
-| Value | Meaning |
-|:-----:|:--------|
-| Pin # | The hardware digital output pin number. |
-
----
-
-#### `$369` – _Torch Up Digital Output Port_
-Maps the physical digital output pin to an external "Torch Up" signal.
-
-
-> ℹ️ **Info**
-> - This setting is used by some advanced THC systems.
-> - It defines the pin for the "Up" signal to be sent to an external THC controller.
-> - Works in conjunction with `$368`.
-
-| Value | Meaning |
-|:-----:|:--------|
-| Pin # | The hardware digital output pin number. |
+**Example:**  
+* _$pins output when the port has been assigned with $367=0, port 1 (Aux in 1) is still available:_
+	```text
+	[PIN:PC11,Aux in 0,Arc ok]
+	[PIN:PB0,Aux in 1,P0]
+	```
 
 ---
 
-#### $350 - _Mode of operation_
+#### `$368` and `$369` – Torch Down and Up Digital Input Ports {#368-369}
+Maps the physical digital input ports for an external torch heigth controller that provides up/down signals for height control.
 
-| Mode | Description |
-|------|-------------|
-| 0    | Disabled.|
-| 1    | Uses an external arc voltage input to calculate Arc Voltage (for Torch Height Control).<br>Uses an external Arc OK input for Arc OK.|
-| 2    | Uses an external Arc OK input for Arc OK.<br>Uses external up/down signals for Torch Height Control.|
-| 3    | Uses an external Arc OK input for Arc OK.|
+- `$368`: Torch down port
+- `$369`: Torch up port
 
-#### THC
+> [!TIP]
+> Use the [$pins](./commands#pins) command to list available port numbers. Digital ports are annotated with `Aux in n` and
+> when the ports have been assigned they will be labeled as `Cutter down` and `Cutter up`.
 
-| Setting                    | Modes | Description |
-|----------------------------|-------|-------------|
-| $351 - Delay               | 1,2   | This sets the delay (in seconds) measured from the time the Arc OK signal is received until Torch Height Controller (THC) activates.|
-| $352 - Threshold \(V\)     | 1     | This sets the voltage variation allowed from the target voltage before for THC makes movements to correct the torch height.|
-| $353 - P Gain              | 1     | This sets the Proportional gain for the THC PID loop.<br>This roughly equates to how quickly the THC attempts to correct changes in height. |
-| $354 - I Gain              | 1     | This sets the Integral gain for the THC PID loop.<br>Integral gain is associated with the sum of errors in the system over time and is not always needed.|
-| $355 - D Gain              | 1     | This sets the Derivative gain for the THC PID loop.<br>Derivative gain works to dampen the system and reduce over correction oscillations and is not always needed.|
-| $356 - VAD Threshold \(%\) | 1,2   | \(Velocity Anti Dive\) This sets the percentage of the current cut feed rate the machine can slow to before locking the THC to prevent torch dive.|
-| $357 - Void Override \(%\) | N/A    | This sets the size of the change in cut voltage necessary to lock the THC to prevent torch dive \(higher values need greater voltage change to lock THC\)|
-| $682 - Z feed factor \(%\) | 1,2   | This sets the Z-axis feedrate to use for height corrections as a percentage of the actual XY feedrate.|
+**Example:**  
+* _$pins output when ports has been assigned with $367=0, $368=1 and $369=2:_
+	```text
+	[PIN:PC11,Aux in 0,Arc ok]
+	[PIN:PB0,Aux in 1,Cutter down]
+	[PIN:PC1,Aux in 2,Cutter up]
+	```
+> [!NOTE]
+> The ports will not be assigned unless the [$350](#350) mode is set to `2`.
 
-#### ARC
+---
 
-| Setting                | Modes | Description |
-|------------------------|-------|-------------|
-| $358 - Fail Timeout    | 1,2,3 | This sets the amount of time (in seconds) PlasmaC will wait between commanding a "Torch On"<br>and receiving an Arc OK signal before timing out and displaying an error message.|
-| $359 - Retry Delay     | 1,2,3 | This sets the time (in seconds) between an arc failure and another arc start attempt.
-| $360 - Max Retries     | 1,2,3 | This sets the number of times PlasmaC will attempt to start the arc.|
-| $361 - Voltage Scale   | 1     | This sets the arc voltage input scale and is used to display the correct arc voltage.|
-| $362 - Voltage Offset  | 1     | This sets the arc voltage offset and is used to display zero volts when there is zero arc voltage input.|
-| $363 - Height Per Volt | 1     | This sets the distance the torch would need to move to change the arc voltage by one volt.<br>Used for manual height manipulation only.|
-| $364 - Ok High Voltage | N/A   | This sets the voltage threshold below which Arc OK signal is valid.|
-| $365 - Ok Low Voltage  | N/A   | This sets the voltage threshold above which the Arc OK signal is valid.|
-
-#### Auxiliary I/O
-
-| Setting                 | Description |
-|-------------------------|-------------|
-| $366 - Arc voltage port | This sets which analog input port to use for the arc voltage signal. Set to -1 to not use any.<sup>1</sup> |
-| $367 - Arc ok port      | This sets which digital input port to use for the arc ok signal. Set to -1 to not use any.<sup>2</sup> |
-| $368 - Cutter down port | This sets which digital input port to use for the cutter down signal. Set to -1 to not use any. |
-| $369 - Cutter up port   | This sets which digital input port to use for the cutter up signal. Set to -1 to not use any. |
-
-<sup>1</sup> This pin/port is required to enable voltage controlled THC.  
-<sup>2</sup> This pin/port is required to enable the plugin.
-
-Tip: use the `$PINS` command to list available pins. The port number is the number following the "_Aux in_" text, an example: `[PIN:P3.2,Aux in 0,P0]`.
-
-#### $674 - Plugin options
+#### $674 - Plugin options, [bitmask](./settings#bitmask) {#674}
 
 | Bit | Value |Description |
 |-----|-------|------------|
 | 0   | 1     | Enable [virtual ports](#virtual-ports). |
 | 1   | 2     | Sync Z position. Update the Z position when THC control ends. |
+| 2   | 4     | Send push report when material is selected. |
+| 3   | 8     | Add grblHAL specific virtual parameters. |
 
-Add the _Value_ fields for the functionality to enable to get the one to use for the setting.
+> [!NOTE]
+> Option 3 for _grblHAL specific virtual parameters_ adds synonyms for LinuxCNC parameters:
+> - `_plasma_feed-rate` is equal to `_hal[plasmac.cut-feed-rate]`
+> - `_plasma_kerf-width` is equal to `_hal[plasmac_run.kerf-width-f]`
 
-#### `$674` – THC Options [(bitmask)](#bitmask)
-Configures advanced options for the THC (Torch Height Control) plugin.
+**Example:**  
+* _Example output when push report is enabled:_
+	```gcode
+	M190P
+	ok
+	[MSEL:1|Mild Steel - 45 A - 2 MM]
+	```
 
-> ℹ️ **Info**
-> - The available options are defined by the specific THC plugin being used.
-> - This is a companion to the main THC settings in the `$350+` block.
+---
 
 #### `$682` – THC Feed Factor {#682}
 Sets a factor to adjust the Z-axis feed rate for THC correction moves.
 
-> ℹ️ **Info**
+> [!NOTE]
 > - A tuning parameter for the THC plugin.
 > - It can be used to scale the speed of the THC's Z-axis adjustments to match the capabilities of the machine and the cutting parameters.
 
-#### Virtual ports
+---
+
+### Virtual ports
 
 Virtual ports are controlled by regular M-Codes.
 
@@ -2003,72 +2056,6 @@ The maximum percentage allowed is 100%, values above this will be set to 100%.
 > [!IMPORTANT]
 > Virtual ports will shadow any real ports with the same port number. Some dummy ports may also be added since the core require port numbers to be consecutive starting from 0.
 
-#### Materials
-
-The plugin can load and partially make use of LinuxCNC and/or SheetCam style material files. Loading is from either a SD card or from root mounted littlefs file system.
-
-The following files are currently loaded from if present:
-* LinuxCNC: _/linuxcnc/material.cfg_
-* SheetCam: _/sheetcam/default.tools_
-
-Additionally materials can be modified or added by LinuxCNC style _magic_ [gcode comments](https://linuxcnc.org/docs/html/plasma/qtplasmac.html#plasma:magic-comments).
-
-To select the material to use `M190P<n>` where `<n>` is the material number.  
-If NGC parameter support is enabled in the controller the feedrate from the selected material can be set by adding `F#<_hal[plasmac.cut-feed-rate]>` to the gcode file.
-
-Currently loaded materials can be output to the sender console with the `$EM` command, the output is in a machine readable format.
-
-> [!NOTE]
-> Settings updated via _magic_ comments are currently _not_ written back to the material file.
-
-#### Dependencies:
-
-Driver must support a number of auxiliary I/O ports, at least one digital input for the arc ok signal.  
-Some drivers support the MCP3221 I2C ADC, when enabled it can be used for the arc voltage signal.
-
-#### Credits:
-
-LinuxCNC documentation linked to above.
-
-#### $-Settings
-
-| Setting | Description | Example |
-|---------|-------------|---------|
-| `$350` | Mode of operation | `1` → uses external arc voltage input |
-| `$351` | Arc OK pin | `2` → input pin number |
-| `$352` | Arc Voltage pin | `3` → input pin number |
-| `$353` | Up/Down pin | `4` → output pin number |
-| `$354` | Voltage scale | `1.0` → scaling factor |
-| `$355` | Voltage threshold | `0.5` → threshold value |
-| `$356` | Velocity Anti-Dive threshold (%) | `20` |
-
-#### M-Codes
-
-| M-Code | Syntax | Description |
-|--------|--------|-------------|
-| `M62` | `M62 P[port]` | Disable THC, synchronized with motion |
-| `M63` | `M63 P[port]` | Enable THC, synchronized with motion |
-| `M64` | `M64 P[port]` | Disable THC, immediate |
-| `M65` | `M65 P[port]` | Enable THC, immediate |
-| `M67` | `M67 E[port] Q[percent]` | Immediate velocity reduction |
-| `M68` | `M68 E[port] Q[percent]` | Velocity reduction synchronized |
-
-#### Example
-```gcode
-; Plasma THC example
-$350=2          ; THC mode: arc ok + up/down
-$356=20         ; VAD threshold 20%
-$361=1.5        ; Voltage scaling factor
-$682=80         ; Z feed factor
-
-M190 P3         ; Select material #3
-M63 P0          ; Enable THC synced
-G1 X100 Y0 F2000
-G1 X100 Y100 F2000
-M67 E0 Q50      ; Immediate feed reduction to 50%
-M64 P0          ; Disable THC after cut
-```
-
 ---
 
 ## Sienci ATCi (Automatic Tool Changer Interface) {#sienciatc}
@@ -2091,8 +2078,8 @@ This plugin provides advanced safety, state management, and sensor integration f
 #### `$683` – ATCi Configuration (mask)
 Configures the operating modes for the Sienci Automatic Tool Changer Interface plugin.
 
-> ℹ️ **Info**
-> - This is a **bitmask**: add together the values of the options you want to enable.
+> [!NOTE]
+> - This is a [bitmask](./settings#bitmask): add together the values of the options you want to enable.
 > - **Rack Monitor:** Uses `AUXINPUT7` to detect if the rack is physically mounted. If the rack is removed, the Keepout zone is automatically disabled.
 > - **TC Macro Monitor:** Automatically disables the Keepout zone while a Tool Change macro is running to allow tool fetching.
 
