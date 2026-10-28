@@ -211,14 +211,14 @@ Outputs firmware information, including version, build date, axis configuration,
 
 **Output Details:**
 -   `[VER..:]` - Dot separated major version, minor version and build date in YYYYMMDD format followed by semicolon and optional build string.
--   `[AXS::]` - Number of axes and their letter designations (e.g., `XYZ`, `XYZABC`).
+- <a id="firmware-axes"/>  `[AXS::]` - Number of axes and their letter designations (e.g., `XYZ`, `XYZABC`).
 -   `[NEWOPT:,,,...]` - Comma-separated list of enabled compile-time options (e.g., `ATC`, `WIFI`, `SD`, `ETH`).
 -   `[FIRMWARE:grblHAL]`
 -   `[SIGNALS:]` - List of enabled input signals (same codes as realtime report).
 -   `[DRIVER:@]` - Driver name followed by a `@` and MCU clock frequency.
 -   `[DRIVER VERSION:]` - Date in YYMMDD format.
 -   `[BOARD:]` - Driver name followed by a `@` and MCU clock frequency.
--   `[AUX IO:,,,]` - Comma separated list with number of digital/analog inputs/outputs.
+- <a id="firmware-aux-io"/>   `[AUX IO:,,,]` - Comma separated list with number of digital/analog inputs/outputs.
 -   `[PLUGIN:]`: - Plugin name and version, one line for each installed.
 
 **Example**
@@ -288,15 +288,15 @@ Saves a G-code block to one of the startup lines (typically `$N0` and `$N1`).
 
 Use the `|` (vertical bar) character to separate commands than cannot be put on a single line.
 
-**Example**
+> [!WARNING]]
+> - Do not place motion commands (`G0`, `G1`, `G2`, `G3`) or tool changes (`M6`) in startup lines. This can be dangerous if the machine moves unexpectedly upon connection.
+> - On setting a startup line the code will be run to validate it before it is stored.
+
+**Example:**
 * _Set startup mode to absolute, metric and XY plane:_
 	```gcode
 	$N0=G90G21G17
 	```
-
-> [!WARNING]]
-> Do not place motion commands (`G0`, `G1`, `G2`, `G3`) or tool changes (`M6`) in startup lines. This can be dangerous if the machine moves unexpectedly upon connection.
-> On setting a startup line the code will be run to validate it before it is stored.
 
 ---
 
@@ -310,7 +310,7 @@ Restores groups of settings to their firmware defaults.
 | **`$`** | Restores all core `$$` numbered settings to defaults. |
 | **`&`** | Restores all driver and plugin defined `$$` numbered settings to defaults. |
 | **`#`** | Restores all G-code parameters (`G54`-`G59`, `G28`, `G30`) to zero. |
-| **`*`** | Restores **ALL** settings and parameters to defaults. |
+| **`*`** | Restores _all_ settings and parameters to defaults. |
 
 **Example**
 * _Reset all settings to default:_
@@ -334,13 +334,15 @@ Output format: `[SPINDLEENCODER:<index count>,<pulse count>, <error count>,<angu
 | **`<error count>`** | Number of full revolutions where the pulse count differed from the configured [pulses per revolutions](./settings#38) (PPR). |
 | **`<angular position>`** | The number of revolutions since last reset in decimal representation. |
 
-**Example**
-* _Send `$SD` to get the current spindle encoder data, PPR setting is 200:_
-	```text
-	[SPINDLEENCODER:1,300,0,1.5]
-	```
 > [!TIP]
 > The current RPM calculated from the encoder data is added to the real time report when an encoder is installed. Some senders, like [ioSender](https://github.com/terjeio/ioSender#readme), may display the live spindle RPM in its UI.
+
+**Example:**
+* _Send `$SD` to get the current spindle encoder data, PPR setting is 200:_
+	```text
+	$SD
+	[SPINDLEENCODER:1,300,0,1.5]
+	```
 
 ### `$SR` – Reset Spindle Encoder Data {#spindle-data-reset}
 Resets spindle encoder data.
@@ -682,9 +684,9 @@ These are the standard Grbl control characters used by most senders. The _Alt._ 
 
 | Char  | Hex   | Alt.  | Name | Description |
 | :---: | :---: | :---: | :--- | :--- |
-| **`?`** | `0x3F` | `0x80` | **Status&nbsp;Report** | Immediately generates and sends a runtime status report (see Realtime Report section below).  - Can be sent at any time, except during critical system alarms. - The content of the report is configured by the `$10` setting. |
-| **`~`** | `0x7E` | `0x81` | **Cycle Start / Resume** | - **In Hold:** Resumes the cycle after a Feed Hold (`!`) or Program Stop (`M0`). - **In Door:** Resumes from a safety door state (if closed). - **Otherwise:** Ignored. |
-| **`!`** | `0x21` | `0x82` | **Feed Hold** | - **In Motion:** Decelerates the machine to a controlled stop and enters a `Hold` state.  - **In Jog:** Cancels the jog and flushes the buffer. - **Spindle/Coolant:** Remain **ON** during a feed hold.  - **Ignored:** In Alarm state. |
+|<a id="rtcmd-status"/>**`?`** | **`0x3F`** | **`0x80`** | Status&nbsp;Report | Immediately generates and outputs a [runtime status report](#realtime-report). It can be requested at any time unlike for legacy Grbl which blocks it during critical alarms. The content of the report is configured by the [`$10`](./settings#10) setting. |
+| **`~`** | **`0x7E`** | **`0x81`** | Cycle Start (Resume) | - **In Hold:** Resumes the cycle after a Feed Hold (`!`) or Program Stop (`M0`). - **In Door:** Resumes from a safety door state (if closed). - **Otherwise:** Ignored. |
+| **`!`** | **`0x21`** | **`0x82`** | Feed Hold | Enters the [`Hold`](#rtstate-hold) state, if in motion decelerates the machine to a controlled stop. The command is ignored in [`Alarm`](#rtstate-alarm) state. |
 | **`^x`** | `0x18` |   | **Soft Reset** | (Ctrl-X) - **Immediate Halt:** Stops all pulse generation, turns off spindle/coolant, and flushes the planner buffer. - **State:** Resets grblHAL to the `Alarm` state (if in motion) or `Idle` state (if stopped). - **Position:** If reset during motion, position is considered lost (requires re-homing). If reset while idle, position is retained. |
 | **`^y`** |  | `0x19` | **Stop** | (Ctrl-Y) - **Halt:** Executes a fast hold if in motion, turns off spindle/coolant, and flushes the planner buffer. - **State:** Resets grblHAL to the `Idle` state. - **Position:** Position is _not_ lost. |
 |          |  | `0x9F` | **Soft E-stop** | **E-stop:** Executes a fast hold if in motion, turns off spindle/coolant, and flushes the planner buffer. - **State:** Resets grblHAL to the E-stop `Alarm` state. - **Position:** Position is _not_ lost. This is **not** a safe alternative to a proper hardware based E-stop system. |
@@ -759,7 +761,7 @@ These functionality codes are specific extensions or part of the extended ASCII 
 | :---: | :--- | :--- |
 | `0x84` | **Safety&nbsp;Door** | - Simulates opening the safety door. - **Action:** Enters `Door:0` state. Retracts mode is optional (if enabled). Spindle/Coolant turn off. - **Resume:** Requires closing the door (or re-sending `0x84` in some sims) and sending Cycle Start (`~`). |
 | `0x85` | **Jog Cancel** | - **Only valid in JOG state.** - Effectively brings the machine to a smooth stop during a jog command. - Flushes the input and planner buffers for any pending jog commands. |
-| `0x87` | **Report All** | (grblHAL specific) Acts like `?` but returs **all** available data fields. Useful for senders to fully synchronize state. |
+|<a id="rtcmd-full-status"/>**`0x87`** | Report All | Acts like [`?`](#rtcmd-status) but returs [_all_ available fields](#realtime-report-fields) including some not available for the `?` request. Useful for senders to fully synchronize state on connect. (grblHAL extension) |
 | `0x88` | **Optional stop toggle** | (grblHAL specific) Toggles optional stop mode, when enabled `M1` 'pause' commands in the gcode will be ignored. |
 | `0x89` | **Single block toggle** | (grblHAL specific) Toggles single block mode, when enabled grblHAL will enter `Hold` state after each gcode block (line) waiting for a cycle start command to continue. |
 | `0x8A` | **Toggle FAN0 on/off** | (grblHAL specific) Toggles fan 0 on/off, only available when firmware has fan support enabled. |
@@ -806,14 +808,14 @@ When you send `?`, a status report is streamed back. The format is a structured 
 | **`Sc:`** | Scaling Status. ||Change| `Sc:<axisletters>`, a combination of [`<axisletters>`](./gcode#axisletters) for the axes where scaling is active. If none is scaled `Sc:` is output. |
 | **`TLR:`** | Tool Length Reference. ||Change| `TLR:<axismask>`, an [`<axismask>`](./settings/#axismask) if set, if not then `0` for the mask. |
 | **`TLR@:`** | Tool Length Reference position. ||Change| `TLR@:<a>,<b>:<tool axis>:<atG53>`<br>`<a>` and `<b>`: position in the [plane](./gcode#G17-G18-G19) where the offset was measured, typically XY.<br>`<tool axis>`: axis id of the linear (spindle) axis, typically `2` (Z).<br>`<atG53>`: `0` - not measured at G59.3 (toolsetter) coordinate, `1` - measured at [G59.3](./gcode#G5x_WCS) coordinate. |
-|<a id="rtfield-thc"></a>**`THC:`** | Plasma Plugin Status. | | Always | `THC:<voltage>,<status>`, `<voltage>`: arc voltage, [`<status>`](#plasma-status-letters): a combination of plasma status letters. |
+|<a id="rtfield-thc"/>**`THC:`** | Plasma Plugin Status. | | Always | `THC:<voltage>,<status>`, `<voltage>`: arc voltage, [`<status>`](#plasma-status-letters): a combination of plasma status letters. |
 | **`FW:`** | Firmware Identity. ||Requested<sup>2</sup>| `FW:grblHAL` This is the only data one can use to detect which controller firmware when in `Hold` state. |
-|<a id="rtfield-in"></a>**`In:`** | [M66](./gcode#M66) Wait for Input Result. ||Requested| `In:<state>`, `<state>`: `-1` not requested or timeout/error, `0` or `1` for digtal inputs, read value for analog inputs. |
+|<a id="rtfield-in"/>**`In:`** | [M66](./gcode#M66) Wait for Input Result. ||Requested| `In:<state>`, `<state>`: `-1` not requested or timeout/error, `0` or `1` for digtal inputs, read value for analog inputs. |
 | **`SD:`** | SD Card Plugin Status. ||Change| `SD:<mount status>`, `SD:<pct completed>,<filename>` or `SD:Pending`<br>`<mount status>`: `0` - unmounted, `1` - mounted, `2` - auto-detected unmount, `3` auto-detected mount<br>`<pct completed>`: streaming, percent complete. `filename`: name of streaming file.<br>`SD:Pending`: streaming is suspended. |
 | **`$C:`** | Blocking event active. ||Requested<sup>2</sup>| `$C:1` |
 
 <sup>1</sup> **`Mpos`** and **`WPos`** are mutually exclusive, which one is reported depends on a [$10](./settings#10) option.  
-<sup>2</sup> Only output for full (`0x87`) status requests.
+<sup>2</sup> Only output for full [`0x87`](#rtcmd-full-status) status requests.
 
 > [!NOTE]
 > - Positional values reported are either in metric or imperial, controlled by the [$13](./settings#13) setting, independent of the current [G20/G21](./gcode#G20-G21) mode.
@@ -821,27 +823,27 @@ When you send `?`, a status report is streamed back. The format is a structured 
 > - Plugins may add additional fields to the report.
 
 > [!TIP]
-> Since many grblHAL controllers is not reset on connect, unlike most legacy Grbl controllers, a regular status report request may not reveal
-> the current status since some are sent on changes only. To work around that a grblHAL specific status request, `0x87`, can be sent
+> Since many grblHAL controllers are not reset on connect, unlike most legacy Grbl controllers, a regular status report request may not reveal
+> the current status since some are sent on changes only. To work around that a grblHAL specific status request, [`0x87`](#rtcmd-full-status), can be sent
 > on connect that will output all available fields.
 
 #### Controller States {#controller-states}
 
 | State | Substates | Description |
 |:-----:|:---------:|:------------|
-| **`Idle`** | - | Idle state typically means the controller is ready to accept commands, it may also occur during [G4](./gcode#G4) delays. |
-| **`Run`** | 1,2 | Machine is executing motion. Optional substates, enabled by a [$10](./settings#10) option: `1`=Feed hold pending, `2`=Probing |
-| **`Hold`** | 0,1,2  | Motion is halted. Substates: `0`=Holding, `1`=Decelerate complete `2`=Decelerating |
-| **`Jog`** | - | Machine is executing jog motion. |
-| **`Alarm`** | Alarm code | G-code execution is blocked, only some $-commands are allowed. Optional substate, enabled by a [$10](./settings#10) option is the alarm code. |
-| **`Door`** | 0,1,2,3,4 | Safety door ajar. Substates: `0`=Closed, `1`=Ajar, `2`=Retracting, `3`=Cancelling, `4`=Resuming |
-| **`Check`** | - | Controller passes G-code blocks through the parser for validation, no action taken. |
+|<a id="rtstate-idle"/>**`Idle`** | - | Idle state typically means the controller is ready to accept commands, it may also occur during [G4](./gcode#G4) delays. |
+|<a id="rtstate-run"/>**`Run`** | 1,2 | Machine is executing motion. Optional substates, enabled by a [$10](./settings#10) option: `1`=Feed hold pending, `2`=Probing |
+|<a id="rtstate-hold"/>**`Hold`** | 0,1,2  | Motion is halted. Substates: `0`=Holding, `1`=Decelerate complete `2`=Decelerating |
+|<a id="rtstate-jog"/>**`Jog`** | - | Machine is executing jog motion. |
+|<a id="rtstate-alarm"/>**`Alarm`** | Alarm code | G-code execution is blocked, only some $-commands are allowed. Optional substate, enabled by a [$10](./settings#10) option is the alarm code. |
+|<a id="rtstate-door"/> **`Door`** | 0,1,2,3,4 | Safety door ajar. Substates: `0`=Closed, `1`=Ajar, `2`=Retracting, `3`=Cancelling, `4`=Resuming |
+| **`Check`** | - | Controller passes G-code blocks through the parser for validation, no action taken other than reporting any errors. |
 | **`Home`** | - | Homing sequence is executing. Real time report requests are not responded to unless enabled by a [$10](./settings#10) option. |
 | **`Sleep`** | - | In sleep mode . Send a reset command to wake it up. |
-| **`Tool`** | - | grblHAL extension, a [tool change](../developers/senders#tool-change-protocol) operation is ongoing. |
+|<a id="rtstate-tool"/> **`Tool`** | - | grblHAL extension, a [tool change](../developers/senders#tool-change-protocol) operation is ongoing. |
 
 > [!NOTE]
-> - The optional **`Run`** substates can be used by senders for advanced funtionality. `1` means that a feed hold request was send during  
+> - The optional **`Run`** substates can be used by senders for advanced funtionality. `1` means that a feed hold request was received during  
 > spindle synchronized motion and will not be executed before it completes, `2` means that a probing motion is ongoing, if probe triggered  
 > is reported when not probing the sender may stop motion to protect the probe.
 > - When in **`Hold`** state no commands except some [realtime](#realtime-commands) commands are accepted.
@@ -852,7 +854,7 @@ When you send `?`, a status report is streamed back. The format is a structured 
 
 #### Axis positions {#axis-positions}
 Axis positions are a comma separated list of positions whe the first is for the X-axis, the second for the Y-axis and so on.  
-If the controller is configured for more than three axes then the axis letter for a given position in the list is the one corresponding to the letter in the [`$I`](#firmware-info) element `[AXS::]`.
+If the controller is configured for more than three axes then the axis letter for a given position in the list is the one corresponding to the letter in the [`$I`](#firmware-axes) element `[AXS::]`.
 
 #### Input Signal Letters {#signal-letters}
 A string containing any combination of the following letters:
@@ -871,6 +873,9 @@ A string containing any combination of the following letters:
 | **`M`** | Motor warning, was `W` in builds <= 20220922. |
 | **`F`** | Motor fault, was `M` in builds <= 20220922. |
 | **`Q`** | Single step blocks asserted, from builds >= 20240110. |
+
+> [!TIP]
+> grblHAL will report the Cycle Start signal `S` at least once even if the cycle start input was asserted between status report requests, legacy Grbl will only report it if asserted when the report is prepared.
 
 #### Accessory Status Letters {#accessory-letters}
 A string containing any combination of the following letters:
@@ -1065,7 +1070,7 @@ Outputs error (status) codes with a description.
 | **`1`** | Bitfield, typically rendered as a column of check boxes. The `<format>` field contains a comma separated list of labels: the first corresponds to bit 0, second to bit 1 and so on. Labels named "N/A" are for unavailable fields and should not be shown in the UI.|
 | **`2`** | Exclusive bitfield, typically rendered as a column of check boxes.The `<format>` field contains a comma separated list of labels: the first corresponds to bit 0, second to bit 1 and so on. Labels named "N/A" are for unavailable fields and should not be shown in the UI. When bit 0 is not set checkboxes for other bits should be disabled.|
 | **`3`** | Radio buttons. The `<format>` field contains a comma separated list of labels: the first corresponds to the value 0, second to value 1 and so on. Labels named "N/A" are for unavailable options and should not be shown in the UI.|
-| **`4`** | [Axis mask](settings#axismask), a bit field typically rendered as a column of check boxes. Number of check boxes corresponds to number of axes. Letters assigned to the axes is available in the [`$I`](#firmware-info) element `[AXS::]` |
+| **`4`** | [Axis mask](settings#axismask), a bit field typically rendered as a column of check boxes. Number of check boxes corresponds to number of axes. Letters assigned to the axes is available in the [`$I`](#firmware-axes) element `[AXS::]` |
 | **`5`** | Integer, typically rendered as a numeric input field. |
 | **`6`** | Decimal, typically rendered as a numeric input field. |
 | **`7`** | String. |

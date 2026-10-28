@@ -1314,7 +1314,7 @@ Under development. Adds some M-codes to allow grblHAL to be used for [OpenPNP](h
 > The returned value is `raw value * P + Q`, `P` and `Q` values as set by a previous `M145` command, defaults for these are `1` and `0` respectively.
 
 > [!NOTE]
-> Information about available axes and auxiliary ports is available in the `$I+` [system information](https://github.com/grblHAL/core/wiki/Report-extensions#other-request-responses-or-push-messages) output, see the `AXS` and `AUX IO` elements.
+> Information about available axes and auxiliary ports is available in the `$I+` [system information](https://github.com/grblHAL/core/wiki/Report-extensions#other-request-responses-or-push-messages) output, see the [`AXS`](./commands#firmware-axes) and [`AUX IO`](./commands#firmware-aux-io) elements.
 
 #### Example
 ```gcode

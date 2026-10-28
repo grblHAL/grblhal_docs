@@ -75,7 +75,7 @@ Check the [GitHub Issues](https://github.com/grblHAL/core/issues) or join the co
 
 ---
 
-## 6. Electromagnetic Interference (EMI)
+## 6. Electromagnetic Interference (EMI) {#emi}
 
 EMI is a common cause of unexplainable random issues, usually triggered by high-power devices like spindles, VFDs, or plasma cutters.
 
