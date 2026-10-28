@@ -3,6 +3,7 @@ const fs = require('fs');
 const { marked } = require('marked');
 const hljs = require('highlight.js');
 const grayMatter = require('gray-matter');
+const { normalizeSelfClosingAnchors, getHtmlIds } = require('./anchors');
 
 const ROOT = path.resolve(__dirname, '..');
 
@@ -123,9 +124,13 @@ const wikiLinkExtension = {
     return `<a class="wiki-broken" href="#">${token.text}</a>`;
   }
 };
-marked.use({ extensions: [calloutExtension, admonitionExtension, wikiLinkExtension] });
+marked.use({
+  extensions: [calloutExtension, admonitionExtension, wikiLinkExtension],
+  renderer: { html: normalizeSelfClosingAnchors }
+});
 
 const tocRenderer = new marked.Renderer();
+tocRenderer.html = normalizeSelfClosingAnchors;
 
 tocRenderer.heading = function(text, level) {
   const heading = getHeadingDetails(text);
@@ -135,6 +140,7 @@ tocRenderer.heading = function(text, level) {
 function createPageRenderer(page) {
   const renderer = new marked.Renderer();
   renderer.heading = tocRenderer.heading;
+  renderer.html = tocRenderer.html;
   renderer.link = function(href, title, text) {
     return marked.Renderer.prototype.link.call(this, resolveInternalLink(href, page), title, text);
   };
@@ -155,8 +161,8 @@ function resolveInternalLink(href, page) {
     const fragment = canonicalMatch[2] || '';
     if (fragment.startsWith('#')) {
       const id = decodeURIComponent(fragment.slice(1));
-      if (!target.headingIds.has(id)) {
-        unresolvedInternalLinks.add(`${page.sourcePath}: ${href} (missing heading #${id})`);
+      if (!target.anchorIds.has(id)) {
+        unresolvedInternalLinks.add(`${page.sourcePath}: ${href} (missing anchor #${id})`);
       }
     }
 
@@ -173,8 +179,8 @@ function resolveInternalLink(href, page) {
       const fragment = shorthandMatch[2] || '';
       if (fragment.startsWith('#')) {
         const id = decodeURIComponent(fragment.slice(1));
-        if (!target.headingIds.has(id)) {
-          unresolvedInternalLinks.add(`${page.sourcePath}: ${href} (missing heading #${id})`);
+        if (!target.anchorIds.has(id)) {
+          unresolvedInternalLinks.add(`${page.sourcePath}: ${href} (missing anchor #${id})`);
         }
       }
 
@@ -195,8 +201,8 @@ function resolveInternalLink(href, page) {
   const fragment = match[2] || '';
   if (fragment.startsWith('#')) {
     const id = decodeURIComponent(fragment.slice(1));
-    if (!target.headingIds.has(id)) {
-      unresolvedInternalLinks.add(`${page.sourcePath}: ${href} (missing heading #${id})`);
+    if (!target.anchorIds.has(id)) {
+      unresolvedInternalLinks.add(`${page.sourcePath}: ${href} (missing anchor #${id})`);
     }
   }
 
@@ -341,7 +347,7 @@ function getPageInfo(file) {
     slug,
     outputPath: `${slug}/index.html`,
     title: extractDisplayTitle(file.fullPath, file.path),
-    headingIds: new Set([...parsed.content.matchAll(/^(#{1,6})\s+(.+)$/gm)].map(match => getHeadingDetails(match[2]).id))
+    anchorIds: getHtmlIds(marked.parse(parsed.content, { renderer: tocRenderer }))
   };
 }
 

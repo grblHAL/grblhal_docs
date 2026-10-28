@@ -230,6 +230,8 @@ Unresolved wiki links are shown as broken links in the generated site, making th
 
 Raw HTML supported by GFM is passed through, which is useful for the occasional detail that Markdown cannot express. Keep it minimal and prefer Markdown where possible.
 
+To link to a table row, add an anchor such as `<a id="rtfield-thc"></a>` inside a cell and link to `#rtfield-thc` (or `page.md#rtfield-thc` from another page). The generator also accepts `<a id="rtfield-thc"/>` and expands it to an empty, closed anchor. IDs on HTML elements are recognised by the internal link checker.
+
 ```md
 <details>
 <summary>Show advanced notes</summary>
