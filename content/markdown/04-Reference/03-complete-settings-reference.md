@@ -371,14 +371,8 @@ Controls behavior for the **primary PWM spindle** if available (spindle type 11 
 
 ## `$10` – Status Report Options ([bitmask](#bitmask)) {#10}
 
-Configures what information is included in the **real-time status reports** (`?` command).  
+Configures what information is included in the [real-time status reports](./commands#realtime-report).  
 This allows you to customize what grblHAL streams back to the host.
-
-
-> ℹ️ **Info**
-> - grblHAL extends this beyond classic Grbl.
-> - Common usage: enable only the fields your sender needs _and_ supports.
-
 
 | Bit | Value | Option |
 |-----|-------|--------|
@@ -397,6 +391,11 @@ This allows you to customize what grblHAL streams back to the host.
 | 12  | 4096  | **Enable during homing** (report also sent while homing) |
 | 13  | 8192  | **Distance to Go**
 
+
+> [!NOTE]
+> - grblHAL extends this beyond classic Grbl.
+> - Common usage: enable only the fields your sender needs _and_ supports.
+
 #### Common Examples
 
 * **Default:**  
@@ -408,11 +407,11 @@ This allows you to customize what grblHAL streams back to the host.
 * **Full report (all flags):**  
   `$10=8191`
 
-#### Tips and Trick
-- Enabling more fields = more **serial traffic**.  
-- Some GUIs may rely on specific fields (e.g. offsets, parser state).  
-- `Parser state` is not included inline, but sent separately on changes.  
-- `Run substatus` can be used as a simple **probe protection** indicator.  
+> [!TIP]
+> - Enabling more fields = _more traffic_ on the sender connection.  
+> - Some GUIs may rely on specific fields (e.g. offsets, parser state).  
+> - `Parser state` is not included inline, but sent separately on changes.  
+> - `Run substatus` can be used as a simple **probe protection** indicator.  
 
 > 🔥 **Danger**
 > - Do not enable the `Run Substatus` option unless the sender can handle it.
@@ -461,29 +460,29 @@ Smaller values = more precise arcs, but more segments.
 ---
 
 ## `$13` – Report in Inches (boolean) {#13}
-
-Switches between metric and imperial units in **status reports only**.  
-Does **not** affect G-code commands.
-
-
-> ℹ️ **Info**
-> - G-code units are set with `G20` (inches) and `G21` (mm).
-> - `$13` affects only the report format to the host.
+Switches between metric and imperial units in _reports only_.
 
 | Value | Effect |
 |-------|--------|
 | 0     | Reports in millimeters |
 | 1     | Reports in inches |
 
-#### Common Examples
-* **Default (metric):**  
-  `$13=0`
+> [!IMPORTANT]
+>  This setting does _not_ affect the interpretation of G-code command parameters.
 
-* **For imperial-based senders:**  
-  `$13=1`
+> [!TIP]
+> - G-code units are set with [`G20` and `G21`](./gcode#G20-G21).
+> - Leave at `0` unless your sender specifically requires inches. Most G-code senders prefer the reports to be in metric, and handle imperial conversions locally.
 
-#### Tips & Tricks
-- Leave at `0` unless your sender specifically requires inches.  Most G-code senders prefer the reports to be in metric, and handle imperial conversions locally, as most of grblHAL is metric in nature
+**Examples:**
+* _Default (metric):_
+	```gcode
+	$13=0
+	```
+* _For imperial-based senders:_
+	```gcode
+	$13=1
+	```
 
 ---
 

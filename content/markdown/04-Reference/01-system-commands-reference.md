@@ -643,39 +643,41 @@ The YModem protocol is part of the [file system plugins](/docs/reference/plugins
 
 ## For developers and integrators
 
-Realtime commands are single control characters that can be sent to grblHAL at any time. They are intercepted from the input stream and executed immediately, often within tens of milliseconds, bypassing the normal G-code planner buffer.
+### Real time commands <!--toc--> {#realtime-commands}
 
-> ℹ️ **Info**
-> -   **No Newline Needed:** These are _single byte/character_ command bytes. Do not send a `CR` or `LF` after them.
-> -   **Immediate Execution:** They work even if the input buffer is full.
-> -   **State Dependent:** Some commands (like `!` Feed Hold) are only valid in certain states (e.g., Run, Jog).
-> -   **Ignored if Invalid:** If a command cannot be executed (e.g., toggling spindle stop while moving), it is silently ignored to prevent unsafe conditions.
+Realtime commands are single control characters that can be sent to grblHAL at any time. They are intercepted from the input stream and executed immediately, typically within milliseconds, bypassing the input buffer.
 
-### Basic Control Commands <!--toc-->
+> [!NOTE]
+> - **No Newline Needed:** These are _single byte/character_ command bytes. Do _not_ send a `CR` or `LF` after them.
+> - **Immediate Execution:** They work even if the input buffer is full.
+> - **State Dependent:** Some commands (like `!` Feed Hold) are only valid in certain states (e.g., Run, Jog).
+> - **Ignored if Invalid:** If a command cannot be executed (e.g., toggling spindle stop while moving), it is silently ignored to prevent unsafe conditions.
 
-These are the standard Grbl control characters found in most senders. The _Alt._ column contains a grblHAL alternative which are outside the 'printable' ASCII characters range, some senders may not support/use these.
+#### Basic Control Commands <!--toc-->
+
+These are the standard Grbl control characters used by most senders. The _Alt._ column contains a grblHAL alternative which are outside the 'printable' ASCII characters range, some senders may not support/use these.
 
 | Char  | Hex   | Alt.  | Name | Description |
 | :---: | :---: | :---: | :--- | :--- |
 | **`?`** | `0x3F` | `0x80` | **Status&nbsp;Report** | Immediately generates and sends a runtime status report (see Realtime Report section below).  - Can be sent at any time, except during critical system alarms. - The content of the report is configured by the `$10` setting. |
 | **`~`** | `0x7E` | `0x81` | **Cycle Start / Resume** | - **In Hold:** Resumes the cycle after a Feed Hold (`!`) or Program Stop (`M0`). - **In Door:** Resumes from a safety door state (if closed). - **Otherwise:** Ignored. |
-| **`!`** | `0x21` | `0x82` | **Feed Hold** | - **In Motion:** Decelerates the machine to a controlled stop and enters a `Hold` state.  - **In Jog:** Cancels the jog and flushes the buffer. - **Spindle/Coolant:** Remain **ON** during a feed hold.  - **Ignored:** In Idle or Alarm states. |
+| **`!`** | `0x21` | `0x82` | **Feed Hold** | - **In Motion:** Decelerates the machine to a controlled stop and enters a `Hold` state.  - **In Jog:** Cancels the jog and flushes the buffer. - **Spindle/Coolant:** Remain **ON** during a feed hold.  - **Ignored:** In Alarm state. |
 | **`^x`** | `0x18` |   | **Soft Reset** | (Ctrl-X) - **Immediate Halt:** Stops all pulse generation, turns off spindle/coolant, and flushes the planner buffer. - **State:** Resets grblHAL to the `Alarm` state (if in motion) or `Idle` state (if stopped). - **Position:** If reset during motion, position is considered lost (requires re-homing). If reset while idle, position is retained. |
 | **`^y`** |  | `0x19` | **Stop** | (Ctrl-Y) - **Halt:** Executes a fast hold if in motion, turns off spindle/coolant, and flushes the planner buffer. - **State:** Resets grblHAL to the `Idle` state. - **Position:** Position is _not_ lost. |
 |          |  | `0x9F` | **Soft E-stop** | **E-stop:** Executes a fast hold if in motion, turns off spindle/coolant, and flushes the planner buffer. - **State:** Resets grblHAL to the E-stop `Alarm` state. - **Position:** Position is _not_ lost. This is **not** a safe alternative to a proper hardware based E-stop system. |
 
 ---
 
-### Overrides <!--toc-->
+#### Overrides <!--toc-->
 
 Overrides allow you to fine-tune the machine's operation in real-time.
 
-### Feed Rate Overrides <!--toc-->
+#### Feed Rate Overrides <!--toc-->
 Alters the programmed feed rate (`F`) for `G1`, `G2`, `G3` moves.
 -   **Range:** 10% to 200%.
 -   **Limits:** Commands that would push the value outside this range are ignored.
 -   **Scope:** Does **not** affect Rapid (`G0`) or Jog motions.
--   **Latency:** Changes take effect immediately (within the current planner block).
+-   **Latency:** Changes take effect immediately.
 
 | Hex | Command | Description |
 | :---: | :--- | :--- |
@@ -685,10 +687,10 @@ Alters the programmed feed rate (`F`) for `G1`, `G2`, `G3` moves.
 | `0x93` | **+1%** | Increases feed override by 1%. |
 | `0x94` | **-1%** | Decreases feed override by 1%. |
 
-### Rapid Rate Overrides <!--toc-->
+#### Rapid Rate Overrides <!--toc-->
 Scales the speed of `G0`, `G28`, and `G30` rapid motions.
--   **Scope:** Affects rapid motions only. Does not affect cutting moves (`G1`, etc.).
--   **State:** Can be changed at any time.
+- **Scope:** Affects rapid motions only. Does not affect cutting moves (`G1`, etc.).
+- **State:** Can be changed at any time.
 
 | Hex | Command | Description |
 | :---: | :--- | :--- |
@@ -697,7 +699,7 @@ Scales the speed of `G0`, `G28`, and `G30` rapid motions.
 | `0x97` | **25%** | Sets rapids to 25% of max rate. |
 | `0x98` | **5%** | Sets rapids to 5% of max rate. Available since build 20260831. |
 
-### Spindle Speed Overrides <!--toc-->
+#### Spindle Speed Overrides <!--toc-->
 Alters the programmed spindle speed (`S`).
 -   **Range:** 10% to 200%.
 -   **Limits:** Commands that would push the value outside this range are ignored.
@@ -711,12 +713,12 @@ Alters the programmed spindle speed (`S`).
 | `0x9C` | **+1%** | Increases spindle override by 1%. |
 | `0x9D` | **-1%** | Decreases spindle override by 1%. |
 
-### Spindle Stop Override {#spindle-stop-override}
+#### Spindle Stop Override {#spindle-stop-override}
 | Hex | Command | Description |
 | :---: | :--- | :--- |
 | `0x9E` | **Toggle&nbsp;Spindle&nbsp;Stop** | - **Only valid in HOLD state.** - Toggles the spindle On/Off while paused. - **Safety:** Ignored during motion to prevent crashing. - **Resume:** When Cycle Start (`~`) is issued, the spindle automatically restores its previous state. The system waits 4.0 seconds (configurable) for the spindle to spin up before resuming motion. |
 
-### Coolant Overrides {#coolant-overrides}
+#### Coolant Overrides {#coolant-overrides}
 Toggles coolant states directly.
 -   **State:** Valid in standard states (Idle, Run, Hold).
 -   **Parser Update:** These commands **update the modal state** of the G-code parser. A `$G` report will reflect the change.
@@ -726,9 +728,7 @@ Toggles coolant states directly.
 | `0xA0` | **Toggle Flood** | Toggles M8 Flood Coolant on/off. |
 | `0xA1` | **Toggle Mist** | Toggles M7 Mist Coolant on/off. |
 
----
-
-### Extended Commands <!--toc-->
+### Extended Commands
 
 These functionality codes are specific extensions or part of the extended ASCII set.
 
@@ -745,55 +745,117 @@ These functionality codes are specific extensions or part of the extended ASCII 
 
 ---
 
-### Realtime Report {#realtime-report} <!--toc-->
+### Realtime Report  <!--toc--> {#realtime-report}
 
-When you send `?`, status reports are streamed back. The format is a structured text string enclosed in ``, with fields separated by pipe `|` characters.
+When you send `?`, a status report is streamed back. The format is a structured text string enclosed in chevrons (angle brackets), with fields separated by pipe `|` characters.
 
 ```text
-[{:}|{|Bf:,}{|Ln:}{|FS:,{,}}{|Pn:}{|WCO:}{|WCS:G}{|Ov:}{|A:}{|MPG:}{|H:{,}}{|D:}{|Sc:}{|TLR:}{|FW:}{|In:}]
+<state{:substate}|{|Bf:,}{|Ln:}{|FS:,{,}}{|Pn:}{|WCO:}{|WCS:G}{|Ov:}{|A:}{|MPG:}{|H:{,}}{|D:}{|Sc:}{|TLR:}{|FW:}{|In:}>
 ```
 
-> ℹ️ **Info**
+> [!NOTE]
 > In the definitions below:
 > - `{ }` indicates optional items.
 > - `` indicates variables or constants.
 > - `|` separates literal values.
 
-#### Core States
-
-`Idle`, `Run`, `Hold`, `Jog`, `Alarm`, `Door`, `Check`, `Home`, `Sleep`
--   **New in grblHAL:** `Tool` (for [Tool Change Protocol](https://github.com/grblHAL/core/wiki/Manual-tool-change-protocol)).
--   **Substatuses:**
-    -   `Run:`: `1`=Feed hold pending, `2`=Probing.
-    -   `Alarm:`: Current alarm code (always added for `0x87` report).
-
 #### Report Fields {#status-report-fields}
 
-| Field | Description | Format/Details |
-|:------------:| :--- | :--- |
-| **Position** | Current&nbsp;axis&nbsp;positions. | `MPos:x,y,z...` (Machine) or `WPos:x,y,z...` (Work). |
-| **Bf** | Buffer status. | `Bf:,` |
-| **Ln** | Line Number. | `Ln:` |
-| **FS** | Feed and Speed. | `FS:,{,}` |
-| **Pn** | Input Signals. | `Pn:`  **P**: Probe, **O**: Probe disconnected, **X/Y/Z/A/B/C/U/V/W**: Limits **D**: Door, **R**: Reset, **H**: Feed Hold, **S**: Cycle Start **E**: E-Stop, **L**: Block Delete, **T**: Optional Stop **M**: Motor Warning, **F**: Motor Fault, **Q**: Single Step |
-| **WCO** | Work Coordinate Offset. | `WCO:x,y,z...` |
-| **WCS** | Active Work System. | `WCS:G54`, `WCS:G59.3`, etc. (Sent on change) |
-| **Ov** | Overrides. | `Ov:,,` |
-| **A** | Accessory State. | `A:` **S**: Spindle CW, **C**: Spindle CCW **M**: Mist (M7), **F**: Flood (M8) **T**: Tool Change Pending (M6) |
-| **MPG** | Pendant Status. | `MPG:0` (Released), `MPG:1` (Taken). |
-| **H** | Homing Status. | `H:0` (Not homed), `H:1` (Homed). Optional `,` for axis-specific. |
-| **P** | Active Probe. | `P:` (0=Primary, 1=Toolsetter, 2=Secondary). Reported when switching probes. |
-| **D** | Diameter Mode. | `D:0` (Radius/G8), `D:1` (Diameter/G7). (Lathe only). |
-| **Sc** | Scaling Status. | `Sc:` (e.g., `Sc:XY`). |
-| **TLR** | Tool Length Reference. | `TLR:offset`, only reported when set. |
-| **TLR@** | Tool Length Reference position. | `TLR@:a,b:tool axis:atG53`, only reported when set. |
-| **FW** | Firmware Identity. | `FW:grblHAL` (Full report `0x87` only, this is the only way to detect which controller firmware when in `Hold` state). |
-| **In** | Input Result (M66). | `In:0`/`In:1` (Digital state), `In:-1` (Error, not requested), `In:value ` (Analog state). |
-| **SD** | SD Card Status. | `SD:0` (Unmounted) `SD:1` (Mounted) `SD:2` (Unmounted, auto-detect) `SD:3` (Mounted, auto-detect) `SD:pct completed,filename` (Streaming) `SD:Pending` (Suspended) |
-| **$C** | Blocking event active. | `$C:1` (Full report `0x87` only). |
+| Field | Description | Optional | When | Format/Details |
+|:-----:| :---------- | :------- | :--- |:----|
+| [state](#controller-states) | Current controller state. || Always | `<Idle\|Run\|Hold\|Jog\|Alarm\|Door\|Check\|Home\|Sleep\|Tool>{:<substatus>}` The optional substate can be enabled by a [$10](./settings#10) option. |
+| **`Mpos:`** | Current absolute (machine) position. |yes |Always<sup>1</sup>| `MPos:<axis positions>`, [`<axis positions>`](#axis-positions) are in the base machine coordinate system. |
+| **`WPos:`** | Current relative (work) position. | yes |Always<sup>1</sup>| `WPos:<axis positions>`, [`<axis positions>`](#axis-positions) are in the base machine coordinate system plus any offsets. |
+| **`Bf:`** | Buffer status. | yes | Always | `Bf:<planner buffers available>,<RX buffer space available>`<br>`<planner buffers available>`: # of planner buffers available, during motion it is ideal that this approches 0.<br> `<RX buffer space available>`: # of available character slots in the input buffer. |
+| **`Ln:`** | Line Number. | yes | Always | `Ln:<n>`, `<n>`: block/line number, only output if the [N-word](./gcode#single-meaning-words) is present in the G-code. |
+| **`FS:`** | Feed and Speed. | yes |Always| `FS:<feed rate>,<spindle RPM>{,<actual spindle RPM>}`<br>`<feed rate>` - current feed rate.<br>`<spindle RPM>` - current spindle speed.<br>`<actual spindle RPM>` - as reported from a spindle encoder or from a VFD. |
+| **`Pn:`** | Input Signals. | yes |Always| `Pn:<signals>`, a combination of [`<signals>`](#signal-letters) letters. |
+| **`WCO:`** | Work Coordinate Offset. | yes |Periodic| `WCO:<axis positions>`, a list of [`<axis positions>`](#axis-positions) with the sum of all active offsets. |
+| **`WCS:`** | Active Work System. | yes |Change| `WCS:<csys>`, `<csys>`: the currently selected [coordinate system](./gcode#G5x_WCS). |
+| **`Ov:`** | Overrides. | yes | Periodic | `Ov:<feed rate>,<rapid rate>,<spindle RPM>` |
+| **`A:`** | Accessory State. ||Change| `A:<accessories>`, a combination of [`<accessories>`](#accessory-letters) letters. If there is a transition from any on to all off a empty field (`A:`) is output. |
+| **`MPG:`** | Pendant Status. ||Change| `MPG:<status>`, `<status>`: `0` - pendant listening, `1` - pendant in control. |
+| **`H:`** | Homing Status. ||Change| `H:<status>{,<axismask>}`, `<status>`: `0`= not homed, `1`= homed according to the [configured axes](./settings#44--49). [`<axismask>`](./settings/#axismask) is added if single axis homing commands is [enabled](./settings#22). |
+| **`P:`** | Active Probe. ||Change| `P:<probe>{,P}`, `<probe>`: `0`=Primary, `1`=Toolsetter, `2`=Secondary. The letter `P` is added when probe protection is enabled and active. |
+| **`D:`** | Lathe Diameter Mode. ||Change| `D:<mode>`, `<mode>`: `0` - Radius ([G8](./gcode#G7-G8)), `1` - ([G7](./gcode#G7-G8)). |
+| **`Sc:`** | Scaling Status. ||Change| `Sc:<axisletters>`, a combination of [`<axisletters>`](./gcode#axisletters) for the axes where scaling is active. If none is scaled `Sc:` is output. |
+| **`TLR:`** | Tool Length Reference. ||Change| `TLR:<axismask>`, an [`<axismask>`](./settings/#axismask) if set, if not then `0` for the mask. |
+| **`TLR@:`** | Tool Length Reference position. ||Change| `TLR@:<a>,<b>:<tool axis>:<atG53>`<br>`<a>` and `<b>`: position in the [plane](./gcode#G17-G18-G19) where the offset was measured.<br>`<tool axis>`: axis id of the linear (spindle) axis<br>`<atG53>`: `0` - not measured at G59.3 (toolsetter) coordinate, `1` - measured at [G59.3](./gcode#G5x_WCS) coordinate. |
+| **`FW:`** | Firmware Identity. ||Requested<sup>2</sup>| `FW:grblHAL` This is the only data one can use to detect which controller firmware when in `Hold` state). |
+| **`In:`** | Input Result (M66). ||Requested| `In:<state>`, `<state>`: `-1` not requested (by [M66](./gcode#M66)) or timeout/error, `0` or `1` for digtal inputs, read value for analog inputs. |
+| **`SD:`** | SD Card Status. ||Change| `SD:<mount status>`, `SD:<pct completed>,<filename>` or `SD:Pending`<br>`<mount status>`: `0` - unmounted, `1` - mounted, `2` - auto-detected unmount, `3` auto-detected mount<br>`<pct completed>`: streaming, percent complete. `filename`: name of streaming file.<br>`SD:Pending`: streaming is suspended. |
+| **`$C:`** | Blocking event active. ||Requested<sup>2</sup>| `$C:1` |
 
-> 📝 **Note**
-> When a full status (`0x87`) is requested the `SD:x` mount status is always reported, **not** the streaming state. Plugins may add additional fields to the report.
+<sup>1</sup> **`Mpos`** and **`WPos`** are mutually exclusive, which one is reported depends on a [$10](./settings#10) option.  
+<sup>2</sup> Only output for full (`0x87`) status requests.
+
+> [!NOTE]
+> - Positional values reported are either in metric or imperial, controlled by the [$13](./settings#13) setting, independent of the current [G20/G21](./gcode#G20-G21) mode.
+> - When a full status (`0x87`) is requested the `SD:` mount status is always reported, _not_ the streaming state.
+> - Plugins may add additional fields to the report.
+
+> [!TIP]
+> Since many grblHAL controllers is not reset on connect, unlike most legacy Grbl controllers, a regular status report request may not reveal
+> the current status since some are sent on changes only. To work around that a grblHAL specific status request, `0x87`, can be sent
+> on connect that will output all available fields.
+
+#### Controller States {#controller-states}
+
+| State | Substates | Description |
+|:-----:|:---------:|:------------|
+| **`Idle`** | - | Idle state typically means the controller is ready to accept commands, it may also occur during [G4](./gcode#G4) delays. |
+| **`Run`** | 1,2 | Machine is executing motion. Optional substates, enabled by a [$10](./settings#10) option: `1`=Feed hold pending, `2`=Probing |
+| **`Hold`** | 0,1,2  | Motion is halted. Substates: `0`=Holding, `1`=Decelerate complete `2`=Decelerating |
+| **`Jog`** | - | Machine is executing jog motion. |
+| **`Alarm`** | Alarm code | G-code execution is blocked, only some $-commands are allowed. Optional substate, enabled by a [$10](./settings#10) option is the alarm code. |
+| **`Door`** | 0,1,2,3,4 | Safety door ajar. Substates: `0`=Closed, `1`=Ajar, `2`=Retracting, `3`=Cancelling, `4`=Resuming |
+| **`Check`** | - | Controller passes G-code blocks through the parser for validation, no action taken. |
+| **`Home`** | - | Homing sequence is executing. Real time report requests are not responded to unless enabled by a [$10](./settings#10) option. |
+| **`Sleep`** | - | In sleep mode . Send a reset command to wake it up. |
+| **`Tool`** | - | grblHAL extension, a [tool change](../developers/senders#tool-change-protocol) operation is ongoing. |
+
+> [!NOTE]
+> - The optional **`Run`** substates can be used by senders for advanced funtionality. `1` means that a feed hold request was send during  
+> spindle synchronized motion and will not be executed before it completes, `2` means that a probing motion is ongoing, if probe triggered  
+> is reported when not probing the sender may stop motion to protect the probe.
+> - When in **`Hold`** state no commands except some [realtime](#realtime-commands) commands are accepted.
+> - When in **`Alarm`** state alarm codes `1`, `2`, `10`, `17` and `20` are designated as critical, legacy Grbl does not respond to realtime    
+> report requests when these are active even if the documentation states it will, grblHAL does and will also accept some $-commands.
+> - Legacy Grbl never reports the **`Home`** state, grblHAL outputs a realtime report with the state when the homing sequence starts.  
+> Unlike legcay Grbl GrblHAL _can_ be configured to allow realtime reporting during homing even if this is considered to be a bad idea.
+
+#### Axis positions {#axis-positions}
+Axis positions are a comma separated list of positions whe the first is for the X-axis, the second for the Y-axis and so on.  
+If the controller is configured for more than three axes then the axis letter for a given position in the list is the one corresponding to the letter in the [`$I`](#firmware-info) element `[AXS::]`.
+
+#### Input Signal Letters {#signal-letters}
+A string containing any combination of the following letters:
+| Letter(s) | Description |
+|:-------:|:------------|
+| **`P`** | Probe triggered. |
+| **`O`** | Probe disconnected. |
+| **`XYZABCUVW`** | Corresponding axis limit switch asserted. |
+| **`D`** | Door switch asserted. |
+| **`R`** | Reset switch asserted. |
+| **`H`** | Feed hold switch asserted. |
+| **`S`** | Cycle start switch asserted. |
+| **`E`** | E-Stop switch asserted. |
+| **`L`** | Block delete switch asserted. |
+| **`T`** | Optional program stop switch asserted. |
+| **`M`** | Motor warning, was `W` in builds <= 20220922. |
+| **`F`** | Motor fault, was `M` in builds <= 20220922. |
+| **`Q`** | Single step blocks asserted, from builds >= 20240110. |
+
+#### Accessory Status Letters {#accessory-letters}
+A string containing any combination of the following letters:
+| Letter  | Description |
+|:-------:|:------------|
+| **`S`** | Spindle is running in a clockwise direction \(M3\). |
+| **`C`** | Spindle is running in a counterclockwise direction \(M4\). |
+| **`O`** | Spindle encoder error. |    
+| **`M`** | Mist coolant is on \(M7\). |
+| **`F`** | Flood coolant is on \(M8\).  |
+| **`T`** | Tool change is pending \(M6\). |
 
 ### Enumerations <!--toc-->
 
@@ -985,8 +1047,8 @@ Outputs error (status) codes with a description.
 
 ---
 
-### `$ESG` –Enumerate and output $-setting codes  in legacy Grbl file format {#enumerate-grbl-settings}
-Outputs error (status) codes in legacy [Grbl comma separated file](https://github.com/gnea/grbl/tree/master/doc/csv) format.
+### `$ESG` Enumerate and output $-setting codes  in legacy Grbl file format {#enumerate-grbl-settings}
+Outputs error (status) codes in legacy [Grbl comma separated file](https://github.com/gnea/grbl/blob/master/doc/csv/setting_codes_en_US.csv) format.
 
 **Syntax:**  
 `$ESG`
@@ -1058,10 +1120,10 @@ Outputs Plasma materials, requires the [plasma plugin](./plugins#plasma-material
 
 | Element | Description |
 |:-------:|:------------|
-| **`<magic comment>`** | Data in LinuxCNC [magic comment](./plugins#plasma-materials-example) format with `\|` separated elements instead of comma separated. |
+| **`<magic comment>`** | Data in LinuxCNC [magic comment](./plugins#plasma-materials-example) format with `\|` separated elements instead of comma separated and `=` replaced with `:`. |
 
 **Example:**
-* _Output setting groups codes:_
+* _Output materials:_
 	```text
 	$EM
 	[MATERIAL:o:2|nu:0|na:Basic default Material|th:1|ph:3|pd:0.1|fr:1000|ch:1|cv:100|pe:0|jh:0|jd:0|kw:1|ca:45|gp:0|cm:1]

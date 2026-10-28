@@ -87,7 +87,7 @@ A command letter followed by a hyphen enclosed in angle brackets, e.g `<P->`. Th
 
 ---
 
-## Single Meaning Command Words
+## Single Meaning Command Words {#single-meaning-words}
 
 These words have a specific, singular meaning in a G-code block. They can appear on their own or with other commands.
 
@@ -97,6 +97,7 @@ These words have a specific, singular meaning in a G-code block. They can appear
 | **`S-`** | Spindle Speed. | Modal |
 | **`T-`** | Tool Select. | Modal |
 | **`O-`** | Label, Subprogram Name / Subprogram Number. | Non-modal |
+| **`N-`** | Line/block number. | Non-modal |
 
 ### `F` – Feed Rate <!-- toc --> {#F}
 Sets the velocity for motion (`G1`, `G2`, `G3`) in units per minute (`G94`) or units per revolution (`G95`).
