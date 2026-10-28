@@ -1440,7 +1440,7 @@ These commands provide granular control over enabling or disabling specific over
 > - **Re-enabling:** To re-enable these overrides, the corresponding `M48` command (Enable Overrides) would typically be used, or a specific override enable M-code if supported by a plugin. In a standard grblHAL configuration, `M48` re-enables all of them.
 > - **Reference:** For more details, see the [LinuxCNC M-code documentation on M50-M53](https://linuxcnc.org/docs/2.5/html/gcode/m-code.html#sec:M50-Feed-Override).
 
-#### Examples
+**Examples:**
 * _Run a critical finishing pass with exact programmed feed and spindle speed:_
 	```gcode
 	M50 M51 (Disable feed and spindle overrides)  
@@ -1468,7 +1468,6 @@ These commands provide granular control over enabling or disabling specific over
 
 This is a special grblHAL extension command used to enable or disable the controller's parking motion behavior. This command is only available when both the parking feature and this specific override option are enabled in the grblHAL firmware.
 
-
 > ℹ️ **Info**
 > - **Legacy Grbl Extension:** Originally a Grbl legacy extension for park override.
 > - **grblHAL specific:** In grblHAL, `M56` with `P1` enables parking motion, while `P0` disables it.
@@ -1480,7 +1479,7 @@ This is a special grblHAL extension command used to enable or disable the contro
 |-----------|-------------|
 | **`P`**   | `0` - disable parking motion, `1` - enable parking motion. |
 
-#### Example
+**Example**:
 * _Temporarily disable parking motion during a critical part of a program:_
 	```gcode
 	M56 P0 (Disable parking)  
@@ -1516,7 +1515,13 @@ These are advanced commands for controlling digital output pins, either synchron
 | **`M64 P`** | Turn Output `n` ON | Immediate |
 | **`M65 P`** | Turn Output `n` OFF | Immediate |
 
-#### Synchronized Example (Laser Engraving)
+> [!TIP]
+> Use the [`$PINS`](./commands#pins) command to list pins and identify auxiliary digital output ports.
+
+> [!IMPORTANT]
+> The plasma plugin may shadow some outputs when its [virtual outputs](./plugins#virtual-ports) are enabled.
+
+**Synchronized Example (Laser Engraving):**
 * _Turn on the laser just as the cut starts, and turn it off just as it ends:_
 	```gcode
 	G0 X10 Y10 (Move to start position)  
@@ -1526,9 +1531,6 @@ These are advanced commands for controlling digital output pins, either synchron
 	G0 X30 (Laser turns off at the start of this rapid move)
 	```
 
-> [!IMPORTANT]
-> The plasma plugin may shadow some outputs when its [virtual outputs](/docs/reference/plugins#virtual-ports) are enabled.
-
 ---
 
 ## `M66` – Wait for Input {#M66}
@@ -1537,7 +1539,7 @@ These are advanced commands for controlling digital output pins, either synchron
 > `M66 E- <L->`  
 > `M66 P- L- <Q->`  
 
-This command pauses program execution until a specified input pin changes state, or a timeout occurs. It is supported if auxiliary inputs (analog or digital) are available and configured. The value read is stored in parameter [5399](./parameters/#numbered) and output in the next [status report](./commands#status-report-fields) in the `In:` field. If the read failed the value is set to `-1`.
+This command pauses program execution until a specified input pin changes state, or a timeout occurs. It is supported if auxiliary inputs (analog or digital) are available and configured. The value read is stored in parameter [5399](./parameters/#numbered) and output in the next [status report](./commands#rtfield-in) in the `In:` field. If the read failed the value is set to `-1`.
 
 > ℹ️ **Info**
 > - **Non-Modal:** Executed when encountered.
@@ -1554,6 +1556,9 @@ This command pauses program execution until a specified input pin changes state,
 > - The `Q` parameter is ignored if the `L` parameter is 0.
 > - The `Q` parameter must be > 0 if the `L` parameter is > 0.
 > - The `L` parameter must be 0 for analog inputs.
+
+> [!TIP]
+> Use the [`$PINS`](./commands#pins) command to list pins and identify auxiliary digital and analog input ports.
 
 #### Example
 * _Wait for a part sensor (connected to pin 2) to go high, with a 10-second timeout:_
@@ -1586,7 +1591,13 @@ These commands control analog output pins, either synchronized with motion or im
 | **`E`**   | Analog output pin number |
 | **`Q`**   | Value to set   |
 
-#### Synchronized Example (Laser Power Control)
+> [!TIP]
+> Use the [`$PINS`](./commands#pins) command to list pins and identify auxiliary analog output ports.
+
+> [!IMPORTANT]
+> The plasma plugin may shadow some outputs when its [virtual outputs](/docs/reference/plugins#virtual-ports) are enabled.
+
+**Synchronized Example (Laser Power Control):**
 * _Set laser power (on analog output 0) just as the cut starts, and turn it off just as it ends:_
 	```gcode
 	G0 X10 Y10 (Move to start position)  
@@ -1595,9 +1606,6 @@ These commands control analog output pins, either synchronized with motion or im
 	M67 E0 Q0 (Queue "Laser Power OFF")  
 	G0 X30 (Laser turns off at the start of this rapid move)
 	```
-
-> [!IMPORTANT]
-> The plasma plugin may shadow some outputs when its [virtual outputs](/docs/reference/plugins#virtual-ports) are enabled.
 
 ---
 
@@ -1689,7 +1697,13 @@ These commands are provided by the [OpenPNP](./plugins#openpnp-mcodes) plugin.
 
 ## `M150` - RGB LED Strip Control (RGB) {#M150}
 
-This command is provided by the [RGB LED plugin](/docs/reference/plugins#rgb-led-mcode).
+This command is provided by the [RGB LED](./plugins#rgb-led-mcode) plugin.
+
+---
+
+## `M190` - Select Plasma Material {#M190}
+
+This command is provided by the [Plasma](./plugins#M190) plugin.
 
 ---
 
@@ -1701,13 +1715,13 @@ These commands are provided by the [OpenPNP](./plugins#openpnp-mcodes) plugin.
 
 ## `M220` - Feed Override {#M220}
 
-This command is provided by the [Feed override plugin](/docs/reference/plugins#feed-override-mcode).
+This command is provided by the [Feed override plugin](./plugins#feed-override-mcode).
 
 ---
 
 ## `M280` – Set Servo Position (Servo) {#M280}
 
-This command is provided by the [PWM servo plugin](/docs/reference/plugins#pwm-servo-mcode).
+This command is provided by the [PWM servo plugin](./plugins#pwm-servo-mcode).
 
 ---
 
@@ -1719,7 +1733,7 @@ This command is provided by the [OpenPNP](./plugins#openpnp-mcodes) plugin.
 
 ## `M401` and `M402` – BLTouch Probe Control (BLTouch) {#M401-M402}
 
-These commands are provided by the [BLTouch probe plugin](/docs/reference/plugins#bltouch-mcodes).
+These commands are provided by the [BLTouch probe plugin](./plugins#bltouch-mcodes).
 
 ---
 

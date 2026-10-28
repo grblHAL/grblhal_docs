@@ -480,23 +480,39 @@ Output value of [numbered](./parameters#numbered) or [named](./parameters#named)
 ---
 
 ### `$PINS` – Report Pin Mappings {#pins}
-Debug command to show the current hardware mapping of input/output pins.
+Command to show the current hardware mapping of input/output pins. One of the uses is to identify auxiliary pins and their state\/availability.
 
 **Syntax:** `$PINS`
 
-**Output Example:**
-```text
-[PIN:PB12,Emergency stop]
-[PIN:PC4,Probe]
-[PIN:PA15,X motor fault]
-...
-[PIN:PE13,Spindle on]
-[PIN:PB1,Spindle direction]
-[PIN:PA8,Spindle PWM]
-...
-[PIN:PD6,RX,Modbus]
-[PIN:PD5,TX,Modbus]
-```
+Auxiliary ports are identified by the text `Aux in <n>` or `Aux out <n>` for digital pins and `Aux analog in <n>` or `Aux analog out <n>` for analog pins. `<n>` is the base port number and this is the number to use for settings that binds a port to the desired function.  
+Auxiliary ports that are not claimed by plugins for private use will be added to the pool of ports that can be controlled by
+[M62-M65](./gcode#M62--M65) and [M67-M68]((./gcode#M67-M68)) and read by [M66]((./gcode#M66)), these can be identified by having a `P<n>` or `E<n>` designation. Again `<n>` is a port number and it is the one to use with the aforementioned M-commands, note that this port number may differ from the base port number used for settings.
+
+> [!IMPORTANT]
+> * When a port is claimed by a plugin the port numbers assigned for use by M-commands will be changed to make them consequtive.
+> * After configuring ports for use by plugins a reboot is required to reset the port bindings. Either power cycle the controller or use the [$REBOOT](#reboot) command.
+
+> [!TIP]
+> * To unclaim a port for a plugin the usual way to do that is to set the port number to `-1`.
+> * If the sender supports grouping of settings the _Aux ports_ group is where all plugin port settings should live.
+
+**Example:**
+* _The controller has three auxiliary digital inputs and two outputs, port 0 is claimed by the Plasma plugin for 'Arc ok' by setting $367=0:_
+	```gcode
+	$pins
+	...
+	[PIN:PC12,Y limit min]
+	[PIN:PC10,Z limit min]
+	[PIN:PB14,Aux in 0,Arc ok]
+	[PIN:PA15,Aux in 1,P0]
+	[PIN:PC11,Aux in 2,P1]
+	...
+	[PIN:PB10,Flood]
+	[PIN:PB15,Aux out 0,P0]
+	[PIN:PB2,Aux out 1,P1]
+	[PIN:PA6,MISO]
+	...
+	```
 
 ---
 
@@ -639,6 +655,13 @@ The YModem protocol is part of the [file system plugins](/docs/reference/plugins
 | **`$MODBUSCMD`**  | **Modbus Command.** Send raw Modbus commands. (Build 20260215) |
 | **`$TTLOAD`**     | **Reload Tool Table.** Reloads file based tool table from storage. (Build 20251111) |
 
+
+### `$REBOOT` – Reboot Controller {#reboot}
+Hard resets the controller. Sender connection will be likely lost unless it is UART based.
+
+> [!NOTE]
+> This command is not implemented for all driver types. If not power cycle the controller instead.
+
 ---
 
 ## For developers and integrators
@@ -750,8 +773,10 @@ These functionality codes are specific extensions or part of the extended ASCII 
 When you send `?`, a status report is streamed back. The format is a structured text string enclosed in chevrons (angle brackets), with fields separated by pipe `|` characters.
 
 ```text
-<state{:substate}|{|Bf:,}{|Ln:}{|FS:,{,}}{|Pn:}{|WCO:}{|WCS:G}{|Ov:}{|A:}{|MPG:}{|H:{,}}{|D:}{|Sc:}{|TLR:}{|FW:}{|In:}>
+<state{:substate}|{|Bf:-}{|Ln:-}{|FS:-}{|Pn:-}{|WCO:-}{|WCS:-}{|Ov:-}{|A:-}{|MPG:-}{|H:-}{|D:-}{|Sc:-}{|TLR:-}{|FW:-}{|In:-}{|THC:-}>
 ```
+
+<!-- ADD: |Fan:, |Enc: |TCT: (laser) | |TMCMON: (motors) |Sl: (VFD spindle load) -->
 
 > [!NOTE]
 > In the definitions below:
@@ -759,7 +784,7 @@ When you send `?`, a status report is streamed back. The format is a structured 
 > - `` indicates variables or constants.
 > - `|` separates literal values.
 
-#### Report Fields {#status-report-fields}
+#### Report Fields {#realtime-report-fields}
 
 | Field | Description | Optional | When | Format/Details |
 |:-----:| :---------- | :------- | :--- |:----|
@@ -780,10 +805,11 @@ When you send `?`, a status report is streamed back. The format is a structured 
 | **`D:`** | Lathe Diameter Mode. ||Change| `D:<mode>`, `<mode>`: `0` - Radius ([G8](./gcode#G7-G8)), `1` - ([G7](./gcode#G7-G8)). |
 | **`Sc:`** | Scaling Status. ||Change| `Sc:<axisletters>`, a combination of [`<axisletters>`](./gcode#axisletters) for the axes where scaling is active. If none is scaled `Sc:` is output. |
 | **`TLR:`** | Tool Length Reference. ||Change| `TLR:<axismask>`, an [`<axismask>`](./settings/#axismask) if set, if not then `0` for the mask. |
-| **`TLR@:`** | Tool Length Reference position. ||Change| `TLR@:<a>,<b>:<tool axis>:<atG53>`<br>`<a>` and `<b>`: position in the [plane](./gcode#G17-G18-G19) where the offset was measured.<br>`<tool axis>`: axis id of the linear (spindle) axis<br>`<atG53>`: `0` - not measured at G59.3 (toolsetter) coordinate, `1` - measured at [G59.3](./gcode#G5x_WCS) coordinate. |
-| **`FW:`** | Firmware Identity. ||Requested<sup>2</sup>| `FW:grblHAL` This is the only data one can use to detect which controller firmware when in `Hold` state). |
-| **`In:`** | Input Result (M66). ||Requested| `In:<state>`, `<state>`: `-1` not requested (by [M66](./gcode#M66)) or timeout/error, `0` or `1` for digtal inputs, read value for analog inputs. |
-| **`SD:`** | SD Card Status. ||Change| `SD:<mount status>`, `SD:<pct completed>,<filename>` or `SD:Pending`<br>`<mount status>`: `0` - unmounted, `1` - mounted, `2` - auto-detected unmount, `3` auto-detected mount<br>`<pct completed>`: streaming, percent complete. `filename`: name of streaming file.<br>`SD:Pending`: streaming is suspended. |
+| **`TLR@:`** | Tool Length Reference position. ||Change| `TLR@:<a>,<b>:<tool axis>:<atG53>`<br>`<a>` and `<b>`: position in the [plane](./gcode#G17-G18-G19) where the offset was measured, typically XY.<br>`<tool axis>`: axis id of the linear (spindle) axis, typically `2` (Z).<br>`<atG53>`: `0` - not measured at G59.3 (toolsetter) coordinate, `1` - measured at [G59.3](./gcode#G5x_WCS) coordinate. |
+|<a id="rtfield-thc"></a>**`THC:`** | Plasma Plugin Status. | | Always | `THC:<voltage>,<status>`, `<voltage>`: arc voltage, [`<status>`](#plasma-status-letters): a combination of plasma status letters. |
+| **`FW:`** | Firmware Identity. ||Requested<sup>2</sup>| `FW:grblHAL` This is the only data one can use to detect which controller firmware when in `Hold` state. |
+|<a id="rtfield-in"></a>**`In:`** | [M66](./gcode#M66) Wait for Input Result. ||Requested| `In:<state>`, `<state>`: `-1` not requested or timeout/error, `0` or `1` for digtal inputs, read value for analog inputs. |
+| **`SD:`** | SD Card Plugin Status. ||Change| `SD:<mount status>`, `SD:<pct completed>,<filename>` or `SD:Pending`<br>`<mount status>`: `0` - unmounted, `1` - mounted, `2` - auto-detected unmount, `3` auto-detected mount<br>`<pct completed>`: streaming, percent complete. `filename`: name of streaming file.<br>`SD:Pending`: streaming is suspended. |
 | **`$C:`** | Blocking event active. ||Requested<sup>2</sup>| `$C:1` |
 
 <sup>1</sup> **`Mpos`** and **`WPos`** are mutually exclusive, which one is reported depends on a [$10](./settings#10) option.  
@@ -857,7 +883,26 @@ A string containing any combination of the following letters:
 | **`F`** | Flood coolant is on \(M8\).  |
 | **`T`** | Tool change is pending \(M6\). |
 
-### Enumerations <!--toc-->
+
+#### Plasma Status Letters {#plasma-status-letters}
+A string containing any combination of the following letters:
+| Letter  | Description            |
+|:-------:|:-----------------------|
+| **`A`** | Arc ok                 |
+| **`T`** | Torch on               |
+| **`E`** | THC enabled            |
+| **`O`** | Ohmic probe triggered  |
+| **`F`** | Float switch triggered |
+| **`B`** | Breakaway detected     |
+| **`R`** | THC active             |
+| **`V`** | Velocity lock          |
+| **`H`** | Void lock              |
+| **`U`** | Toch up                |
+| **`D`** | Torch down             |
+
+---
+
+## Enumerations <!--toc-->
 
 Code sets and translations can be fetched from the controller, superseding the use of files that has to be kept in sync.
 Since grblHAL supports plugins and driver specific extensions it will be hard to keep senders up to date via files that has to be updated.
@@ -1020,7 +1065,7 @@ Outputs error (status) codes with a description.
 | **`1`** | Bitfield, typically rendered as a column of check boxes. The `<format>` field contains a comma separated list of labels: the first corresponds to bit 0, second to bit 1 and so on. Labels named "N/A" are for unavailable fields and should not be shown in the UI.|
 | **`2`** | Exclusive bitfield, typically rendered as a column of check boxes.The `<format>` field contains a comma separated list of labels: the first corresponds to bit 0, second to bit 1 and so on. Labels named "N/A" are for unavailable fields and should not be shown in the UI. When bit 0 is not set checkboxes for other bits should be disabled.|
 | **`3`** | Radio buttons. The `<format>` field contains a comma separated list of labels: the first corresponds to the value 0, second to value 1 and so on. Labels named "N/A" are for unavailable options and should not be shown in the UI.|
-| **`4`** | [Axis mask](settings#axismask), a bit field typically rendered as a column of check boxes. Number of check boxes corresponds to number of axes. Latters assigned to the axes is available in the [`$I`](#firmware-info) element `[AXS::]` |
+| **`4`** | [Axis mask](settings#axismask), a bit field typically rendered as a column of check boxes. Number of check boxes corresponds to number of axes. Letters assigned to the axes is available in the [`$I`](#firmware-info) element `[AXS::]` |
 | **`5`** | Integer, typically rendered as a numeric input field. |
 | **`6`** | Decimal, typically rendered as a numeric input field. |
 | **`7`** | String. |

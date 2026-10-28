@@ -981,70 +981,79 @@ A collection of small and useful plugins.
 
 #### Settings {#eventout-settings}
 
-#### `$750` - `$759` – Event Trigger Source Selection (Eventout Plugin)
-Configures which real-time system state change will activate each of the ten available Event Slots (0-9).
+#### `$750` - `$759` – Event Trigger Source Selection {#750--759}
+Configures which state change will activate each of the ten available Event Slots (0-9).
 
-> ℹ️ **Info**
-> - This advanced feature is specifically implemented by the **`eventout` plugin** (often found in `Plugins_misc`). It enables highly responsive, direct hardware control based on various real-time machine states.
-> - Each setting (`$750` to `$759`) corresponds to an **Event Slot (0-9)**. The **value you assign to each setting selects the source trigger** for that Event Slot from the predefined list of `EVENT_TRIGGERS`.
-> - When an Event Slot is activated by its chosen trigger, it will control the auxiliary I/O port assigned to it via the corresponding `$76x` setting.
-> - A value of `0` ("None") disables the trigger for that Event Slot.
+- Each setting (`$750` to `$759`) corresponds to an _Event Slot_ (0-9). The value you assign to each setting selects the source trigger slot.
+- When an Event Slot is activated by its chosen trigger, it will control the auxiliary I/O port assigned to it via the corresponding [`$76x`](#760--769) setting.
+- A value of `0` ("None") disables the trigger for the slot.
 
-| Value | Event Trigger Source      | Description                               |
-|:-----:|:--------------------------|:------------------------------------------|
-| **0** | **None**                  | No trigger assigned to this Event Slot.   |
-| **1** | **Spindle enable (M3/M4)**| Activates when the primary spindle is commanded ON (`M3`/`M4`). |
-| **2** | **Laser enable (M3/M4)**  | Activates when the primary laser is commanded ON (`M3`/`M4`).   |
-| **3** | **Mist enable (M7)**      | Activates when mist coolant is commanded ON (`M7`).      |
-| **4** | **Flood enable (M8)**     | Activates when flood coolant is commanded ON (`M8`).     |
-| **5** | **Feed hold**             | Activates when the controller enters a Feed Hold state. |
-| **6** | **Alarm**                 | Activates when the controller enters an Alarm state.    |
-| **7** | **Spindle at speed**      | Activates when the spindle is confirmed to be at commanded speed (requires `$340` and encoder feedback for closed-loop systems). |
-| **8** | **Motion**                | Activates when the machine is in motion (G0, G1, G2, G3, G38.x). |
-| **9** | **Optional stop toggle**  | Activates when the Optional Stop `(M1)` state is toggled ON. |
-| **10** | **Single Stepping Mode** | Activates when the controller is in Single Stepping (Single Block) mode. |
-| **11** | **Block delete toggle**  | Activates when the Block Delete (/ skip) state is toggled ON. |
+| Value    | Event Trigger Source   | Description                               |
+|:--------:|:-----------------------|:------------------------------------------|
+| **`0`**  | None                   | No trigger assigned to this Event Slot.   |
+| **`1`**  | Spindle enable (M3/M4) | Activates when the primary spindle is turned on. |
+| **`2`**  | Laser enable (M3/M4)   | Activates when the primary laser is turned on.   |
+| **`3`**  | Mist enable (M7)       | Activates when mist coolant is turned on.      |
+| **`4`**  | Flood enable (M8)      | Activates when flood coolant is turned on.     |
+| **`5`**  | Feed hold              | Activates when the controller enters a Feed Hold state. |
+| **`6`**  | Alarm                  | Activates when the controller enters an Alarm state.    |
+| **`7`**  | Spindle at speed       | Activates when the spindle is confirmed to be at commanded speed. |
+| **`8`**  | Motion                 | Activates when the machine is in Run state (motion). |
+| **`9`**  | Optional stop toggle   | Activates when the Optional Stop `(M1)` state is toggled ON. |
+| **`10`** | Single Stepping Mode   | Activates when the controller is in Single Stepping (Single Block) mode. |
+| **`11`** | Block delete toggle    | Activates when the Block Delete (/ skip) state is toggled ON. |
 
-#### Examples
-*   **Activate Event Slot 0 when the Spindle is enabled:**
-    *   `$750=1`
-*   **Activate Event Slot 1 when the controller enters an Alarm state:**
-    *   `$751=6`
-*   **Activate Event Slot 2 when Flood coolant is enabled:**
-    *   `$752=4`
+**Examples:**
+* _Activate Event Slot 0 when the Spindle is enabled:_
+	```gcode
+	$750=1
+	```
+* _Activate Event Slot 1 when the controller enters an Alarm state:_
+	```gcode
+	$751=6
+	```
+* _Activate Event Slot 2 when Flood coolant is enabled:_
+	```gcode
+	$752=4
+	```
 
-#### Tips & Tricks
-- This system allows you to create highly responsive, hardware-level automation by linking machine states to specific output pins.
-- The physical auxiliary output pin itself is assigned via the corresponding `$76x` setting.
-- Ensure the selected trigger source matches your intended automation logic. This is an advanced feature for users familiar with the `eventout` plugin.
+> [!IMPORTANT]
+> - The physical auxiliary output pin itself must be assigned via the corresponding [`$76x`](#760--769) setting.
+
+> [!TIP]
+> - This system allows you to create highly responsive, hardware-level automation by linking machine states to specific output pins.
+> - Ensure the selected trigger source matches your intended automation logic.
 
 ---
 
-#### `$760` - `$769` – Event I/O Port Assignment (Eventout Plugin)
-Assigns a physical auxiliary digital output port to be controlled by each of the ten Event Slots (0-9).
-
-> ℹ️ **Info**
-> - This setting works in conjunction with `$750`-`$759` to provide direct hardware control based on real-time system states, as part of the **`eventout` plugin**.
-> - Each setting (`$760` to `$769`) corresponds to an **Event Slot (0-9)**. The **value you assign specifies which auxiliary I/O Port** will be activated when its corresponding Event Slot becomes active (as determined by the trigger selected in `$75x`).
-> - A value of `-1` disables the output control for that Event Slot.
+#### `$760` - `$769` – Event I/O Port Assignment {#760--769}
+Assigns a physical auxiliary digital output port to be controlled by each of the ten _Event Slots_ (0-9).
+Each setting (`$760` to `$769`) corresponds to an _Event Slot_ (0-9). The value you assign specifies which auxiliary I/O Port
+will be activated when its corresponding Event Slot becomes active (as determined by the trigger selected by [`$75x`](#750--759)).
 
 | Setting | Controls Output for Event Slot | Assigns to Auxiliary I/O Port Number |
 |:--------|:-------------------------------|:-------------------------------------|
-| `$760`  | Event Slot 0 (Trigger defined by `$750`) | Hardware auxiliary output pin number |
-| `$761`  | Event Slot 1 (Trigger defined by `$751`) | Hardware auxiliary output pin number |
+| `$760`  | Event Slot 0 (Trigger defined by `$750`) | Auxiliary output port number, set to `-1` to disable. |
+| `$761`  | Event Slot 1 (Trigger defined by `$751`) | Auxiliary output port number, set to `-1` to disable. |
 | ...     | ...                            | ...                                  |
-| `$769`  | Event Slot 9 (Trigger defined by `$759`) | Hardware auxiliary output pin number |
+| `$769`  | Event Slot 9 (Trigger defined by `$759`) | Auxiliary output port number, set to `-1` to disable. |
 
-#### Examples
-*   **When Event Slot 0 is active, control auxiliary I/O Port 5:**
-    *   `$760=5` (If `$750=1`, then Port 5 activates when Spindle is enabled. This could trigger a dust collector).
-*   **When Event Slot 1 is active, control auxiliary I/O Port 7:**
-    *   `$761=7` (If `$751=6`, then Port 7 activates when the controller is in an Alarm state. This could trigger a warning light or a main power shutdown relay).
 
-#### Tips & Tricks
-- This system enables sophisticated hardware-level responses. For example, you could activate a fume extractor (Port 7) whenever the laser is enabled (`$752=2`, `$762=7`).
-- You must know the auxiliary I/O port numbers for your specific controller board. Use the `$PINS` command to list available ports.
-- If an active-low signal is required for the connected device, you can use `$372` (Invert I/O Port Outputs) to invert the logic of the selected auxiliary port.
+> [!TIP]
+> - You must know the auxiliary output port numbers for your specific controller board. See the [`$PINS`](./commands#pins) command for how to list and identify ports.
+> - If an active-low signal is required for the connected device, you can use [`$372`](./settings#372) to invert the logic of auxiliary output ports.
+
+**Examples:**
+* _When Event Slot 0 is active, control auxiliary output port 5:_
+	```gcode
+	$760=5
+	; If $750=1, then Port 5 activates when Spindle is enabled. This could trigger a dust collector.
+	```
+* _When Event Slot 1 is active, control auxiliary I/O Port 7:_
+	```gcode
+	$761=7
+	; If $751=6, then Port 7 activates when the controller is in an Alarm state. This could trigger a warning light or a main power shutdown relay
+	```
 
 ---
 
@@ -1296,7 +1305,7 @@ Under development. Adds some M-codes to allow grblHAL to be used for [OpenPNP](h
 |**`T`**    | Set acceleration for all axes except the linear axis (Z-axis) |
 |**`Q`**    | Scaling offset |
 
-<sup>1</sup> M-code under consideration, may cchange:
+<sup>1</sup> M-code under consideration, may change:
 
 > [!NOTE]
 > - `M42` is equivalent to the [standard](https://linuxcnc.org/docs/2.5/html/gcode/m-code.html#sec:M62-M65) commands, `M64` and `M65`, which are supported by the core.  
@@ -1928,7 +1937,7 @@ Applies a scale factor and offset to the raw analog voltage reading from the THC
 | `$362`  | **Voltage Offset:** A value to add or subtract (e.g., `-0.5` to subtract 0.5V). |
 
 > [!TIP]
-> The real arc voltage together with status flags are added to the [realtime report](./commands#realtime-report) `THC:` element. To be documented....
+> The real arc voltage together with status flags are added to the [realtime report](./commands#realtime-report-fields) `THC:` field.
 
 ---
 
@@ -1945,7 +1954,7 @@ Defines the relationship between arc voltage and torch height.
 #### `$364` and `$365` – Arc OK Voltage Range {#364-365}
 Defines the acceptable voltage window for using the arc voltage as a substitute for the "Arc OK" signal.
 
-> [!Important]
+> [!IMPORTANT]
 > Not yet implemented.
 
 ---

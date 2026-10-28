@@ -2375,11 +2375,8 @@ Disables the internal pull-up resistors on the generic digital input pins.
 ---
 
 ## `$372` – Invert I/O Port Outputs  [(bitmask)](#bitmask) {#372}
-Inverts the logic for the generic digital output pins.
-
-
-> ℹ️ **Info**
-> - This allows you to flip the signal for general-purpose outputs, for example, to control a relay that requires an active-low signal to turn on.
+Inverts the logic for the generic digital output ports.  
+This allows you to flip the signal for general-purpose outputs, for example, to control a relay that requires an active-low signal to turn on.
 
 | Bit | Value | Output to Invert |
 |:---:|:-----:|:-----------------|
@@ -2388,12 +2385,9 @@ Inverts the logic for the generic digital output pins.
 | 2   | 4     | I/O Port 2       |
 | ... | ...   | And so on...     |
 
-#### Tips & Tricks
-- Use the `$PINS` command to list all pins including auxiliary I/O ports.
-- `$PINSTATE` command can be used to check pin capabilities and current state.
-- [M62, M63, M64 and M65 – Synchronized and Asynchronous I/O](./gcode#M62--M65)
--  [M66 – Wait for Input Signal](./gcode#M66)
--  [M67, M68 – Set Analog Output](./gcode#M67-M68)
+> [!TIP]
+> - Use the [`$PINS`](./commands#pins) command to list all pins including digital auxiliary output ports.
+> - The [`$PINSTATE`](./commands#pinstate) command can be used to check pin capabilities and current state.
 
 ---
 
