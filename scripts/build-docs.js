@@ -511,7 +511,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubunt
 .main pre code{background:none;padding:0;border-radius:0}
 .table-scroll{max-width:100%;overflow-x:auto;margin-bottom:1rem;-webkit-overflow-scrolling:touch}
 .main table{width:100%;border-collapse:collapse;margin-bottom:0;table-layout:auto}
-.main th,.main td{padding:8px 12px;border:1px solid var(--border);text-align:left;overflow-wrap:normal;word-break:normal}
+.main th,.main td{padding:8px 12px;border:1px solid var(--border);text-align:left;vertical-align:top;overflow-wrap:normal;word-break:normal}
 .main th:not(:last-child),.main td:not(:last-child){white-space:nowrap}
 .main th{background:var(--bg-alt);font-weight:600}
 .main hr{margin:2rem 0;border:none;border-top:1px solid var(--border)}
