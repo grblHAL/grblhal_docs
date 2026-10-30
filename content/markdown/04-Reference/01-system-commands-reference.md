@@ -4,39 +4,41 @@ slug: reference/commands
 
 # System Commands Reference
 
-This page details the system commands available in grblHAL. These commands are distinct from G-code and are used to configure the controller, control machine state, and request real-time information.
+This page details the system commands available in grblHAL. These commands are distinct from G-code and are used to configure the controller, control machine state, and request information.
 
 They are divided into two categories:
-1.  **`$` System Commands**: Text-based commands starting with `$` and terminated by a newline. These interact with settings, memory, and high-level control.
-2.  **Realtime Commands**: Single ASCII characters (or byte values) that execute immediately, even while the machine is moving.
+1.  **$ Prefixed System Commands**: Text-based commands starting with `$` and terminated by a newline. These interact with settings, memory, and high-level control.
+2.  **Realtime Commands**: Single ASCII characters (or byte values) that queued for immediate execution, even while the machine is moving or in a critical [`Alarm`](#rtstate-alarm) state.
+
+> [!NOTE]
+> - Senders will typically use and 'hide' many if these commands behind UI elements such as buttons.
+> - Plugins may add additional $-commands, send **$help commands** to list all available. 
 
 ---
 
-## `$` System Commands - overview
-
-System commands are special start with `$`. They are used to configure, control, and query the machine state.
+## System Commands Overview
 
 ### Basic Commands <!--toc-->
 
-| Command | Description |
-|---------|-------------|
-| **`$HELP`** | List help topics. |
-| [`$$`](#settings-list) | View current settings. |
-| [`$$=<n>`](#setting-help) | View help for setting `<n>`. |
-| **`$#`** | View G-code parameters (WCS offsets, probe positions, tool offsets). |
-| **`$G`** | View G-code parser state (active modes like G54, G17, G90, etc.). |
-| [`$I`](#firmware-info) | View firmware information. |
-| [`$I=`](#set-build-string) | Set custom build string. |
-| [`$N`](#startup-blocks) | View startup blocks. |
-| [`$N<n>=`](#set-startup-block) | Set startup block. |
-| **`$X`** | **Kill Alarm Lock.** Unlocks the machine from an alarm state (e.g., hard limit). Use with caution! |
-| **`$H`** | **Run Homing Cycle.** Homes all axes specified in `$23`. |
-| **`$HX`** | **Home Individual Axis.** Homes only the X axis (replace X with Y, Z, etc.). |
-| **`$J=...`** | **Jogging.** Execute a jogging motion. |
-| [`$RST=`](#restore-settings) | Restore settings. |
-| **`$SLP`** | **Sleep.** Put the machine to sleep. |
-| [`$SD`](#spindle-data) | Output spindle encoder data. |$EM
-| [`$SR`](#spindle-data-reset) | Reset spindle encoder data. |
+| Command | Action | Description |
+|:-------:|:-------|:------------|
+| **`$HELP`** | List help topics ||
+| [**`$$`**](#settings-list) | Output current settings ||
+| [**`$$=<n>`**](#setting-help) | View help for setting `<n>` ||
+| [**`$#`**](#hash) | Output G-code parameters| WCS offsets, probe positions, tool offsets. |
+| [**`$G`**](#parser-state) | Output G-code parser state | Active modes like G54, G17, G90, etc. |
+| [**`$I`**](#firmware-info) | Output firmware information ||
+| [**`$I=`**](#set-build-string) | Set custom build string ||
+| [**`$N`**](#startup-blocks) | Output startup blocks ||
+| [**`$N<n>=`**](#set-startup-block) | Set startup block ||
+| [**`$X`**](#unlock) | Kill Alarm Lock. | Unlocks the machine from an alarm state (e.g., hard limit). |
+| [**`$H`**](#homing) | Run Homing Cycle. | Homes all axes specified in `$23`. |
+| [**`$H-`**](#homing) | Home Individual Axis. | Homes only the given axis (replace - with X, Y, Z, etc.). |
+| [**`$J=-`**](#jog) | Jogging | Execute a jogging motion. |
+| [**`$RST=`**](#restore-settings) | Restore settings ||
+| [**`$SLP`**](#sleep) | Enter Sleep | Put the machine to sleep |
+| [**`$SD`**](#spindle-data) | Output spindle encoder data ||
+| [**`$SR`**](#spindle-data-reset) | Reset spindle encoder data ||
 
 ### Additional Commands <!--toc-->
 
@@ -47,7 +49,6 @@ Extended functionality for machine control and debugging found in the source.
 | **`$B`** | Toggle **Block Delete** switch. |
 | **`$S`** | Toggle **Single Block** mode. |
 | **`$O`** | Toggle **Optional Stop** switch. |
-| **`$HX`..`$HW`** | Home individual axes (`X`, `Y`, `Z`, `A`, `B`, `C`, `U`, `V`, `W`). |
 | **`$HSS`** | Report **Homing Switch Status**. |
 | **`$TPW`** | **Tool Probe Workpiece**. Probes the tool plate. |
 | **`$TLR`** | **Set Tool Length Reference**. Sets the current tool offset reference. |
@@ -56,7 +57,7 @@ Extended functionality for machine control and debugging found in the source.
 | **`$SD`** | Report **Spindle Data**. |
 | **`$SR`** | Reset **Spindle Data**. |
 | **`$SDS`** | Report **Stepper Status**. |
-| **`$REBOOT`** | **Reboot System**. Soft reboots the controller. |
+| [**`$REBOOT`**](#reboot) | **Reboot System**. Soft reboots the controller. |
 | **`$RTC`** | **Real Time Clock** action. |
 | **`$DWNGRD`** | Toggle **Downgrade** setting flags. |
 | **`$TTLOAD`** | **Reload Tool Table**. Reloads tool data from `tooltable.tbl` (if file-based tool table is active). |
@@ -74,32 +75,14 @@ These commands are specific to manual and semi-automatic tool change modes.
 | **`$TLR`** | **Set Tool Length Reference.** Sets the current tool length offset as the reference. Used after a successful probe for the first tool in a job. |
 | **`$TPW`** | **Tool Probe Workpiece.** Initiates a probing sequence to set the dynamic tool offset for a new tool. Only available in Tool Change Modes 1 and 2. |
 
-### Reporting & Enumeration (grblHAL Extensions) <!--toc-->
+### Reporting & Enumeration <!--toc-->
+grblHAL provides commands for senders to query up to date data such as alarm and error codes, documented [here](#enumerations).
 
-grblHAL provides advanced reporting commands for Senders to query up to date data, there is no need for them to rely on hardcoded lists.
+## System Commands Reference {#reference}
 
-| Command | Description |
-|---------|-------------|
-| **`$EA`** | **Enumerate Alarms.** Lists all supported alarm codes and descriptions. |
-| **`$EE`** | **Enumerate Errors.** Lists all supported error codes and descriptions. |
-| **`$ES`** | **Enumerate Settings.** Lists all supported settings with types, ranges, and descriptions. |
-| **`$EG`** | **Enumerate Setting Groups.** Lists the hierarchy of setting groups. |
-| [**`$PINS`**](#pins) | **Enumerate Pins.** Lists processor pin and port mappings. |
-| **`$PINSTATE`** | **Enumerate Pin States.** Lists current state of auxiliary pins. |
-| **`$PORTS`** | **Enumerate Serial Ports.** Lists available UART ports. |
-| **`$SPINDLES`** | **Enumerate Spindles.** Lists available spindles. |
+### Configuration & Settings <!--toc--> {#settings}
 
-## System Commands ($) - reference
-
-System commands allow you to view and change settings, control machine modes (like sleep or homing), and read non-volatile data.
-
-> ℹ️ **Info**
-> Most `$` commands are processed by the main protocol loop. Some commands (like `$H` for homing) may block other operations until they complete.  
-> Plugins may add additional $-commands, send **$help commands** to list all available. 
-
-## Configuration & Settings
-
-### `$$` – View All Settings {#settings-list}
+### `$$` – Output All Settings {#settings-list}
 Outputs the current value of all numbered settings.
 
 **Syntax:** `$$`
@@ -110,7 +93,7 @@ Outputs the current value of all numbered settings.
 
 ---
 
-### `$$=` – View Setting Help {#setting-help}
+### `$$=` – Output Setting Help {#setting-help}
 Outputs the description and details such as units and allowed range for a specific setting.
 
 **Syntax:**  
@@ -250,7 +233,7 @@ ok
 
 ---
 
-### `$I=` - Set Build String {#set-build-string}
+### `$I=` Set Build String {#set-build-string}
 Sets a custom string in the [firmware information](#firmware-info) version info. This can be used to store machine specific information and is added after the colon in the version string.
 
 **Syntax:** `$I=<string>`  
@@ -263,7 +246,7 @@ Sets a custom string in the [firmware information](#firmware-info) version info.
 
 > [!NOTE]
 >  Vendors supplying pre-compiled firmware can set and also disable modification of this string by changing
-the symbols `BUILD_INFO` and/or `DISABLE_BUILD_INFO_WRITE_COMMAND` in _grbl/config.h_ or on the compiler command line.
+> the symbols `BUILD_INFO` and/or `DISABLE_BUILD_INFO_WRITE_COMMAND` in _grbl/config.h_ or on the compiler command line.
 
 **Example:**
 -    `#define BUILD_INFO "MyMachine_v1.0".`
@@ -271,7 +254,7 @@ the symbols `BUILD_INFO` and/or `DISABLE_BUILD_INFO_WRITE_COMMAND` in _grbl/conf
 
 ---
 
-### `$N` – View Startup Lines {#startup-blocks}
+### `$N` – Output Startup Lines {#startup-blocks}
 Outputs the currently stored startup G-code blocks. These lines run automatically every time grblHAL powers up or resets.
 
 **Syntax:**
@@ -320,6 +303,87 @@ Restores groups of settings to their firmware defaults.
 
 ---
 
+## Machine Control
+
+### `$J` – Jogging <!-- toc --> {#jog} 
+Commands the machine to move freely. Jog commands are independent of the G-code parser state and can be canceled immediately by a [`Jog Cancel`](#rtcmd-jog-cancel) command.
+
+**Syntax:** `$J=axes F- ...`
+
+**Requirements:**
+-   Must include at least one axis coordinate.
+-   Must include a Feed Rate (`F`).
+-   Can include `G20`/`G21` (units), `G53` (move in the machine coordinate system) and `G90`/`G91` (distance mode).
+
+**Examples:**
+-   `$J=G91 G21 X10 F500` (Move X +10mm relative at 500mm/min)
+-   `$J=G90 Z5 F100` (Move Z to absolute 5 units at 100units/min - uses the current units mode - metric/imperial)
+
+> [!TIP]
+> - Jogging is "safer" than `G0`/`G1` because it checks soft limits (if enabled) *before* moving and can be smoothly aborted by the user.
+> - If the machine is homed set [$40=1](/docs/reference/settings#40) to automatically limit jog motion to be within machine limits.
+
+---
+
+### `$H` and `$H-` – Homing Cycle <!-- toc --> {#homing} 
+Initiates the homing sequence to set the machine origin.
+
+**Syntax:**  
+`$H` - homes all [configured axes](./settings#44--49) in the specified sequence.
+
+**Extended Syntax (Single Axis):**
+- `$HX` (Home X only)
+- `$HY` (Home Y only)
+- `$HZ` (Home Z only)
+- `$HA` ... `$HW` (Home rotary/secondary axes)
+
+> [!NOTE]
+> The extended syntax is not available by default, enable it with a [`$22`](./settings#22) setting option.
+ 
+> [!WARNING]
+>  Requires limit switches to be installed and configured unless [configured](./settings#22) to allow manually homed axes.
+
+---
+
+### `$SLP` – Sleep Mode <!-- toc --> {#sleep} 
+Puts the machine into a low-power sleep state.
+
+**Syntax:** `$SLP`
+
+**Behavior:**
+- Disables spindle and coolant.
+- Disables stepper motors (they lose holding torque!).
+- Requires a [Reset](#rtcmd-reset) (`ctrl-x`) to wake up.
+
+---
+
+### `$C` – Check Mode <!-- toc --> {#check-mode} 
+Toggles "Check Mode". In this mode, grblHAL parses and validates G-code but **does not move** the machine or turn on the spindle.
+
+**Syntax:** `$C`
+
+**Usage:**
+-   Send `$C` to enable.
+-   Stream your G-code file. grblHAL will report verifying lines or errors (`error:xx`).
+-   Send [Reset](#rtcmd-reset) (`ctrl-x`) to exit Check Mode.
+
+---
+
+### `$X` – Unlock / Kill Alarm <!-- toc --> {#unlock} 
+Disables the alarm lock state.
+
+**Syntax:**  
+`$X`
+
+**Usage:**
+-   If the machine is in an [`Alarm`](#rtstate-alarm) state (e.g., hard limit hit, or unhomed with `$22=1`), it often locks motion.
+-   `$X` overrides this lock, allowing you to jog away from a switch or move the machine.
+-   **Caution:** This does not fix the underlying issue (e.g., machine position may be lost).
+
+---
+
+## Diagnostics & Reporting
+
 ### `$SD` – Output Spindle Encoder Data {#spindle-data}
 When a spindle encoder is installed data from the encoder can be output with this command.  
 
@@ -351,83 +415,7 @@ Resets spindle encoder data.
 
 ---
 
-## Machine Control
-
-### `$J` – Jogging <!-- toc --> {#jog} 
-Commands the machine to move freely. Jog commands are independent of the G-code parser state and can be canceled immediately by a Feed Hold or Jog Cancel command.
-
-**Syntax:** `$J=axes F- ...`
-
-**Requirements:**
--   Must include at least one axis coordinate.
--   Must include a Feed Rate (`F`).
--   Can include `G20`/`G21` (units), `G53` (move in the machine coordinate system) and `G90`/`G91` (distance mode).
-
-**Examples:**
--   `$J=G91 G21 X10 F500` (Move X +10mm relative at 500mm/min)
--   `$J=G90 Z5 F100` (Move Z to absolute 5 units at 100units/min - uses the current units mode - metric/imperial)
-
-> [!TIP]
->  -   Jogging is "safer" than `G0`/`G1` because it checks soft limits (if enabled) *before* moving and can be smoothly aborted by the user.
-> -   If the machine is homed set [$40=1](/docs/reference/settings#40) to automatically limit jog motion to be within machine limits.
-
----
-
-### `$H` – Homing Cycle
-Initiates the homing sequence to find the machine origin.
-
-**Syntax:** `$H` (Homes all configured axes in standard sequence)
-
-**Extended Syntax (Single Axis):**
--   `$HX` (Home X only)
--   `$HY` (Home Y only)
--   `$HZ` (Home Z only)
--   `$HA` ... `$HW` (Home rotary/secondary axes)
-
-> ⚠️ **Warning**
-> Requires limit switches to be installed and configured unless [configured](/docs/reference/settings#22) to allow manually homed axes.
-
----
-
-### `$SLP` – Sleep Mode
-Puts the machine into a low-power sleep state.
-
-**Syntax:** `$SLP`
-
-**Behavior:**
--   Disables spindle and coolant.
--   Disables stepper motors (they lose holding torque!).
--   Requires a Reset (`ctrl-x`) to wake up.
-
----
-
-### `$C` – Check Mode
-Toggles "Check Mode". In this mode, grblHAL parses and validates G-code but **does not move** the machine or turn on the spindle.
-
-**Syntax:** `$C`
-
-**Usage:**
--   Send `$C` to enable.
--   Stream your G-code file. grblHAL will report verifying lines or errors (`error:xx`).
--   Send `ctrl-x` (Reset) to exit Check Mode.
-
----
-
-### `$X` – Unlock / Kill Alarm
-Disables the alarm lock state.
-
-**Syntax:** `$X`
-
-**Usage:**
--   If the machine is in an Alarm state (e.g., hard limit hit, or unhomed with `$22=1`), it often locks motion.
--   `$X` overrides this lock, allowing you to jog away from a switch or move the machine.
--   **Caution:** This does not fix the underlying issue (e.g., machine position may be lost).
-
----
-
-## Diagnostics & Reporting
-
-### `$G` – View G-code Parser State <!-- toc --> {#parser_state} 
+### `$G` – Output G-code Parser State <!-- toc --> {#parser-state} 
 Outputs the currently active G-code modal states.
 
 **Syntax:** `$G`
@@ -440,7 +428,7 @@ Outputs the currently active G-code modal states.
 
 ---
 
-### `$#` – View Parameters <!-- toc --> {#hash}
+### `$#` – Output Parameters <!-- toc --> {#hash}
 Outputs the stored offsets for work coordinate systems, tool offsets, and pre-defined positions.
 
 **Syntax:** `$#`
@@ -518,26 +506,106 @@ Auxiliary ports that are not claimed by plugins for private use will be added to
 
 ---
 
-### `$PINSTATE` – Detailed Pin Enumeration {#pinstate}
+### `$PINSTATE` – Report Pin States {#pinstate}
 Enumerates auxiliary pins with type, description, mode (input/output, inverted, pull-up/down), and capabilities.
 
-**Syntax:** `$PINSTATE`
+**Syntax:**  
+`$PINSTATE`
 
-**Output Format:**
-```text
-[PINSTATE:|||||]
-```
+Output format:  
+`[PINSTATE:<type>|<description>|<id>|<mode>|<capabilities>|<state>{|<resolution}]`  
+
+* `<type>` - string designating the type: `AIN` - analog in, `AOUT` - analog out, `DIN` - digital in, `DOUT` - digital out.
+* `<description>` - string, may be set by plugin code. If the pin is available for use via M62-M68 or by plugins it will be labeled `P<n>` or `E<n>`, `<n>` is the port number.
+* `<id>` - numeric id, used internally.
+* `<mode>` - current mode as a string consisting of the following characters:  
+For digital pins, in the first position:  
+&emsp;`I` - inverted.  
+&emsp;`N` - normal or non inverted.  
+In the second position, digital input pins only:  
+&emsp;`-` - floating.  
+&emsp;`D` - pulldown enabled.  
+&emsp;`U` - pullup enabled.  
+&emsp;&emsp;This is the state at the MCU pin, not neccesarily at the physical pin connection on the board which may be buffered.  
+In the third position, digital input pins only:  
+&emsp;`-` - interrupt disabled.  
+&emsp;`C` - change interrupt enabled.  
+&emsp;`F` - falling edge interrupt enabled.  
+&emsp;`H` - high state interrupt interrupt enabled.  
+&emsp;`L` - low state interrupt enabled.  
+&emsp;`R` - rising edge enabled.  
+&emsp;&emsp;For analog input pins this element is left empty.  
+For analog output pins a single character:  
+&emsp;`N` - normal \(DAC\) mode enabled.  
+&emsp;`P` - PWM mode enabled.  
+&emsp;`S` - PWM servo mode enabled.
+
+* `<capabilities>` - capabilities as a string consisting of the following characters:  
+For digital pins, in the first position:  
+&emsp;`-` - inversion not available.  
+&emsp;`I` - inversion available.  .  
+In the second position, digital input pins only:  
+&emsp;`-` - pull up/down not available.  
+&emsp;`B` - both pull up/down available.   
+&emsp;`D` - pulldown available.  
+&emsp;`U` - pullup available.    
+In the third position, digital input pins only:  
+&emsp;`-` - not interrupt capable.  
+&emsp;`A` - all interrupt modes are available.  
+&emsp;`C` - change interrupts \(rising/falling\) available. The MCU does not provide information about the initial state change.   
+&emsp;`E` - change, rising and falling edge interrupts available.  
+&emsp;`F` - falling edge interrupt available.  
+&emsp;`H` - high state interrupt interrupt available.  
+&emsp;`L` - low state interrupt available.  
+&emsp;`R` - rising edge available.  
+For analog input pins this element is left empty.  
+For analog output pins a single character:  
+&emsp;`N` - normal \(DAC\) mode available.  
+&emsp;`P` - PWM mode available.  
+&emsp;`S` - PWM servo mode available. This typically requires a plugin that reconfigures PWM capable pins.
+
+* `<state>` - current state. For digital pins `0` or `1` for low and high respectively, for analog pins the input or output value.  
+If the driver does not support reading the state `?` is reported.
+
+* `<resolution>` - optional, for analog pins ADC or DAC resolution in bits.
 
 **Example:**
 ```text
 $pinstate
+...
+[PINSTATE:DIN|Cycle start|4|NUR-|IBED|1]
 [PINSTATE:DIN|P0|0|NU--|IB--|1]
 [PINSTATE:DIN|P1|1|NU--|IB--|1]
 [PINSTATE:DIN|P2|2|NU--|IBED|1]
 [PINSTATE:DIN|Toolsetter|3|NU--|IBED|1]
 [PINSTATE:DIN|Emergency stop|12|NUR-|IBED|0]
-[PINSTATE:DOUT|P0 ||,RX|,TX|...]
+...
+[PINSTATE:DOUT|P0|15|N|I|0]
+[PINSTATE:DOUT|P1|2|N|I|0]
+[PINSTATE:DOUT|Spindle PWM|8|N|I|0]
+[PINSTATE:DOUT|Spindle direction|5|N|I|0]
+...
 ```
+
+### `$PORTS` – List Serial (UART) Ports {#uart-ports}
+Enumerates serial ports with port number, description, pin binding, current mode and claimed status.
+
+**Syntax:**  
+`$PORTS`
+
+Output format:  
+`[PORT:<port>|<description>|<pin,RX>|pin,TX>|<mode>|<status>]`  
+
+* `<port>` - port number (or UART stream number).
+* `<description>` - string, may be set by plugin code when claiming a port.
+* `<pin,RX>` - MCU input pin name followed by the literal `,RX`.
+* `<pin,RX>` - MCU output pin name followed by the literal `,TX`.
+* `<mode>` - current mode as a comma separated list with the following entries:  
+baud rate.  
+number of data bits.  
+parity: `N` for none, `E` for even, `O` for odd.  
+number of stop bits.   
+* `<status>` - `F` for free or unused, `C` for claimed or used    
 
 **Example:**
 ```text
@@ -572,12 +640,12 @@ Lists available spindles.
 
 ## File handling
 
-grblHAL utilizes a **Virtual File System (VFS)** layer that allows it to interact with different storage media through a unified set of commands and programming interfaces.
+grblHAL utilizes a _Virtual File System (VFS)_ layer that allows it to interact with different storage media through a unified set of commands and programming interfaces.
 It is a [hierarchical file system ](https://en.wikipedia.org/wiki/Hierarchical_file_system) where different media is mounted as directories,
 either as the root directoy (/) or as a subdirectory under it.
 
 ### SD Card (FatFs)
-The SD card is the primary high-capacity storage for G-code files, typically formatted as **FAT32**.
+The SD card is the primary high-capacity storage for G-code files, typically formatted as _FAT32_.
 - **Mount Point:** Usually mounted at the root (`/`).
 - **Performance:** Ideal for large 3D carving jobs or complex laser engraving.
 - **Hot-Swapping:** Supported on boards with SD detect support.
@@ -616,22 +684,22 @@ The RAM filing system uses the heap to store transient data. Typically files are
 ### File System Commands {#file-system}
 These commands allow navigation and management of the file system.
 
-| Command           | Description |
-|:-----------------:|:------------|
-| **`$F`**          | **List Files.** Lists CNC-compatible files (`.nc`, `.gcode`, etc.) in the current working directory. |
-| **`$F+`**         | **List All Files.** Lists all files in the current working directory regardless of extension. |
-| **`$F=[file]`**   | **Run File.** Starts execution of the specified G-code file. |
-| **`$F<=[file]`**  | **Copy file to output.** Copies/streams the specified file to the current output. |
-| **`$FR`**         | **Rewind file.** Enables rewind mode for next file to run. When finished it can be rerun by issuing a Cycle Start command |
-| **`$FD=[file]`**  | **Delete File.** Permanently removes a file from the storage. |
-| **`$CWD=[path]`** | **Change Directory.** Sets the Current Working Directory. Usage: `$CWD=/` (root), `$CWD=..` (up), `$CWD=subdir` (down). If called without arguments, it reports the current path. |
-| **`$PWD`**        | **Print Working Directory.** Reports the current working directory in the format `[CWD:/path/to/dir]`. |
-| **`$FMD=[path]`** | **Create directory.** |
-| **`$FRD=[path]`** | **Remove directory.** |
-| **`$FI`**         | **Mount info.** Outputs information about mounted filing systems. |
+| Command           | Action | Description |
+|:-----------------:|:-------|:------------|
+| **`$F`**          | List Files | Lists CNC-compatible files (`.nc`, `.gcode`, etc.) in the current working directory. |
+| **`$F+`**         | List All Files | Lists all files in the current working directory regardless of extension. |
+| **`$F=[file]`**   | Run File | Starts execution of the specified G-code file. |
+| **`$F<=[file]`**  | Copy file to output | Copies/streams the specified file to the current output. |
+| **`$FR`**         | Rewind file | Enables rewind mode for next file to run. When finished it can be rerun by issuing a Cycle Start command |
+| **`$FD=[file]`**  | Delete File | Permanently removes a file from the storage. |
+| **`$CWD=[path]`** | Change Directory | Sets the Current Working Directory. Usage: `$CWD=/` (root), `$CWD=..` (up), `$CWD=subdir` (down). If called without arguments, it reports the current path. |
+| **`$PWD`**        | Print Working Directory | Reports the current working directory in the format `[CWD:/path/to/dir]`. |
+| **`$FMD=[path]`** | Create directory ||
+| **`$FRD=[path]`** | Remove directory ||
+| **`$FI`**         | Mount info | Outputs information about mounted filing systems. |
 
 #### Navigation & Usage
-grblHAL keeps track of a **Current Working Directory (CWD)**. By default, this is the root `/`. When you use `$F` to list files or `$F=` to run one, grblHAL looks inside the CWD. You can navigate into subfolders using `$CWD=foldername` and back up using `$CWD=..`.
+grblHAL keeps track of a current working directory (_CWD_). By default, this is the root directory `/`. When you use `$F` to list files or `$F=` to run one, grblHAL looks inside the CWD. You can navigate into subfolders using `$CWD=foldername`, back up on level using `$CWD=..` or back to the root using `$CWD=/`.
 
 > [!TIP]
 > You can use `$PWD` at any time to verify where you are in the file system. This is particularly useful when managing complex folder structures for different projects.
@@ -680,16 +748,24 @@ Realtime commands are single control characters that can be sent to grblHAL at a
 
 #### Basic Control Commands <!--toc-->
 
-These are the standard Grbl control characters used by most senders. The _Alt._ column contains a grblHAL alternative which are outside the 'printable' ASCII characters range, some senders may not support/use these.
+The  _Grbl_ column flags command characters compatible with legacy Grbl. The _Alt._ column contains a grblHAL alternative which are outside the 'printable' ASCII characters range, some senders may not support/use these. Finally, the _Input_ column flags commands that may have a corresponding physical input that allows the action to be triggered by a button or a switch.
 
-| Char  | Hex   | Alt.  | Name | Description |
-| :---: | :---: | :---: | :--- | :--- |
-|<a id="rtcmd-status"/>**`?`** | **`0x3F`** | **`0x80`** | Status&nbsp;Report | Immediately generates and outputs a [runtime status report](#realtime-report). It can be requested at any time unlike for legacy Grbl which blocks it during critical alarms. The content of the report is configured by the [`$10`](./settings#10) setting. |
-| **`~`** | **`0x7E`** | **`0x81`** | Cycle Start (Resume) | - **In Hold:** Resumes the cycle after a Feed Hold (`!`) or Program Stop (`M0`). - **In Door:** Resumes from a safety door state (if closed). - **Otherwise:** Ignored. |
-| **`!`** | **`0x21`** | **`0x82`** | Feed Hold | Enters the [`Hold`](#rtstate-hold) state, if in motion decelerates the machine to a controlled stop. The command is ignored in [`Alarm`](#rtstate-alarm) state. |
-| **`^x`** | `0x18` |   | **Soft Reset** | (Ctrl-X) - **Immediate Halt:** Stops all pulse generation, turns off spindle/coolant, and flushes the planner buffer. - **State:** Resets grblHAL to the `Alarm` state (if in motion) or `Idle` state (if stopped). - **Position:** If reset during motion, position is considered lost (requires re-homing). If reset while idle, position is retained. |
-| **`^y`** |  | `0x19` | **Stop** | (Ctrl-Y) - **Halt:** Executes a fast hold if in motion, turns off spindle/coolant, and flushes the planner buffer. - **State:** Resets grblHAL to the `Idle` state. - **Position:** Position is _not_ lost. |
-|          |  | `0x9F` | **Soft E-stop** | **E-stop:** Executes a fast hold if in motion, turns off spindle/coolant, and flushes the planner buffer. - **State:** Resets grblHAL to the E-stop `Alarm` state. - **Position:** Position is _not_ lost. This is **not** a safe alternative to a proper hardware based E-stop system. |
+| Key | Hex | Alt. | Grbl | Input | Action | Description  |
+|:----|:---:|:----:|:----:|:-----:|:-------|:-------------|
+|<a id="rtcmd-status"/>**`?`** | **`0x3F`** | **`0x80`** |*|-| Status&nbsp;Report | Immediately generates and outputs a [runtime status report](#realtime-report). It can be requested at any time unlike for legacy Grbl which blocks it during critical alarms. The content of the report is configured by the [`$10`](./settings#10) setting. Plugins may add fields to the report. |
+|<a id="rtcmd-cycle-start"/>**`~`** | **`0x7E`** | **`0x81`** |*|*| Cycle Start (Resume) | Resumes from a [`Hold`](#rtstate-hold), [`Door`](#rtstate-door) or [`Tool`](#rtstate-door) state. |
+| **`!`** | **`0x21`** | **`0x82`** |*|*| Feed Hold | Enters the [`Hold`](#rtstate-hold) state, if in motion decelerates the machine to a controlled stop. The command is ignored in [`Alarm`](#rtstate-alarm) state. |
+|<a id="rtcmd-reset"/>**`^x`** |**`0x18`**||*|*| Soft Reset | (Ctrl-X) - Stops motion abruptly, turns off spindle/coolant, and flushes the motion buffer. Sets the state to [`Alarm`](#rtstate-alarm) if in motion or [`Idle`](#rtstate-idle) if not. If reset during motion, position is considered lost and the machine must be re-homed. If reset while [`Idle`](#rtstate-idle), homed status is retained depending on a [`$676`](./settings#676) option. Some [`Alarm`](#rtstate-alarm) substates require this command to be sent before the controller can be [unlocked](#unlock). |
+|**`^y`**|**`0x19`**||-|-| Stop | (Ctrl-Y) - Executes a fast hold, flushes the motion buffer and sets the state to [`Idle`](#rtstate-idle) if in motion or in [`Hold`](#rtstate-hold) state. Spindle and coolant is turned off. |
+||**`0x84`** ||*|*| Safety Door Ajar | Simulates opening the safety door. Halts motion and turns off spindle and coolant, retracts to the parking position, if [enabled](./settings#41), before changing the state to [`Door:0`](#rtstate-door). Resume by sending a [`Cycle Start`](#rtcmd-cycle-start) command. |
+|<a id="rtcmd-jog-cancel"/>|**`0x85`**||*|-| Jog Cancel | Halts motion, flushes input and motion buffers for any pending commands. Ignored if the state is not [`Jog`](#rtstate-jog). |
+||<a id="rtcmd-full-status"/>**`0x87`** ||-|-| Report All | Acts like [`?`](#rtcmd-status) but returs [_all_ available fields](#realtime-report-fields) including some not available for the `?` request. Useful for senders to fully synchronize state on connect. |
+||**`0x88`**||-|*| Optional Stop Toggle | Toggles optional stop mode, when enabled [`M1`](./gcode#M0-M1-M2-M30-M60) optional pause commands in the gcode will be ignored. |
+||**`0x89`**||-|*| Single Block Toggle | Toggles single block mode, when enabled [`Hold`](#rtstate-hold) state will be entered after each gcode block (line) waiting for a [`Cycle Start`](#rtcmd-cycle-start) command to continue. |
+||**`0x8A`**||-|-| Toggle FAN0 State | Toggles fan 0 on/off, only available when firmware has fan support enabled and configured. |
+||**`0x8B`**||-|*| Toggle MPG Mode | Switches MPG/pendant in/out of full control, sent by the MPG/pendant and only available when firmware has MPG support enabled. |
+||**`0x9F`**||-|-| Soft E-stop | Executes a fast hold if in motion, turns off spindle/coolant, flushes the motion buffer and sets the [`Alarm`](#rtstate-alarm) state with substate `10` - _E-Stop_. This is **not** a safe alternative to a proper hardware based E-stop system. |
+||**`0xA3`**||-|-| Tool ACK | Acknowledge [`Tool`](#rtstate-tool) state, sent by the sender when it is able to handle the [tool change protocol](../developers/senders#tool-change-protocol). |
 
 ---
 
@@ -753,21 +829,6 @@ Toggles coolant states directly.
 | `0xA0` | **Toggle Flood** | Toggles M8 Flood Coolant on/off. |
 | `0xA1` | **Toggle Mist** | Toggles M7 Mist Coolant on/off. |
 
-### Extended Commands
-
-These functionality codes are specific extensions or part of the extended ASCII set.
-
-| Hex | Name | Description |
-| :---: | :--- | :--- |
-| `0x84` | **Safety&nbsp;Door** | - Simulates opening the safety door. - **Action:** Enters `Door:0` state. Retracts mode is optional (if enabled). Spindle/Coolant turn off. - **Resume:** Requires closing the door (or re-sending `0x84` in some sims) and sending Cycle Start (`~`). |
-| `0x85` | **Jog Cancel** | - **Only valid in JOG state.** - Effectively brings the machine to a smooth stop during a jog command. - Flushes the input and planner buffers for any pending jog commands. |
-|<a id="rtcmd-full-status"/>**`0x87`** | Report All | Acts like [`?`](#rtcmd-status) but returs [_all_ available fields](#realtime-report-fields) including some not available for the `?` request. Useful for senders to fully synchronize state on connect. (grblHAL extension) |
-| `0x88` | **Optional stop toggle** | (grblHAL specific) Toggles optional stop mode, when enabled `M1` 'pause' commands in the gcode will be ignored. |
-| `0x89` | **Single block toggle** | (grblHAL specific) Toggles single block mode, when enabled grblHAL will enter `Hold` state after each gcode block (line) waiting for a cycle start command to continue. |
-| `0x8A` | **Toggle FAN0 on/off** | (grblHAL specific) Toggles fan 0 on/off, only available when firmware has fan support enabled. |
-| `0x8B` | **Toggle MPG mode** | (grblHAL specific) Switches MPG/pendant in/out of full control, sent by the MPG/pendant and only available when firmware has MPG support enabled. |
-| `0xA3` | **Tool ACK** | (grblHAL specific) Acknowledge tool change state, sent by the sender when `TOOL` state is reported. |
-
 ---
 
 ### Realtime Report  <!--toc--> {#realtime-report}
@@ -775,7 +836,7 @@ These functionality codes are specific extensions or part of the extended ASCII 
 When you send `?`, a status report is streamed back. The format is a structured text string enclosed in chevrons (angle brackets), with fields separated by pipe `|` characters.
 
 ```text
-<state{:substate}|{|Bf:-}{|Ln:-}{|FS:-}{|Pn:-}{|WCO:-}{|WCS:-}{|Ov:-}{|A:-}{|MPG:-}{|H:-}{|D:-}{|Sc:-}{|TLR:-}{|FW:-}{|In:-}{|THC:-}>
+<state{:substate}|{|Bf:-}{|Ln:-}{|FS:-}{|Pn:-}{|WCO:-}{|WCS:-}{|Ov:-}{|A:-}{|MPG:-}{|H:-}{|D:-}{|Sc:-}{|TLR:-}{|DTG:-}{|FW:-}{|In:-}{|THC:-}>
 ```
 
 <!-- ADD: |Fan:, |Enc: |TCT: (laser) | |TMCMON: (motors) |Sl: (VFD spindle load) -->
@@ -791,15 +852,15 @@ When you send `?`, a status report is streamed back. The format is a structured 
 | Field | Description | Optional | When | Format/Details |
 |:-----:| :---------- | :------- | :--- |:----|
 | [state](#controller-states) | Current controller state. || Always | `<Idle\|Run\|Hold\|Jog\|Alarm\|Door\|Check\|Home\|Sleep\|Tool>{:<substatus>}` The optional substate can be enabled by a [$10](./settings#10) option. |
-| **`Mpos:`** | Current absolute (machine) position. |yes |Always<sup>1</sup>| `MPos:<axis positions>`, [`<axis positions>`](#axis-positions) are in the base machine coordinate system. |
-| **`WPos:`** | Current relative (work) position. | yes |Always<sup>1</sup>| `WPos:<axis positions>`, [`<axis positions>`](#axis-positions) are in the base machine coordinate system plus any offsets. |
-| **`Bf:`** | Buffer status. | yes | Always | `Bf:<planner buffers available>,<RX buffer space available>`<br>`<planner buffers available>`: # of planner buffers available, during motion it is ideal that this approches 0.<br> `<RX buffer space available>`: # of available character slots in the input buffer. |
-| **`Ln:`** | Line Number. | yes | Always | `Ln:<n>`, `<n>`: block/line number, only output if the [N-word](./gcode#single-meaning-words) is present in the G-code. |
-| **`FS:`** | Feed and Speed. | yes |Always| `FS:<feed rate>,<spindle RPM>{,<actual spindle RPM>}`<br>`<feed rate>` - current feed rate.<br>`<spindle RPM>` - current spindle speed.<br>`<actual spindle RPM>` - as reported from a spindle encoder or from a VFD. |
-| **`Pn:`** | Input Signals. | yes |Always| `Pn:<signals>`, a combination of [`<signals>`](#signal-letters) letters. |
-| **`WCO:`** | Work Coordinate Offset. | yes |Periodic| `WCO:<axis positions>`, a list of [`<axis positions>`](#axis-positions) with the sum of all active offsets. |
+|<a id="rtfield-mpos"/>**`MPos:`** | Current absolute (machine) position. |yes |Always<sup>1</sup>| `MPos:<axis positions>`, [`<axis positions>`](#axis-positions) are in the base machine coordinate system. |
+|<a id="rtfield-wpos"/>**`WPos:`** | Current relative (work) position. | yes |Always<sup>1</sup>| `WPos:<axis positions>`, [`<axis positions>`](#axis-positions) are in the base machine coordinate system plus any offsets. |
+|<a id="rtfield-bf"/>**`Bf:`** | Buffer status. | yes | Always | `Bf:<planner buffers available>,<RX buffer space available>`<br>`<planner buffers available>`: # of planner buffers available, during motion it is ideal that this approches 0.<br> `<RX buffer space available>`: # of available character slots in the input buffer. |
+|<a id="rtfield-ln"/>**`Ln:`** | Line Number. | yes | Always | `Ln:<n>`, `<n>`: block/line number, only output if the [N-word](./gcode#single-meaning-words) is present in the G-code. |
+|<a id="rtfield-fs"/>**`FS:`** | Feed and Speed. | yes |Always| `FS:<feed rate>,<spindle RPM>{,<actual spindle RPM>}`<br>`<feed rate>` - current feed rate.<br>`<spindle RPM>` - current spindle speed.<br>`<actual spindle RPM>` - as reported from a spindle encoder or from a VFD. |
+|<a id="rtfield-pn"/> **`Pn:`** | Input Signals. | yes |Always| `Pn:<signals>`, a combination of [`<signals>`](#signal-letters) letters. |
+|<a id="rtfield-wco"/> **`WCO:`** | Work Coordinate Offset. | yes |Periodic| `WCO:<axis positions>`, a list of [`<axis positions>`](#axis-positions) with the sum of all active offsets. |
 | **`WCS:`** | Active Work System. | yes |Change| `WCS:<csys>`, `<csys>`: the currently selected [coordinate system](./gcode#G5x_WCS). |
-| **`Ov:`** | Overrides. | yes | Periodic | `Ov:<feed rate>,<rapid rate>,<spindle RPM>` |
+|<a id="rtfield-ov"/>**`Ov:`** | Overrides. | yes | Periodic | `Ov:<feed rate>,<rapid rate>,<spindle RPM>` |
 | **`A:`** | Accessory State. ||Change| `A:<accessories>`, a combination of [`<accessories>`](#accessory-letters) letters. If there is a transition from any on to all off a empty field (`A:`) is output. |
 | **`MPG:`** | Pendant Status. ||Change| `MPG:<status>`, `<status>`: `0` - pendant listening, `1` - pendant in control. |
 | **`H:`** | Homing Status. ||Change| `H:<status>{,<axismask>}`, `<status>`: `0`= not homed, `1`= homed according to the [configured axes](./settings#44--49). [`<axismask>`](./settings/#axismask) is added if single axis homing commands is [enabled](./settings#22). |
@@ -809,6 +870,7 @@ When you send `?`, a status report is streamed back. The format is a structured 
 | **`TLR:`** | Tool Length Reference. ||Change| `TLR:<axismask>`, an [`<axismask>`](./settings/#axismask) if set, if not then `0` for the mask. |
 | **`TLR@:`** | Tool Length Reference position. ||Change| `TLR@:<a>,<b>:<tool axis>:<atG53>`<br>`<a>` and `<b>`: position in the [plane](./gcode#G17-G18-G19) where the offset was measured, typically XY.<br>`<tool axis>`: axis id of the linear (spindle) axis, typically `2` (Z).<br>`<atG53>`: `0` - not measured at G59.3 (toolsetter) coordinate, `1` - measured at [G59.3](./gcode#G5x_WCS) coordinate. |
 |<a id="rtfield-thc"/>**`THC:`** | Plasma Plugin Status. | | Always | `THC:<voltage>,<status>`, `<voltage>`: arc voltage, [`<status>`](#plasma-status-letters): a combination of plasma status letters. |
+|<a id="rtfield-dtg"/>**`DTG:`** | Distance To Go. ||Always| `DTG:<axis positions>`, a list of [`<axis positions>`](#axis-positions) with the remaing distance to move for the current executing block. |
 | **`FW:`** | Firmware Identity. ||Requested<sup>2</sup>| `FW:grblHAL` This is the only data one can use to detect which controller firmware when in `Hold` state. |
 |<a id="rtfield-in"/>**`In:`** | [M66](./gcode#M66) Wait for Input Result. ||Requested| `In:<state>`, `<state>`: `-1` not requested or timeout/error, `0` or `1` for digtal inputs, read value for analog inputs. |
 | **`SD:`** | SD Card Plugin Status. ||Change| `SD:<mount status>`, `SD:<pct completed>,<filename>` or `SD:Pending`<br>`<mount status>`: `0` - unmounted, `1` - mounted, `2` - auto-detected unmount, `3` auto-detected mount<br>`<pct completed>`: streaming, percent complete. `filename`: name of streaming file.<br>`SD:Pending`: streaming is suspended. |

@@ -32,340 +32,311 @@ Axis settings are indexed with the tree basic axes X, Y and Z always correspondi
 ## `$0` – Step Pulse Time {#0}
 
 Controls the length of the step signal pulse (in microseconds) sent to all stepper drivers.  
-If too short, drivers may **miss steps**. If too long, it can **limit maximum step rate**.
+If too short, drivers may miss steps. If too long, it will limit maximum step rate.
 
-
-> ℹ️ **Info**
-> - Applies to **all axes**.
-> - Works together with `$2` (Step Pulse Invert) and `$29` (Pulse Delay).
-> - Adjust only if your drivers require longer pulses.
-
+- Works together with [`$2`](#2) (Step Pulse Invert) and [`$29`](#29) (Pulse Delay).
+- Adjust only if your drivers require longer pulses.
 
 | Value (µs) | Effect |
 |------------|--------|
-| **1–2**    | Typical for modern drivers (Trinamic, TB6600, Leadshine, etc.). |
-| **3–5**    | Safer setting for slower opto-isolated inputs. |
-| **10+**    | Rare, but sometimes required by old/slow external drivers. |
+| **`1–2`**  | Typical for modern drivers (Trinamic, TB6600, Leadshine, etc.). |
+| **`3–5`**  | Safer setting for slower opto-isolated inputs. |
+| **`10+`**  | Rare, but sometimes required by old/slow external drivers. |
 
-#### Common Examples
-* **Modern Digital Drivers (default):**  
-  `$0=2`
+> [!TIP]
+> - Always start low (e.g. 2 µs) and only increase if you see reliability issues.  
+> - A higher value reduces maximum achievable step frequency.  
+> - If `$29` (Pulse Delay) is used, the _effective pulse width_ is `$29` (Pulse Delay) + `$0` (Pulse on time) + Pulse off time.  
+> - Pulse off time is variable, it is the time between the pulses. This is capped to a minimum of 2 µs. So 1 / ($29+ $0 + 2) is the max theoretical step frequency - which may be higher than what the controller is capable of.
+> - Pulse Off Time is hard-coded to 2 µs minimum. It is only relevant when approaching the maximum possible step rate. Later versions of most drivers will limit the max rate instead of lowering the the off-time, where earlier drivers would break down.
 
-* **Opto-Isolated Drivers (slow input stage):**  
-  `$0=5`
-
-* **Debugging Missed Steps:**  
-  `$0=10`
-
-#### Tips & Tricks
-- Always start **low** (e.g. 2 µs) and only increase if you see reliability issues.  
-- A higher value reduces maximum achievable step frequency.  
-- If `$29` (Pulse Delay) is used, the **effective pulse width** is `$29 (Pulse Delay) + $0 (Pulse on time) + $0 (Pulse off time)`.  
-- Pulse off time is variable, it is the time between the pulses. This is capped to a minimum of 2 µs. So 1 / ($29+ $0 + 2) is the max theoretical step frequency - which may be higher than what the controller is capable of.
-- Pulse Off Time is hard-coded to 2 µs minimum. It is only relevant when approaching the maximum possible step rate. Later versions of most drivers will limit the max rate instead of lowering the the off-time, where earlier drivers would break down.
+**Examples:**  
+* _Modern Digital Drivers (default):_
+	```text
+	$0=2
+	```
+* _Opto-Isolated Drivers (slow input stage):_
+	```text
+	$0=5
+	```
+* _Debugging Missed Steps:_
+	```text
+	$0=10
+	```
 
 ---
 
 ## `$1` – Step Idle Delay {#1}
 
 Controls how long (in milliseconds) the stepper motors remain energized after motion stops.  
-This affects whether motors **hold position** when idle or are allowed to release torque.
+This affects whether motors hold position when idle or are allowed to release torque.
 
+- The delay starts after the last motion command finishes.
+- A value of `255` keeps steppers always enabled.  (Maintains compatibility with legacy Grbl)
 
-> ℹ️ **Info**
-> - Applies to **all axes**.
-> - The delay starts counting **after the last motion command finishes**.
-> - A value of `255` keeps steppers always enabled.  (Maintains compatibility with legacy Grbl)
+| Value (ms)    | Effect |
+|---------------|--------|
+| **`0`**       | Disable motors immediately when motion stops. |
+| **`1–65535`** | Keep motors energized for the given time, then disable. |
+| **`255`**     | Keep motors _always enabled_ (no timeout). |
 
+> [!TIP]
+> - For small hobby machines, a short delay can reduce motor heat and power use.  
+> - For heavy gantries or machines with gravity-loaded axes (like Z), keeping motors always on with `$1=255`, or just Z with `$37=4`, is safest.  
+> - If you notice motors “dropping” or losing zero when idle, increase this value.  
 
+> [!WARNING]
+>  If you do require motors to be disabled - it may be better to use [`$37`](#37) - as it allows per-axis control over which motors to keep enabled. This allows you to keep Z enabled for example, which may drop under the mass of a heavy spindle, but still allows disabling of X and Y for example.
 
-> ⚠️ **Warning**
-> If you do require motors to be disabled - it may be better to use `$37` - as it allows per-axis control over which motors are enabled/disabled during Idle state. This allows you to keep Z enabled for example, which may drop under the mass of a heavy spindle, but still allows disabling of X and Y for example.
-
-
-| Value (ms) | Effect |
-|------------|--------|
-| **0**      | Disable motors immediately when motion stops. |
-| **1–65535**  | Keep motors energized for the given time, then disable. |
-| **255**    | Keep motors **always enabled** (no timeout). |
-
-#### Common Examples
-* **Power Saving, Light Machine:**  
-  Release motors quickly to reduce heat.  
-  `$1=25`
-
-* **Medium Hold Needed:**  
+**Examples:**  
+* _Power Saving, Light Machine:_  
+  Release motors quickly to reduce heat.
+  ```text
+  $1=25
+  ```
+* _Medium Hold Needed:_  
   Keep motors on briefly to prevent drift, but still allow cooldown.  
-  `$1=100`
-
-* **Heavy Machines / Critical Position Hold:**  
-  Always keep motors enabled to maintain position.  
-  `$1=255`
-
-#### Tips & Tricks
-- For small hobby machines, a short delay can reduce **motor heat and power use**.  
-- For heavy gantries or machines with **gravity-loaded axes (like Z)**, keeping motors **always on** (`255`) is safest.  
-- If you notice motors “dropping” or losing zero when idle, increase this value.  
+  ```text
+  $1=100
+  ```
+* _Heavy Machines / Critical Position Hold:_
+  Always keep motors enabled to maintain position. 
+  ```text
+  $1=255
+  ```
 
 ---
 
 ## `$2` – Step Pulse Invert [(axismask)](#axismask) {#2}
 
-Controls the polarity of the **step pulses** for each axis.  
+Controls the polarity of the step pulses for each axis.  
 Some stepper drivers require the step signal to be inverted (active-low instead of active-high).  
-This setting allows you to configure that per axis.
+This setting is an [axismask](#axismask) that allows you to configure pulse inversion per axis.
 
-
-> ℹ️ **Info**
-> - Applies **individually per axis** (X, Y, Z, ...).
-> - Related settings:
->   - [$3](#3) – Direction Invert
->   - [$4](#4) – Invert Stepper Enable
-
-
-| Axis  | Value | Description |
-|-------|-------|-------------|
-| X     | 1     | Invert X step pulse |
-| Y     | 2     | Invert Y step pulse |
-| Z     | 4     | Invert Z step pulse |
-| Other axes | 2^[axis index](#axisid) | Invert axis step pulse |
-
-#### Common Examples
-* **All normal (default):**  
-  `$2=0`
-
-* **Invert X only:**  
-  `1` → `$2=1`
-
-* **Invert X and Y:**  
-  `1 + 2 = 3` → `$2=3`
-
-* **Invert all six axes:**  
-  `1+2+4+8+16+32 = 63` → `$2=63`
+Related settings:
+- [$3](#3) – _Direction Invert_
+- [$4](#4) – _Invert Stepper Enable_
 
 > [!TIP]
-> - Only change this if your **drivers require inverted pulses**.  
+> - Only change this if your drivers require inverted pulses.  
 > - If motors don’t move even though steps are being sent, check this setting.  
-> - Do **not confuse** with `$3` (Direction Invert) — `$2` affects the **pulse signal polarity**, not movement direction.  
+> - Do not confuse with [`$3`](#3) (Direction Invert) — `$2` affects the pulse polarity, not movement direction.  
 
+**Examples:**  
+* _All normal (default):_
+  ```text
+  $2=0
+  ```
+* _Invert X only:_
+  ```text
+  $2=1
+  ```
+* _Invert X and Y:_  
+  `1` (X) + `2` (Y) = `3`
+  ```text
+  $2=3
+  ```
+  
 ---
 
 ## `$3` – Direction Invert [(axismask)](#axismask) {#3}
 
-Controls the polarity of the **direction signal** for each axis.  
+Controls the polarity of the direction signal for each axis.  
 If an axis moves in the opposite direction than expected, invert it here instead of rewiring the motor.
+This setting is an [axismask](#axismask) that allows you to configure direction inversion per axis.
 
+Related settings:
+- [$2](#2) – _Step Pulse Invert_
+- [$8](#8) – _Ganged Axes Direction Invert_
+- [$23](#23) – _Homing Direction Invert_
 
-> ℹ️ **Info**
-> - Applies **individually per axis**
-> - Related settings:
->   - [$2](#2) – Step Pulse Invert
->   - [$23](#23) – Homing Direction Invert
+> [!TIP]
+> - `$23` (Homing Direction Invert) is separate — `$3` affects normal motion, `$23` affects homing only.  
+> - Prefer changing this setting instead of swapping motor wires, so configs are self-documented and repeatable.  
 
-| Axis  | Value | Description |
-|-------|-------|-------------|
-| X     | 1     | Invert X step direction |
-| Y     | 2     | Invert Y step pulse |
-| Z     | 4     | Invert Z step pulse |
-| Other axes | 2^[axis index](#axisid) | Invert axis step pulse |
-
-#### Common Examples
-* **Default (no inversion):**  
-  `$3=0`
-
-* **Invert Y only:**  
-  `2` → `$3=2`
-
-* **Invert X and Z:**  
-  `1 + 4 = 5` → `$3=5`
-
-* **Invert all six axes:**  
-  `1+2+4+8+16+32 = 63` → `$3=63`
-
-#### Tips & Tricks
-- If an axis jogs in the **wrong direction**, flip it here.  
-- `$23` (Homing Direction Invert) is **separate** — `$3` affects **normal motion**, `$23` affects **homing only**.  
-- Prefer changing this setting instead of swapping motor wires, so configs are **self-documented** and repeatable.  
-
+**Examples:**  
+* _No inversion (default):_
+  ```text
+  $3=0
+  ```
+* _Invert Y only:_
+  ```text
+  $3=2
+  ```
+* _Invert X and Z:_ 
+  `1` (X) + `4` (Z) = `5`
+  ```text
+  $3=5
+  ```
 
 ---
 
 ## `$4` – Invert Stepper Enable [(axismask)](#axismask) {#4}
 
-Controls the polarity of the **enable signal** for stepper drivers.  
-Some drivers expect an **active-low** enable, while others expect **active-high**.  
-This setting lets you match the signal to what your driver requires.
+Controls the polarity of the enable signal for stepper drivers.  
+Some drivers expect an active-low enable, while others expect active-high.  
+This setting is an [axismask](#axismask) that allows you to configure enable signal inversion per axis.
 
+> [!NOTE]
+> The default value is for active low enable signals, i.e. all bits in the mask are set.
 
-> ℹ️ **Info**
-> - Related settings:
->   - [$2](#2) – Step Pulse Invert
->   - [$3](#3) – Homing Direction Invert
+> [!TIP]
+> - If your motors never engage (drivers always disabled), try toggling this.  
+> - Some driver boards share a single enable line — use `$4=0` or `$4=1`.
+> - On multi-axis boards with independent enables, masking per axis can help if different driver types are used together.  
+> - If `$4` is set incorrectly, and `$1` is not set to `255` you may notice a thumping noise coming from the motors when you try to jog, but no movement. That is a good troubleshooting indicator that `$4` is set incorrectly.
 
-| Axis  | Value | Description |
-|-------|-------|-------------|
-| X     | 1     | Invert X step pulse |
-| Y     | 2     | Invert Y step pulse |
-| Z     | 4     | Invert Z step pulse |
-| Other axes | 2^[axis index](#axisid) | Invert axis step pulse |
-
-#### Common Examples
-* **Default (active-high, all axes same):**  
-  `$4=0`
-
-* **Invert all axes (active-low enable):**  
-  `$4=255` (or `$4=63` if only 6 axes are defined)
-
-* **Invert Z only:**  
-  `4` → `$4=4`
-
-#### Tips & Tricks
-- If your motors **never engage** (drivers always disabled), try toggling this.  
-- Some driver boards **share a single enable line** — use `$4=0` or `$4=1`
-- On multi-axis boards with **independent enables**, masking per axis can help if different driver types are used together.  
-- If `$4` is set incorrectly, and `$1` is not set to 255 you may notice a thumping noise coming from the motors when you try to jog, but no movement. That is a good troubleshooting indicator that `$4` is set incorrectly.
+**Examples:**  
+* _Invert X only:_
+  ```text
+  $4=1
+  ```
+* _Invert X and Y:_  
+  `1` (X) + `2` (Y) = `3`
+  ```text
+  $4=3
+  ```
 
 ---
 
 ## `$5` – Invert Limit Inputs [(axismask)](#axismask) {#5}
-
-Controls the polarity of the **limit switch inputs**.  
+Controls the polarity of the limit switch inputs.  
 If your limit switches trigger in reverse (always “on” when idle, “off” when pressed), invert them here.
+This setting is an [axismask](#axismask) that allows you to configure signal inversion per axis.
 
+Related setting:
+- [`$18`](#18)- _Pull-up Disable Limit Inputs_
 
-> ℹ️ **Info**
-> - Related to `$18` (Pull-up Disable Limit Inputs).
+> [!TIP]
+> Normally-closed (NC) switches are safer (detect wire breaks) and more [EMI](../concepts/troubleshooting#emi) resistant than normally open (NO), so ideally try to use NC switches.  
 
-| Axis  | Value | Description |
-|-------|-------|-------------|
-| X     | 1     | Invert X step pulse |
-| Y     | 2     | Invert Y step pulse |
-| Z     | 4     | Invert Z step pulse |
-| Other axes | 2^[axis index](#axisid) | Invert axis step pulse |
+**Examples:**  
+* _No inversion - normally closed (NC)switches (default):_
+  ```text
+  $5=0
+  ```
+* _Normally open (NO) switch for Y only:_
+  ```text
+  $5=2
+  ```
+* _Normally open (NO) switches for X and Z:_ 
+  `1` (X) + `4` (Z) = `5`
+  ```text
+  $5=5
+  ```
 
-#### Common Examples
-* **Default (normally-closed switches):**  
-  `$5=0`
-
-* **Normally-open switches on all X, Y and Z:**  
-  `$5=7`
-
-* **Normally-open switches on all axes:**  
-  `$5=63`
-
-* **Invert Z only:**  
-  `$5=4`
-
-#### Tips & Tricks
-- Normally-closed (NC) switches are safer (detect wire breaks) and more EMI resistant, so ideally try to use Normally Closed switches.  
 ---
 
 ## `$6` – Invert Probe Input (boolean/[bitmask](#bitmask)) {#6}
 
-Controls the polarity of the **probe input pin(s)**.  
-If your probe shows **triggered when it's not making contact**, invert it here.
+Controls the polarity of the probe input pin(s).  
+If your probe shows triggered when it's not making contact, invert it here.  
+In builds with multiple probes enabled `$6` changes from a boolean (on/off) and becomes a [bitmask](#bitmask): each probe input can be inverted independently.
+
+Related settings:
+- [$65](#65) – _Probing Options_
 
 
-> ℹ️ **Info**
-> - In most builds: `$6` is a simple **boolean** (0=normal, 1=invert).
-> - In grblHAL builds with **multiple probes enabled**, `$6` becomes a [bitmask](#bitmask): each probe input can be inverted independently.
-> - Related settings:
->   - [$65](#65) – Probing Options (mask)
-
-
-### Single-Probe Mode (default)
+#### Single-Probe Mode
 | Value | Description |
 |-------|-------------|
-| **0** | Normal (active-high probe trigger) |
-| **1** | Inverted (active-low probe trigger) |
+| **`0`** | Normal (active-high probe trigger) |
+| **`1`** | Inverted (active-low probe trigger) |
 
-### Multi-Probe Mode ([bitmask](#bitmask))
-| Probe           | Bit Value | Description |
-|-----------------|-----------|-------------|
-| Primary Probe   | 1   | Invert Primary Probe input |
-| Toolsetter      | 2   | Invert Toolsetter input |
-| Secondary Probe | 4   | Invert Secondary Probe input |
+#### Multi-Probe Mode ([bitmask](#bitmask))
+| Bit/Probe id | Value | Probe      | Description |
+|---------|-------|------------|-------------|
+| **`0`** | **`1`** | Primary    | Invert Primary Probe input |
+| **`1`** | **`2`** | Toolsetter | Invert Toolsetter input |
+| **`2`** | **`4`** | Secondary  | Invert Secondary Probe input |
 
-#### Common Examples
-* **Default wiring (NO probe):**  
-  `$6=0`
+> [!TIP]
+> With multiple probes enabled [`G65P5Q-`](./o-code#G65P5) can be used to set the active probe.
 
-* **NC probe, triggers “off” when idle:**  
-  `$6=1`
-
-* **Multiple probes, invert Probe 2 only:**  
-  `2` → `$6=2`
-
-* **Invert Probes 1 and 3:**  
-  `1 + 4 = 5` → `$6=5`
-
-#### Tips & Tricks
-- If `$6` is wrong, probing will either **alarm immediately** or **never trigger**.  
-- Multi-probe configs are common in **toolsetter + touch plate** setups.  
-- With Multi Probe configs, checkout `G65P5` in [https://github.com/grblHAL/core/wiki/Expressions-and-flow-control#inbuilt-g65-macros](https://github.com/grblHAL/core/wiki/Expressions-and-flow-control#inbuilt-g65-macros)
+**Examples:**  
+* _Default wiring, with normally open (NO) probe:_
+  ```text
+  $6=0
+  ```
+* _NC probe, triggers “off” when idle _:_
+  ```text
+  $6=1
+  ```
+* _Multiple probes, invert toolsetter only:_
+  ```text
+  $6=2
+  ```
 
 ---
 
-## `$8` – Ganged Axes Direction Invert ([bitmask](#bitmask)) {#8}
+# `$8` – Ganged Axes Direction Invert ([bitmask](#bitmask)) {#8}
 
-Controls the direction of the **secondary motor** in a ganged (dual-motor) axis.  
-For example, on a dual-Y gantry machine, you may need one motor to spin in the opposite direction in a belted configuration.
+Controls the direction of the secondary motor in a ganged (dual-motor) axis.  
+For example, on a dual-Y gantry machine, you may need the secondary motor to spin in the opposite direction.
+This setting is an [axismask](#axismask) that allows you to configure direction inversion for secondary motors.
 
-> ℹ️ **Info**
-> - Only applies if you have **ganged axes** (e.g., dual-Y or dual-Z).
-> - This inversion is applied after any configured inversions in `$3 - Direction Invert (mask)`
-> - Expressed as a bitmask **per axis**
-> - Only **X**, **Y** and **Z** can be ganged
+- Only applies if you have ganged or auto squared axes (e.g., dual-Y or dual-Z).
+- This inversion is applied after any configured inversions in [`$3`](#3) - _Direction Invert_
 
-| Axis | Bit Value | Description |
-|------|-----------|-------------|
-| X    | 1         | Invert secondary X motor direction |
-| Y    | 2         | Invert secondary Y motor direction |
-| Z    | 4         | Invert secondary Z motor direction |
+Related settings:
+- [$2](#2) – _Step Pulse Invert_
+- [$3](#3) – _Direction Invert_
+- [$23](#23) – _Homing Direction Invert_
+- [$170](#170--172) – _X-axis Dual-axis Offset_
+- [$171](#170--172) – _Y-axis Dual-axis Offset_
+- [$172](#170--172) – _Z-axis Dual-axis Offset_
 
-#### Common Examples
-* **Dual-Y axis, invert second Y motor:**  
-  `$8=2`
-
-* **Dual-Z gantry, invert second Z motor:**  
-  `$8=4`
-
-#### Tips & Tricks
-- Use this setting if the machine tries running the ganged motors in opposite directions to each other.
+> [!TIP]
+> - Use this setting if the machine tries running the ganged motors in opposite directions to each other.
 - Always check squaring after changing this.  
+
+**Examples:**  
+* _Dual-Y axis, invert second Y motor:_
+  ```text
+  $8=2
+  ```
+* _Dual-Z gantry, invert second Z motor:_
+  ```text
+  $8=4
+  ```
 
 ---
 
 ## `$9` – Primary PWM Spindle Options ([bitmask](#bitmask)) {#9}
 
-Controls behavior for the **primary PWM spindle** if available (spindle type 11 or 12).  
+Controls behavior for the primary PWM spindle when available (spindle type 11 or 12).  
 
-
-> ℹ️ **Info**
-> - Only applies if you have a **PWM spindle**.
-> - Related settings:
->   - [$709](#709) – PWM Spindle Options (Secondary)
-
+Related settings:
+- [$709](#709) – _Secondary PWM Spindle Options_
+- [$539](#539) – _Spindle Off Delay_
+- [$394](#394) – _Spindle On Delay_
+- [$392](#392) – _Door Spindle On Delay_
 
 | Bit | Value | Description |
 |-----|-------|-------------|
-| 0   | 1     | Disable PWM output entirely |
-| 1   | 2     | Let RPM control spindle **on/off** signal (S0 disables spindle, S>0 enables) |
-| 2   | 4     | Disable laser capability. In multi-spindle setups, this allows $32 (laser mode) to remain permanently on while selecting a non-laser spindle. |
-| 3   | 8     | Enable ramping PWM output on RPM changes: ($394 > 0, enables ramp up for spindle on and on RPM changes while spindle is enabled. $339 > 0, enables ramp down for spindle off. $392 > 0, enables ramp up on door close and/or restore from parked.) |
+| **`0`**   | **`1`** | Disable PWM output entirely. |
+| **`1`**   | **`2`** | Let RPM control spindle _on/off_ signal (`S0` disables spindle, `S` > `0` enables).<sup>1</sup> |
+| **`2`**   | **`4`** | Disable laser capability.<sup>2</sup> |
+| **`3`**   | **`8`** | Enable ramping PWM output on RPM changes.<sup>3</sup> |
 
-#### Common Examples
-* **Enable PWM output with RPM controlling spindle enable:**  
-  `$9=3` (bit 0 + bit 1)
+<sup>1</sup> This option can be used in combination with the [laser plugin](./plugins#laser) and [`M129`](./plugins#M129) to overdrive the laser power when engraving. See [this github thread](https://github.com/grblHAL/core/issues/721#issuecomment-2776210888) for some information.  
 
-* **Enable PWM, RPM control, and disable laser mode:**  
-  `$9=7` (bits 0, 1, 2)
+<sup>2</sup> This option prevents activation of Laser Mode while using this spindle. This allows [`$32`](#32) - _Laser Mode_ to stay permanently on for multi-spindle/laser machines, Laser Mode activates dynamically based on whether a laser enabled PWM spindle is currently selected.  
 
-#### Tips & Tricks
-- If you use **M3 or M4 with S0**, the spindle enable output will follow `$9` bit 1 if set.  
-- Useful for CO2 laser engraving: `$9` bit 1 can allow "overdriving" the PWM signal for short pulses or pixels.  (See https://github.com/grblHAL/core/issues/721#issuecomment-2776210888)
-- **Laser mode management:** `$9` bit 2 prevents Laser Mode from being active while using this spindle. This allows $32 (laser mode) to stay permanently on for dual-spindle/laser machines, Laser Mode activates dynamically based on whether the PWM spindle or the PWM Laser is the current tool.
-- Switching between spindles/toolheads can be done using `M104 Qx` where `x` is the index of the spindle in a `$spindles` output
+<sup>3</sup> With this option enabled setting [`$394`](#394) > `0`, enables ramp up for spindle on and on RPM changes while spindle is enabled. [`$539`](#539) > `0`, enables ramp down for spindle off. [`$392`](#392) > `0`, enables ramp up on door close and/or restore from parked.
+
+> [!TIP]
+> - Switching between spindles/toolheads can be done using `M104 Qx` where `x` is the index of the spindle in a `$spindles` output
+
+**Examples:**  
+* _Enable PWM output with RPM controlling spindle enable::_
+  ```text
+  $9=2
+  ```
+* _Enable PWM, RPM control, and disable laser mode capability:_
+  ```text
+  $9=6
+  ```
 
 ---
 
@@ -374,52 +345,45 @@ Controls behavior for the **primary PWM spindle** if available (spindle type 11 
 Configures what information is included in the [real-time status reports](./commands#realtime-report).  
 This allows you to customize what grblHAL streams back to the host.
 
-| Bit | Value | Option |
-|-----|-------|--------|
-| 0   | 1     | Position in **machine coordinates** (MPos) |
-| 1   | 2     | **Buffer state** (planner / RX) |
-| 2   | 4     | **Line numbers** |
-| 3   | 8     | **Feed & speed** |
-| 4   | 16    | **Pin state** (limit, probe, etc.) |
-| 5   | 32    | **Work coordinate offset** (WCO) |
-| 6   | 64    | **Overrides** (feed, spindle, rapid) |
-| 7   | 128   | **Probe coordinates** |
-| 8   | 256   | **Buffer sync on WCO change** |
-| 9   | 512   | **Parser state** (sent separately, only on changes) |
-| 10  | 1024  | **Alarm substatus** |
-| 11  | 2048  | **Run substatus** (can be used to implement simple sender side probe protection) |
-| 12  | 4096  | **Enable during homing** (report also sent while homing) |
-| 13  | 8192  | **Distance to Go**
-
+| Bit | Value | Option |Comment |
+|-----|-------|--------|--------|
+| **`0`**   | **`1`**     | Position in Machine Coordinates | [MPos](./commands#rtfield-mpos) is output instead of [WPos](./commands#rtfield-wpos) (Work Coordinates). |
+| **`1`**   | **`2`**     | [Buffer state](./commands#rtfield-bf) | |
+| **`2`**   | **`4`**     | [Line numbers](./commands#rtfield-ln) | |
+| **`3`**   | **`8`**     | [Feed & speed](./commands#rtfield-fs) ||
+| **`4`**   | **`16`**    | [Pin state](./commands#rtfield-pn) | Limits, probe, etc. |
+| **`5`**   | **`32`**    | [Work coordinate offset](./commands#rtfield-wco) | |
+| **`6`**   | **`64`**    | [Overrides](./commands#rtfield-ov) | Feed, rapids, spindle. |
+| **`7`**   | **`128`**   | Probe coordinates | Enables the probe push message. |
+| **`8`**   | **`256`**   | Buffer sync on WCO change | |
+| **`9`**   | **`512`**   | [Parser state](./commands#parser-state) | Output separately, and only on changes. |
+| **`10`**  | **`1024`**  | Alarm substatus | Adds the current alarm code to the [Alarm](./commands#rtstate-alarm) status |
+| **`11`**  | **`2048`**  | Run substatus | Adds some substates to the [Run](./commands#rtstate-run). Can be used to implement simple sender side probe protection. |
+| **`12`**  | **`4096`**  | Enable during homing | Realtime report requests will be output while homing. |
+| **`13`**  | **`8192`**  | [Distance to Go](./commands#rtfield-dtg) | |
 
 > [!NOTE]
-> - grblHAL extends this beyond classic Grbl.
-> - Common usage: enable only the fields your sender needs _and_ supports.
+> - grblHAL adds many options beyond what legacy Grbl has.
+> - Enable only the fields your sender needs _and_ supports.
 
-#### Common Examples
-
-* **Default:**  
-  `$10=511`
-
-* **Classic Grbl behavior:**  
-  `$10=255` (first 8 flags)
-
-* **Full report (all flags):**  
-  `$10=8191`
+> [!WARNING]]
+> - Do not enable the "Run Substatus" option unless the sender can handle it.
+> - The "Enable during homing" option may affect homing accuracy.
+> - If the Run substate is used for probe protection the sender will have to cancel the current motion if the probe is reported as triggered when _not_ probing.
 
 > [!TIP]
 > - Enabling more fields = _more traffic_ on the sender connection.  
-> - Some GUIs may rely on specific fields (e.g. offsets, parser state).  
-> - `Parser state` is not included inline, but sent separately on changes.  
-> - `Run substatus` can be used as a simple **probe protection** indicator.  
+> - Some GUIs may rely on specific fields (e.g. WCO and offsets).  
 
-> 🔥 **Danger**
-> - Do not enable the `Run Substatus` option unless the sender can handle it.
-
-> 💡 **Tip**
-> - The `Run Substatus` option adds `:` to the status where `` can be `1` for feed hold pending and `2` for probing. E.g. `Run:2` indicates that the current motion is for probing.
-> - Feed hold pending (`Run:1`) is output when a feed hold is asked for during spindle synchronized motion, the hold will be executed after the synced motion is complete.
-> - If used for probe protection the sender will have to cancel the current motion if the probe is triggered when the substate is not `Run:2`.
+**Examples:**  
+* _Default:_
+  ```text
+  $10=511
+  ```
+* _Default legacy Grbl options:_
+  ```text
+  $10=255
+  ```
 
 ---
 
@@ -431,7 +395,7 @@ It affects **cornering speed** and **smoothness**.
 > ℹ️ **Info**
 > - Units: millimeters.
 
-#### Common Examples
+**Examples:**  
 * **Default:**  
   `$11=0.010`
 
@@ -450,7 +414,7 @@ Smaller values = more precise arcs, but more segments.
 > - Units: millimeters.
 > - Controls how finely arcs are broken into small line segments.
 
-#### Common Examples
+**Examples:**  
 * **Default:**  
   `$12=0.002`
 
@@ -508,7 +472,7 @@ Controls the polarity of the various control input signals. Use this to match th
 | 10  | 1024  | Limits Override | A switch to temporarily disable hard limits for jogging off a switch. |
 | 11  | 2048  | Single Step Blocks | A switch to enable single-block execution mode. |
 
-#### Common Examples
+**Examples:**  
 *   **Default (All inputs wired NO - Normally Open):**
     *   This is the default electrical configuration.
     *   `$14=0`
@@ -536,7 +500,7 @@ Some relays expect an active-low signal.
 > - Bit 0 = Flood
 > - Bit 1 = Mist
 
-#### Common Examples
+**Examples:**  
 * **Default (active-high relays):**  
   `$15=0`
 
@@ -564,7 +528,7 @@ Some spindle drivers expect inverted logic.
 > - Related settings:
 >   - [$716](#716) – Invert Secondary Spindle Outputs (mask)
 
-#### Common Examples
+**Examples:**  
 * **Default:**  
   `$16=0`
 
@@ -602,7 +566,7 @@ Disables the internal pull-up resistors on the control input pins (Cycle Start, 
 | 10  | 1024  | Limits Override | A switch to temporarily disable hard limits for jogging off a switch. |
 | 11  | 2048  | Single Step Blocks | A switch to enable single-block execution mode. |
 
-#### Common Examples
+**Examples:**  
 *   **Default (Internal Pull-ups Enabled):**
     *   This is correct for 99% of setups.
     *   `$17=0`
@@ -619,9 +583,8 @@ Disables the internal pull-up resistors on the control input pins (Cycle Start, 
 ## `$18` – Pull-up Disable Limit Inputs ([bitmask](#bitmask)) {#18}
 Disables the internal pull-up resistors on the limit switch input pins.
 
-> ℹ️ **Info**
-> - This works exactly like [$17](#17), but applies to the limit switch pins.
-> - It is extremely rare to disable this, as nearly all limit switches (NO or NC) rely on these internal pull-ups.
+- This works exactly like [$17](#17), but applies to the limit switch pins.
+- It is extremely rare to disable this, as nearly all limit switches (NO or NC) rely on these internal pull-ups.
 
 | Bit | Value | Input |
 |:---:|:-----:|:------|
@@ -632,15 +595,18 @@ Disables the internal pull-up resistors on the limit switch input pins.
 | 4   | 16    | B-Limit |
 | 5   | 32    | C-Limit |
 
-#### Common Examples
+> [!NOTE]
+> - This setting is slated for removal if the controller has proper input circutry, such as optocouplers, conditioning the input. 
+
+> [!WARNING]
+> - Connecting switches directly to MCU pins is a bad idea, there is a high risk that [EMI](../concepts/troubleshooting#emi) may cause false triggers or even destroy the MCU.
+> - Disabling pullup with limit switches connected directly to MCU pins may cause the inputs to "float", leading to random limit triggers or worse.
+
+**Examples:**  
 *   **Default (Internal Pull-ups Enabled):**
     *   This is the correct setting for standard mechanical or optical limit switches.
     *   `$18=0`
 
-##### Tips & Tricks
-- Only disable this if your limit switches are part of an active circuit (e.g., a buffer board) that provides its own pull-ups.
-- Disabling this with standard switches will cause the inputs to "float," leading to random limit triggers.
-- Note: For boards with proper signal conditioning and onboard physical pullups, this feature is slated for removal
 ---
 
 ## `$19` – Pull-up Disable Probe Inputs ([bitmask](#bitmask)) {#19}
@@ -656,7 +622,7 @@ Disables the internal pull-up resistors on the probe input pins.
 | 1   | 2     | Secondary Probe / Toolsetter (TLS) |
 | 1   | 2     | Third Probe |
 
-#### Common Examples
+**Examples:**  
 *   **Default (Internal Pull-ups Enabled):**
     *   Correct for simple touch plates and most common probes.
     *   `$19=0`
@@ -685,7 +651,7 @@ Enables a safety feature that prevents the machine from moving beyond its config
 | 0     | Disabled| No software travel limits are enforced. |
 | 1     | Enabled | grblHAL will throw an error if a move exceeds the max travel for a homed axis. |
 
-#### Common Examples
+**Examples:**  
 *   **Machine Unable to Home / New Uncalibrated setup:**
     *   Keep soft limits off until homing is working perfectly.
     *   `$20=0`
@@ -713,7 +679,7 @@ Enables a safety feature that uses the physical limit switches to stop the machi
 | 1   | 2     | Strict Mode | When a switch is engaged, only a homing cycle is allowed to clear the state. Jogging away is disabled. |
 | 2   | 4     | Disable for Rotary | Hard limits will be ignored for rotary axes (A, B, C), but remain active for linear axes (X, Y, Z). |
 
-#### Common Examples
+**Examples:**  
 *   **No Limit Switches Installed (or Disabled):**
     *   You must keep this disabled.
     *   `$21=0`
@@ -754,7 +720,7 @@ Configures the behavior of the homing cycle.
 | **512**| 9 | **Per-Axis Feedrates:** Allows using separate feed rates for each axis during homing. |
 | **1024**| 10 | **Run Startup Scripts on Homing Complete:** If enabled, startup scripts will only execute after a successful homing cycle. |
 
-#### Common Examples
+**Examples:**  
 *   **Simple Homing Enabled:**
     *   Enables the `$H` command only, standard homing setup
     *   `1` → `$22=1`
@@ -787,7 +753,7 @@ Defines the location of the homing switch for each axis, which in turn determine
 | 16    | B    | Invert to assume switch is at B-minimum. |
 | 32    | C    | Invert to assume switch is at C-minimum. |
 
-#### Common Examples
+**Examples:**  
 *   **Default (Switches at X, Y, Z maxima):**
     *   The machine will home to the back-right-top corner.
     *   `$23=0`
@@ -815,7 +781,7 @@ Sets the slower feed rate used to precisely locate the switch trigger point on t
 | 10-50          | Precise | Good for most machines, ensures a very accurate zero. |
 | 50-100         | Faster  | A good compromise if homing cycles are too slow. |
 
-#### Common Examples
+**Examples:**  
 *   **High-Precision Machine:**
     *   `$24=25`
 *   **Standard Hobby CNC:**
@@ -839,7 +805,7 @@ Sets the faster feed rate used to initially find the homing switches during the 
 | 200-500        | Safe    | A conservative speed for initial setup. |
 | 500-1500+      | Fast    | A typical speed for a well-tuned machine. |
 
-#### Common Examples
+**Examples:**  
 *   **Initial Machine Setup:**
     *   `$25=400`
 *   **Tuned Production Machine:**
@@ -864,7 +830,7 @@ Sets a delay *after* a homing switch is triggered and released to prevent mechan
 | 1-5       | Low Bounce | For high-quality microswitches or electronic switches with clean signals. |
 | 10-50     | Standard Bounce | A safe value for typical mechanical limit switches. |
 
-#### Common Examples
+**Examples:**  
 *   **Typical Mechanical Switches (Default):**
     *   A good starting point that provides enough settling time for most switches.
     *   `$26=25`
@@ -889,7 +855,7 @@ Sets the distance each axis moves *away* from the limit switches after they have
 | 1-3        | Typical | A small, safe distance that works for most machines. |
 | 3-5+       | Large   | Useful for machines with less accurate switches to ensure they are fully released. |
 
-#### Common Examples
+**Examples:**  
 *   **Standard CNC:**
     *   `$27=2.0`
 *   **Machine with Roller Switches:**
@@ -913,7 +879,7 @@ Sets the retract distance for the `G73` high-speed peck drilling cycle.
 |:----------:|:--------|:------------|
 | 0.5 - 2.0  | Typical | A small value to quickly break the chip without fully retracting from the hole. |
 
-#### Common Examples
+**Examples:**  
 *   **Default for General Use:**
     *   `$28=1.0`
 
@@ -938,7 +904,7 @@ Adds an extra delay between the direction pin being set and the step pulse being
 > ⚠️ **Warning**
 > When set > 0 and less than 2 the value is rounded up to 2 microseconds.
 
-#### Common Examples
+**Examples:**  
 *   **Modern Digital Drivers (Default):**
     *   `$29=0`
 
@@ -968,7 +934,7 @@ Sets the spindle speed that corresponds to the maximum PWM output signal (100% d
 |:-----------:|:--------|:------------|
 | 1 - 100000+ | Max RPM | The maximum rated speed of your spindle. |
 
-#### Common Examples
+**Examples:**  
 *   **24,000 RPM Spindle with 0-10V Control:**
     *   `$30=24000`
 *   **Laser Engraver (0-1000 Power Scale):**
@@ -996,7 +962,7 @@ Sets the minimum spindle speed that can be commanded for a PWM-controlled spindl
 | 0           | Disabled| Allows any `S` command, including very low speeds. |
 | 100 - 8000+ | Min RPM | The minimum safe operating speed of your spindle. |
 
-#### Common Examples
+**Examples:**  
 *   **Laser Engraver (where S0 is valid):**
     *   `$31=0`
 *   **VFD-controlled Spindle (0-10V) with 6000 RPM Min Speed:**
@@ -1021,7 +987,7 @@ Enables or disables Laser or Lathe Mode, which fundamentally changes motion cont
 | 1     | Enabled | Optimized for lasers. Motion is continuous, and power scales with speed. |
 | 2     | Enabled | Optimized for lathe... |
 
-#### Common Examples
+**Examples:**  
 *   **Spindle-Only Machine:**
     *   `$32=0`
 *   **Laser-Only Machine:**
@@ -1066,7 +1032,7 @@ The raw PWM value to be output from the **primary** channel when the spindle is 
 >   - [$734](#734) PWM2 Spindle PWM Off Values`
 
 
-#### Common Examples
+**Examples:**  
 *   **VFD/Laser (Universal Default):**
     *   `$34=0`
 
@@ -1084,7 +1050,7 @@ The raw PWM value for the **primary** channel corresponding to the minimum spind
 >   - [$735](#735) PWM2 Spindle PWM Min Values`
 
 
-#### Common Examples
+**Examples:**  
 *   **VFD Ignores Low Voltages:**
     *   Your spindle doesn't start until 15% power. On a 0-1000 scale, this is `150`.
     *   `$35=150`
@@ -1101,7 +1067,7 @@ The raw PWM value for the **primary** channel corresponding to the maximum spind
 > - Related settings:
 > - [$736}(#736) PWM2 Spindle PWM Max Values`
 
-#### Common Examples
+**Examples:**  
 *   **VFD/Laser (Universal Default):**
     *   Assuming a 0-1000 PWM range.
     *   `$36=1000`
@@ -1129,7 +1095,7 @@ Specifies which axes should ignore the `$1` idle delay and remain energized at a
 | Z     | 4     | Keep Z axis enabled |
 | Other axes | 2^[axis index](#axisid) | Keep axis enabled |
 
-#### Common Examples
+**Examples:**  
 *   **Default (All axes use `$1` delay):**
     *   No axes are forced to stay on.
     *   `$37=0`
@@ -1157,7 +1123,7 @@ Informs grblHAL how many pulses it will receive from a spindle encoder for one f
 | 0     | Disabled| Spindle synchronization features are turned off. |
 | 1-N   | PPR/CPR | The number of Pulses (or Counts) Per Revolution of your encoder. |
 
-#### Common Examples
+**Examples:**  
 *   **Feature Disabled (Default):**
     *   `$38=0`
 *   **Using a 1024-PPR Encoder:**
@@ -1182,7 +1148,7 @@ Enables compatibility for older G-code senders that use legacy printable, single
 | 0     | Disabled| Only legacy non-printable real-time commands are accepted. |
 | 1     | Enabled | Both modern and legacy single-byte commands are accepted. |
 
-#### Common Examples
+**Examples:**  
 *   **Default:**
     *   Maintain compatibility with older senders.
     *   `$39=1`
@@ -1205,7 +1171,7 @@ Prevents jogging moves from exceeding the machine's software travel limits (`$13
 | 0     | Disabled| Jogging commands can be sent regardless of software limits. |
 | 1     | Enabled | Jogging commands that would exceed the machine's workspace are clamped/trimmed. |
 
-#### Common Examples
+**Examples:**  
 *   **During Initial Setup (before homing works):**
     *   `$40=0`
 *   **For Safe Operation (Recommended):**
@@ -1236,7 +1202,7 @@ Configures and enables the single-axis parking motion.
 | 1   | 2     | Deactivate upon init |
 | 2   | 4     | Enable parking override control (via M56) |
 
-#### Common Examples
+**Examples:**  
 * **Enable parking (simple):**  
   `$41=1`
 
@@ -1263,7 +1229,7 @@ Selects which single axis will be moved during a parking cycle.
 | Z     | 4     | Park Z axis  |
 | Other axes | 2^[axis index](#axisid) | Park axis |
 
-#### Common Examples
+**Examples:**  
 * **Standard CNC (Retract Z-axis up):**  
   `$42=2`
 
@@ -1285,7 +1251,7 @@ Configures the number of homing passes to perform during the homing cycle.
 | 3     | Perform three homing passes |
 | 4     | Up to a maximum of 4 passes |
 
-#### Common Examples
+**Examples:**  
 * **Standard Homing:**
   * `$43=1` → Each axis homes once during the homing cycle.
 * **Enhanced Precision:**
@@ -1312,7 +1278,7 @@ Defines which axes move during each pass of the homing cycle. You can have up to
 | Z     | 4     | Home Z axis  |
 | Other axes | 2^[axis index](#axisid) | Home axis |
 
-#### Common Examples
+**Examples:**  
 * **Standard 3-Axis CNC (Z first, then XY):**  
   - `$44=4` → Pass 1: Home Z only.  
   - `$45=3` → Pass 2: Home X and Y together.  
@@ -1354,7 +1320,7 @@ Sets an incremental distance for a pull-out move when parking, and a correspondi
 |:----------:|:--------|
 | -N to +N   | The incremental distance for the pull-out and plunge moves. |
 
-#### Common Examples
+**Examples:**  
 * **No Pull-out/Plunge (Default):**  
   `$56=0.0` → parking goes directly to the target (`$58`), resuming goes directly back without any slow retract/plunge.
 
@@ -1378,7 +1344,7 @@ Sets the feed rate for both the initial pull-out move and the final plunge move.
 |:--------------:|:--------|
 | 1 - N          | Feed rate for the pull-out and plunge moves. |
 
-#### Common Examples
+**Examples:**  
 * **Slow, Careful Move:**  
   `$57=100`
 
@@ -1399,7 +1365,7 @@ Sets the absolute machine coordinate for the final parking position.
 |:------|:--------|
 | -N to 0 | Target machine coordinate for the selected axis. |
 
-#### Common Examples
+**Examples:**  
 * **Park Z-Axis at Safe Height:**  
   `$58=-5.0` → Z goes to 5mm below home.
 
@@ -1423,7 +1389,7 @@ Sets the feed rate for the main fast move to and from the parking coordinate.
 |:--------------:|:--------|
 | 1 - N          | Feed rate for the main rapid to/from the park position. |
 
-#### Common Examples
+**Examples:**  
 * **Moderate Speed:**  
   `$59=800.0`
 
@@ -1448,7 +1414,7 @@ Controls whether feed, rapid, and spindle overrides are restored to their previo
 | 0     | Disabled| Overrides are reset to 100% after each job. (Safer) |
 | 1     | Enabled | Override values persist between jobs. (Convenient) |
 
-#### Common Examples
+**Examples:**  
 *   **Safety First (Default):**
     *   Ensures every new job starts at the programmed feed and speed.
     *   `$60=1`
@@ -1475,7 +1441,7 @@ Configures runtime behaviour for the safety-door input.
 | 0   | 1     | When set, **ignore** door-open events while the controller is in **IDLE**. Useful so you can open the enclosure for jogging/setup when the controller isn't running. |
 | 1   | 2     | When set, do **not** turn off coolant outputs when the door opens — preserve the current coolant/spindle state across the door event. |
 
-#### Common Examples
+**Examples:**  
 * **Default (door active):**  
   `$61=0` → Door-open events are handled normally (door will trigger DOOR/hold actions).
 
@@ -1507,7 +1473,7 @@ Enables the `$SLP` command, which allows the controller to enter a low-power sle
 | 0     | Disabled| The `$SLP` command is ignored. |
 | 1     | Enabled | The `$SLP` command will put the controller to sleep. |
 
-#### Common Examples
+**Examples:**  
 *   **Default for most machines:**
     *   `$62=0`
 
@@ -1530,7 +1496,7 @@ Configures additional actions that occur during a Feed Hold and on resume.
 | 0   | 1     | Disable laser (or spindle) during feed hold |
 | 1   | 2     | Restore spindle and coolant state on resume |
 
-#### Common Examples
+**Examples:**  
 * **Default: Disable laser during hold, restore on resume**  
   `$63=3` → Laser/spindle is disabled during feed hold, and restored automatically when resuming.  
 
@@ -1560,7 +1526,7 @@ Forces the controller to start up in an ALARM state.
 | 0     | Disabled| Controller starts in an IDLE state, ready for commands. |
 | 1     | Enabled | Controller starts in an ALARM state. An unlock command (`$X`) is required before any motion. |
 
-#### Common Examples
+**Examples:**  
 *   **Default:**
     *   `$64=0`
 *   **Safety-Critical Machine:**
@@ -1586,7 +1552,7 @@ Configures advanced options for probing cycles (`G38.x`).
 | 3   | 8     | Auto Select Toolsetter | Automatically selects a toolsetter if one is configured for the probe operation. |
 | 4   | 16    | Auto Select Probe 2 | Automatically selects the Secondary Probe |
 
-#### Common Examples
+**Examples:**  
 * **Default:**  
   `$65=0` → No feed override, soft limits not applied, auto toolsetter disabled.
 
@@ -1726,7 +1692,7 @@ Sets an RPM range around the target where no PID correction is applied.
 |:-----------:|:------------|
 | 0 - N       | The +/- RPM value from the target to consider "in position". |
 
-#### Common Examples
+**Examples:**  
 *   **A small deadband of 10 RPM:**
     *   If the target is 10000 RPM, the controller will not make any corrections as long as the actual speed is between 9990 and 10010 RPM.
     *   `$83=10`
@@ -1883,7 +1849,7 @@ The last digit in the setting number corresponds to the [axis id](#axisid).
 | **Linear (Z)**| Screw-Drive | 500 - 2000 (Usually much lower than X/Y) |
 | **Rotary**| Hobby 4th-Axis | 1000 - 10000 (3600 = 10 RPM) |
 
-#### Common Examples
+**Examples:**  
 *   **Hobby CNC Router (X, Y, Z):**
     *   `$110=5000`
     *   `$111=5000`
@@ -1917,7 +1883,7 @@ The last digit in the setting number corresponds to the [axis id](#axisid).
 | **Linear (Z)**| Standard Spindle | 50 - 150 (Usually much lower than X/Y) |
 | **Rotary**| Hobby 4th-Axis | 100 - 500 |
 
-#### Common Examples
+**Examples:**  
 *   **Hobby CNC Router (X, Y, Z):**
     *   `$120=500`
     *   `$121=400` (Y-gantry is heavier)
@@ -1941,7 +1907,7 @@ The last digit in the setting number corresponds to the [axis id](#axisid).
 > - It is measured from the point where the homing switch triggers (`MPos:0`) to the opposite end of physical travel.
 > - This setting is **essential** for the **Soft Limits (`$20`)** feature to work correctly.
 
-#### Common Examples
+**Examples:**  
 *   **300x400x80mm CNC:**
     *   `$130=300`
     *   `$131=400`
@@ -2001,7 +1967,7 @@ The last digit in the setting number corresponds to the [axis id](#axisid).
 |:----------:|:------------|
 | 0.0 - N    | The measured amount of backlash in the axis. |
 
-#### Common Examples
+**Examples:**  
 *   **Well-tuned machine:**
     *   `$160=0.0`
 *   **Hobby machine with some lead screw wear:**
@@ -2061,7 +2027,7 @@ Sets the address of the primary Network Time Protocol (NTP) server.
 |:------|:--------|:------------|
 | URI   | The address of an NTP server. |
 
-#### Common Examples
+**Examples:**  
 *   **Use the public NTP pool (recommended):**
     *   This is a resilient, distributed time source.
     *   `$332=pool.ntp.org`
@@ -2084,7 +2050,7 @@ Sets the address of the secondary (backup) Network Time Protocol (NTP) server.
 |:------|:--------|:------------|
 | URI   | The address of an NTP server. |
 
-#### Common Examples
+**Examples:**  
 *   **Use a government time server as a backup:**
     *   `$333=time.nist.gov`
 
@@ -2114,7 +2080,7 @@ Sets the local timezone to correctly offset the UTC time received from NTP serve
 |:------|:--------|:------------|
 | String| The POSIX TZ string for your timezone. |
 
-#### Common Examples
+**Examples:**  
 *   **USA Eastern Time (EST/EDT):**
     *   `$335=EST5EDT,M3.2.0,M11.1.0`
 *   **Central European Time (CET/CEST):**
@@ -2168,7 +2134,7 @@ The tolerance used for the "spindle at speed" input signal.
 |:---------:|:------------|
 | 0 - 100   | The allowable percentage deviation. |
 
-#### Common Examples
+**Examples:**  
 *   **A 5% Tolerance:**
     *   If you command `S10000`, the spindle is considered "at speed" between 9500 and 10500 RPM.
     *   `$340=5`
@@ -2196,7 +2162,7 @@ Selects the procedure to be used for an `M6` tool change command.
 | 1     | Manual  | Pauses the machine and waits for the user to change the tool and press Cycle Start. |
 | 2+    | Semi automatic | Initiates a predefined tool change sequence |
 
-#### Common Examples
+**Examples:**  
 *   **Simple Manual Tool Change:**
     *   `$341=1`
 *   **A predefined tool change sequence**
@@ -2221,7 +2187,7 @@ Sets the maximum distance the Z-axis will travel when searching for the toolsett
 |:---------:|:------------|
 | 1 - N     | The maximum probing distance. Typically negative for a Z-axis moving down. |
 
-#### Common Examples
+**Examples:**  
 *   **Typical Toolsetter Setup:**
     *   `$342=-50.0`
 
@@ -2244,7 +2210,7 @@ Sets the slower "locate" feed rate for the final, precise touch on the toolsette
 |:-------------:|:------------|
 | 10 - 100      | A slow, precise speed for accurate tool measurement. |
 
-#### Common Examples
+**Examples:**  
 *   **High-Precision Toolsetter:**
     *   `$343=25`
 
@@ -2266,7 +2232,7 @@ Sets the faster feed rate for the initial search for the toolsetter.
 |:-------------:|:------------|
 | 200 - 1000+   | A safe but efficient speed to find the toolsetter. |
 
-#### Common Examples
+**Examples:**  
 *   **Standard Toolsetter Setup:**
     *   `$344=400`
 
@@ -2288,7 +2254,7 @@ Sets the distance the Z-axis retracts after the probe is complete.
 |:---------:|:------------|
 | 1 - N     | The distance to retract after probing. |
 
-#### Common Examples
+**Examples:**  
 *   **Standard Toolsetter Setup:**
     *   `$345=2.0`
 
@@ -2422,7 +2388,7 @@ Configures the serial communication speed for the built-in Modbus RTU interface.
 | 3     | 57600     |
 | 4     | 115200    |
 
-#### Common Examples
+**Examples:**  
 *   **Many VFDs default to 9600 baud:**
     *   `$374=0`
 *   **Faster communication:**
@@ -2443,7 +2409,7 @@ Sets the time grblHAL will wait for a response from a Modbus device before flagg
 |:----------:|:------------|
 | 1 - N      | The timeout in milliseconds. |
 
-#### Common Examples
+**Examples:**  
 *   **Default Timeout:**
     *   `$375=200`
 
@@ -2467,7 +2433,7 @@ Identifies which axes are rotary axes, as opposed to linear axes.
 | 1   | 2    | B-Axis |
 | 2   | 4    | C-Axis |
 
-#### Common Examples
+**Examples:**  
 *   **Standard 3-Axis Mill (No Rotary):**
     *   `$376=0`
 *   **4-Axis Mill with a Rotary A-Axis:**
@@ -2582,7 +2548,7 @@ Adds a mandatory delay after a spindle start command is executed, before motion 
 |:-----------:|:------------|
 | 0.0 - N     | The pause duration in seconds. |
 
-#### Common Examples
+**Examples:**  
 *   **CNC with a VFD-controlled Spindle:**
     *   It might take 3-4 seconds for the spindle to reach 18000 RPM.
     *   `$394=4.0`
@@ -2632,7 +2598,7 @@ Configures the size of the motion planner buffer.
 |:-----:|:--------|:------------|
 | 16-1000  | The number of motion blocks to buffer. |
 
-#### Common Examples
+**Examples:**  
 *   **Standard Controller (e.g., STM32F4xx):**
     *   `$398=32`
 *   **High-Performance Controller (e.g., iMXRT1062 / Teensy 4.1):**
@@ -2712,7 +2678,7 @@ Sets the interval for the automatic, unsolicited streaming of status reports.
 | 0          | Disabled| Status reports are only sent when requested with `?`. (Default) |
 | 100 - N    | Interval | The time in milliseconds between each automatic report. |
 
-#### Common Examples
+**Examples:**  
 *   **Stream a report 5 times per second:**
     *   `$481=200`
 
@@ -2735,7 +2701,7 @@ Sets the timezone as a simple offset from UTC in minutes.
 |:------|:--------|
 | -N to +N| The offset from UTC in minutes. |
 
-#### Common Examples
+**Examples:**  
 *   **USA Eastern Standard Time (EST is UTC-5):**
     *   -5 hours * 60 minutes/hour = -300 minutes.
     *   `$482=-300`
@@ -2768,7 +2734,7 @@ A safety feature that requires an explicit unlock command after an E-stop has be
 | 0     | Disabled| The machine is IDLE and ready for commands immediately after reset. |
 | 1     | Enabled (Default) | The machine enters an ALARM state after reset, requiring `$X` to unlock. (Safer) |
 
-#### Common Examples
+**Examples:**  
 *   **For Enhanced Safety:**
     *   `$484=1`
 
@@ -2803,7 +2769,7 @@ A safety feature that prevents G-code commands from modifying specific work coor
 | 1   | 2     | Lock G59.2 offset             |
 | 2   | 4     | Lock G59.3 offset             |
 
-#### Common Examples
+**Examples:**  
 *   **Default (No offsets locked):**
     *   `$486=0`
 *   **Lock G59.3 (often used for toolsetter):**
@@ -2902,7 +2868,7 @@ Enables debugging messages from the RS274/NGC Expressions inside Macros.
 | 0     | Disabled| Standard operation. No debug messages are printed to the Serial console. (Default) |
 | 1     | Enabled | Debugging messages for the RS274/NGC interpreter are sent to the console. |
 
-#### Common Examples
+**Examples:**  
 *   **Normal Operation:**
     *   This should be the setting for all regular jobs.
     *   `$534=0`
@@ -2942,7 +2908,7 @@ Controls the behavior of rotary axes, particularly when executing a G28 command,
 > - `G28` sends axes to a pre-defined home position.
 > - This setting can modify how rotary axes handle this move, for example, by always taking the shortest path.
 
-#### Common Example
+**Example:**  
 ```gcode
 G91G28A0
 G90
@@ -2963,7 +2929,7 @@ Adds a mandatory delay after the spindle is turned off (`M5`).
 |:-----------:|:------------|
 | 0.0 - N     | The pause duration in seconds after an `M5` command. |
 
-#### Common Examples
+**Examples:**  
 *   **Heavy Spindle:**
     *   A large spindle might take 5-10 seconds to come to a complete stop.
     *   `$539=10.0`
@@ -3019,7 +2985,7 @@ Configures various options related to the controller's filesystem, typically inv
 | 1   | 2     | **Hide LittleFS** | When set, the content of the internal LittleFS filesystem will not be listed (e.g., via the `$F` command or in the WebUI). |
 | 2   | 4     | **Hierarchical Listing** | (Build 20251111+) Enables directory support. Files are listed per directory, and directories are shown with size `-1`. Use `$F=subdir` to navigate down and `$F=..` to go up. |
 
-#### Common Examples
+**Examples:**  
 *   **Auto-mount SD & Enable Directories:**
     *   `1 + 4 = 5` → `$650=5`
 
@@ -3083,7 +3049,7 @@ Configures advanced options for an Automatic Tool Changer (ATC) that is controll
 | 0   | 1     | Execute M6 T0 | By default, an `M6 T0` command (tool change to tool 0) is not sent to the `tc.macro`. Setting this bit enables the `tc.macro` to execute for `M6 T0`. |
 | 1   | 2     | Fail M6 if tc.macro not found | If this bit is set, grblHAL will raise an error (alarm) on an `M6` command if the `tc.macro` file is not found on the SD card or if the SD card is not mounted. |
 
-#### Common Examples
+**Examples:**  
 *   **Default behavior (M6T0 is not routed to tc.macro, it silently selects tool 0 - which may mean no tool):**
     *   `$675=0`
 *   **Allow M6 T0 to trigger macro, and fail if macro not found:**
@@ -3096,29 +3062,23 @@ Configures advanced options for an Automatic Tool Changer (ATC) that is controll
 ---
 
 ## `$676` – Reset Actions [(bitmask)](#bitmask) {#676}
-Configures additional actions to be performed automatically when the controller undergoes a soft or hard reset.
+Configures additional actions to be performed automatically when the controller undergoes a soft reset.
 
 > ℹ️ **Info**
 > - It is useful for ensuring the machine returns to a predictable and safe state, such as clearing specific status flags or overrides.
 
 | Bit | Value | Option | Description |
 |:---:|:-----:|:-------|:------------|
-| 0   | 1     | Clear homed status if position was lost | If set, the machine's "homed" status will be cleared upon reset if the controller detects that its position may have been lost (e.g., due to a power cycle). |
-| 1   | 2     | Clear offsets (except G92) | If set, all work coordinate system offsets (G54-G59.3) will be cleared upon reset, **except** for the G92 temporary offset. This forces the user to re-establish work zeros. |
+| 0   | 1     | Clear homed status if position was lost | When set, the machine's "homed" status will be cleared upon reset if the controller detects that its position may have been lost (e.g., due to a soft reset or an alarm while in motion). |
+| 1   | 2     | Clear offsets (except G92) | When set, all work coordinate system offsets (G54-G59.3) will be cleared upon reset, _except_ for the G92 temporary offset. This forces the user to re-establish work zeros. |
 | 2   | 4     | Clear rapids override | Resets the rapid feed rate override to 100% upon reset. |
 | 3   | 8     | Clear feed override | Resets the programmed feed rate override to 100% upon reset. |
 
-#### Common Examples
-*   **Default (no options enabled, standard reset behavior):**
-    *   `$676=0`
-*   **Clear homed status if position lost, and clear all offsets (except G92):**
-    *   `$676=3` (1 for Clear homed status + 2 for Clear offsets)
-*   **Reset all overrides to 100% on reset:**
-    *   `$676=12` (4 for Clear rapids override + 8 for Clear feed override)
+> [!IMPORTANT]
+> All options are _enabled_ by default.
 
-#### Tips & Tricks
-- Carefully consider which options to enable based on your machine's safety requirements and workflow. Clearing offsets ensures a fresh start but requires re-zeroing.
-- Enabling "Clear homed status if position was lost" is a good safety measure, forcing a re-homing cycle if the machine's absolute position is uncertain.
+> [!WARNING]
+> - Carefully consider which options to disable based on your machine's safety requirements and workflow.
 
 ---
 
@@ -3157,7 +3117,7 @@ Configures the data bit and parity settings for Modbus RTU serial communication.
 | **1** | **8-bit Even Parity:** Data is transmitted in 8 bits with an even parity bit for error checking. |
 | **2** | **8-bit Odd Parity:** Data is transmitted in 8 bits with an odd parity bit for error checking. |
 
-#### Common Examples
+**Examples:**  
 *   **Default for many Modbus devices (no parity):**
     *   `$681=0`
 *   **If your VFD specifies 8-bit even parity:**
@@ -3214,7 +3174,7 @@ Functions the same as [$9](#9), but applies to the **secondary PWM spindle** if 
 | 1   | 2     | Let RPM control spindle **on/off** signal (S0 disables spindle, S>0 enables) |
 | 2   | 4     | Disable laser capability (does not affect $32 when primary spindle is controlling laser) |
 
-#### Common Examples
+**Examples:**  
 * **Enable secondary PWM with RPM control:**  
   `$709=3`
 
@@ -3240,7 +3200,7 @@ Some spindle drivers expect inverted logic.
 > - Related settings:
 >   - [$16](#16) – Invert Primary Spindle Outputs (mask)
 
-#### Common Examples
+**Examples:**  
 * **Default:**  
   `$716=0`
 
@@ -3264,7 +3224,7 @@ Sets the speed limits for the **secondary** PWM spindle.
 > - These are the direct equivalents of [$30](#30) and [$31](#31), but for the secondary PWM output.
 > - They are used to scale the `S` command to the PWM output for a second device like a laser or servo.
 
-#### Common Examples
+**Examples:**  
 *   **Laser on Secondary Channel (0-1000 Power Scale):**
     *   `$730=1000`
     *   `$731=0`
@@ -3277,7 +3237,7 @@ Sets the frequency of the **secondary** PWM signal.
 > ℹ️ **Info**
 > - This is the direct equivalent of [$33](#33). It must be set correctly for the device connected to the second channel.
 
-#### Common Examples
+**Examples:**  
 *   **Laser on Secondary Channel:**
     *   `$733=1000`
 
@@ -3290,7 +3250,7 @@ Sets the raw PWM output range for the **secondary** channel.
 > - These are the direct equivalents of [$34](#34), [$35]((#35), and [$$36].
 > - They map the `S` command range (`$730`/`$731`) to the hardware's PWM duty cycle range for the second channel.
 
-#### Common Examples
+**Examples:**  
 *   **Laser on Secondary Channel (Full 0-100% Power):**
     *   Assuming a 0-1000 PWM range.
     *   `$734=0`
@@ -3338,7 +3298,7 @@ Configures the inputs for critical motor fault detection.
 | `$744`  | **Motor Faults Enable (mask):** A bitmask to enable monitoring for each axis. (X=1, Y=2, Z=4, etc.) |
 | `$745`  | **Motor Faults Invert (mask):** A bitmask to invert the logic of the fault signal (active-high vs. active-low). |
 
-#### Common Examples
+**Examples:**  
 *   **Enable Fault Detection on X, Y, Z:**
     *   `$744=7`
 *   **Fault Signal is Active-Low (Needs Inversion) on X, Y, Z:**

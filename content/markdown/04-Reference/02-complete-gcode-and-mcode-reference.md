@@ -1558,7 +1558,7 @@ This command pauses program execution until a specified input pin changes state,
 > - The `L` parameter must be 0 for analog inputs.
 
 > [!TIP]
-> Use the [`$PINS`](./commands#pins) command to list pins and identify auxiliary digital and analog input ports.
+> Use the [`$PINS`](./commands/#pins) command to list pins and identify auxiliary digital and analog input ports.
 
 #### Example
 * _Wait for a part sensor (connected to pin 2) to go high, with a 10-second timeout:_
