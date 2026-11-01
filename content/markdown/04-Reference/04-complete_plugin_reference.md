@@ -1686,7 +1686,7 @@ M114
 
 ---
 
-## Plasma / Torch Height Control (THC)
+## Plasma / Torch Height Control (THC) {#plasma-plugin}
 Github Repository: https://github.com/grblHAL/Plugin_plasma
 
 Under development. Based on [LinuxCNC specification](http://linuxcnc.org/docs/2.8/html/plasma/plasmac-user-guide.html#config-panel), with limitations.
@@ -1733,6 +1733,7 @@ The macic comment must start with an `o=<option>` field where `<option>` is one 
 | `0`   | Add a temporary material. Temporary materials will be deleted on reboot or a reload with the $MLOAD command. |
 | `1`   | Create a new material if it does not exist. |
 | `2`   | Modify an existing material or create a new if it does not exsist. | 
+| `3`   | grblHAL extension: delete an existing material. Temporary materials cannot be deleted. | 
 
 > [!IMPORTANT]
 > * The comment must start with `(o=`, the order of the other fields is not important.
@@ -1740,6 +1741,9 @@ The macic comment must start with an `o=<option>` field where `<option>` is one 
 > * No spaces are allowed between the field name and the equal sign.
 > * There can be any number of temporary materials defined in a g-code file (memory permitting), the last defined will automatically become the active.
 > * `nu` is ignored for temporary materials added with the `0` option, they will be automatically numbered starting with `1000000`.
+
+> [!TIP]
+> Experimental postprocessors for using materials with Vectric CAD/CAM can be found [here](https://github.com/grblHAL/PostProcessors/tree/main/Vectric/Plasma).
 
 #### Full example: {#plasma-materials-example} 
 `(o=1, nu=2, na=5mm Mild Steel 40A, ph=3.1, pd=0.1, ch=0.75, fr=3000, kw=0.5, th=1, ca=45, cv=110, pe=0.1, gp=5, cm=1, jh=0, jd=0)`
@@ -2029,8 +2033,10 @@ Maps the physical digital input ports for an external torch heigth controller th
 |-----|-------|------------|
 | 0   | 1     | Enable [virtual ports](#virtual-ports). |
 | 1   | 2     | Sync Z position. Update the Z position when THC control ends. |
-| 2   | 4     | Send push report when material is selected. |
-| 3   | 8     | Add grblHAL specific virtual parameters. |
+| 2   | 4     | N/A. |
+| 3   | 8     | Send push report when material is selected. |
+| 5   | 16    | Add grblHAL specific virtual parameters. |
+| 5   | 32    | Turn off arc monitoring. |
 
 > [!NOTE]
 > Option 3 for _grblHAL specific virtual parameters_ adds synonyms for LinuxCNC parameters:

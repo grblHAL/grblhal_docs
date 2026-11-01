@@ -269,7 +269,7 @@ Related settings:
 
 ---
 
-# `$8` – Ganged Axes Direction Invert ([bitmask](#bitmask)) {#8}
+## `$8` – Ganged Axes Direction Invert ([bitmask](#bitmask)) {#8}
 
 Controls the direction of the secondary motor in a ganged (dual-motor) axis.  
 For example, on a dual-Y gantry machine, you may need the secondary motor to spin in the opposite direction.
