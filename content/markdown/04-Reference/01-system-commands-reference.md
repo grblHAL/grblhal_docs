@@ -63,6 +63,7 @@ Extended functionality for machine control and debugging found in the source.
 | **`$TTLOAD`** | **Reload Tool Table**. Reloads tool data from `tooltable.tbl` (if file-based tool table is active). |
 | **`$MODBUSSTATS`** | **Modbus Statistics**. Returns communication stats (sent/retries). Use `$MODBUSSTATS=R` to reset. |
 | **`$BL`** | Enter **Bootloader**. Jumps to the bootloader (e.g., Teensy Loader) if supported by the driver. |
+| [**`$SPINDLES`**](#spindles) | Outputs all supported spindles in human readable format. |
 
 ---
 
@@ -616,25 +617,27 @@ $PORTS
 
 ---
 
-### `$SPINDLES` / `$SPINDLESH` – Enumerate Spindles
-Lists available spindles. 
--   `$SPINDLES`: Human readable format.
-    ```text
-    2 - H-100, enabled as spindle 0, active
-    0 - PWM
-    1 - PWM2
-    ```
--   `$SPINDLESH`: Machine readable format:
-    ```text
-    [SPINDLE:|||||,]
-    ```
-    
-    **Example:**
-    ```text
-    [SPINDLE:2|0|2|*SDVE|H-100|7500.0,24000.0]
-    [SPINDLE:0|-|0|DIRV|PWM|7500.0,24000.0]
-    [SPINDLE:1|-|0|IRV|PWM2|0.0,255.0]
-    ```
+### `$SPINDLES` – Output Spindles {#spindles}
+Outputs available spindles in human readable format. 
+
+**Related command:**  
+[**`$SPINDLESH`**](#enumerate-spindles) - _Enumerate Spindles_.
+
+**Format**:
+Spindle id followed by a dash and spindle name.
+If enabled then the text `, enabled as spindle <n>` where `<n>` is the spindle number - then the text `, active` if the currently selected spindle.
+
+> [!TIP]
+> - Use the spindle number with [`M104`](./gcode#M104) to select an enabled spindle.
+> - Use the spindle id for settings [`$395`](./settings#395) and [`$511-$517`](./settings#510--517), add one to the id for the latter.
+
+**Example:**
+```text
+$SPINDLES
+2 - H-100, enabled as spindle 0, active
+0 - PWM
+1 - PWM2
+```
 
 ---
 
@@ -985,6 +988,7 @@ Since grblHAL supports plugins and driver specific extensions it will be hard to
 | [**`$ESH`**](#enumerate-tab-settings) | Outputs all supported settings in grblHAL tab separated format. |
 | [**`$EG`**](#enumerate-groups) | Outputs the setting groups. |
 | [**`$E*`**](#enumerate-all) | Outputs all supported alarm, error codes and settings in grblHAL format. |
+| [**`$SPINDLESH`**](#enumerate-spindles) | Outputs all supported spindles in machine readable format. |
 
 ### `$E*` – Enumerate all {#enumerate-all}
 Outputs [alarm](#enumerate-alarms), [error](#enumerate-errors), [setting groups](#enumerate-groups) and [setting](#enumerate-settings) codes in one combined `ok` terminated transaction.
@@ -1243,3 +1247,55 @@ Outputs Plasma materials, requires the [plasma plugin](./plugins#plasma-material
 	...
 	ok
 	```
+### `$SPINDLESH` – Enumerate Spindles {#enumerate-spindles}
+Outputs available spindles in machine readable format. 
+
+`[SPINDLE:<id>|<spindle number|<type>|<capabilities>|<name>{|<max RPM>,<min RPM>}]`
+
+| Element | Description |
+|:-------:|:------------|
+| **`<id>`** | Spindle id, for use with settings. Add one to the id when used with [$511-$517](./settings#510--517). |
+| **`<spindle number>`** | Assigned when enabled, the letter **`-`** if not. For use with [M104](.gcode#M104). |
+| **`<type>`** | Spindle [type](#spindle-types). |
+| **`<capabilities>`** | Spindle [capability/status letters](#spindle-cap-letters). |
+| **`<name>`** | Spindle name. |
+| **`<max RPM>`** | Max RPM allowed. |
+| **`<min RPM>`** | Min RPM allowed. |
+
+#### Spindle types {#spindle-types}
+| Value   | Description |
+|:-------:|:------------|
+| **`0`** | PWM |
+| **`1`** | Basic (on/off/direction) |
+| **`2`** | VFD (Variable Frequency Drive) |
+| **`3`** | Solenoid (on/off - with reduced hold current) |
+| **`4`** | Stepper based |
+| **`5`** | Null spindle |
+
+#### Spindle Capability Letters {#spindle-cap-letters}
+A string containing any combination of the following letters:
+| Letter  | Description            |
+|:-------:|:-----------------------|
+| **`*`** | Currently selected spindle. |
+| **`S`** | "At speed" functionality supported. |
+| **`D`** | Direction output supported. |
+| **`L`** | Laser mode capable. |
+| **`A`** | Laser mode capable + PPI. |
+| **`I`** | PWM output inversion. |
+| **`N`** | RPM linearization. |
+| **`R`** | RPM range locked. |
+| **`V`** | Variable RPM. |
+| **`E`** | Spindle encoder. |
+
+> [!NOTE]
+> **`<min RPM>`** and **`<max RPM>`** may not be available before the spindle has been selected.
+
+**Example:**  
+```text
+$SPINDLESH
+[SPINDLE:2|0|2|*SDVE|H-100|7500.0,24000.0]
+[SPINDLE:0|-|0|DIRV|PWM|7500.0,24000.0]
+[SPINDLE:1|-|0|IRV|PWM2|0.0,255.0]
+```
+	
+---

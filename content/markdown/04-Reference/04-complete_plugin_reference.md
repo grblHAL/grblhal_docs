@@ -189,7 +189,7 @@ Add example here.
 
 ---
 
-### Stepper spindle
+### Stepper spindle <!-- toc --> {#stepper-spindle}
 
 #### `$677` – Stepper Spindle Options {#677}
 Configures options for a "stepper spindle," where the spindle is driven by a stepper motor.
@@ -200,7 +200,7 @@ Configures options for a "stepper spindle," where the spindle is driven by a ste
 
 ### Spindle offset <!-- toc --> {#spindle-offset}
 
-The spindle offset plugin is for automatically moving and offsetting the XY-position when switching between spindles.
+The spindle offset plugin is for automatically moving and offsetting the XY-position when switching between the primary spindle and a laser.
 
 #### Settings {#spindle-offset-settings}
 
@@ -215,14 +215,17 @@ The spindle offset plugin is for automatically moving and offsetting the XY-posi
 | Bit | Value | Option                     | Description                                                                                             |
 |:---:|:-----:|:---------------------------|:--------------------------------------------------------------------------------------------------------|
 | 0   | 1     | Keep new position          | If set, when a laser spindle with an offset is activated, the machine's work position shifts by the offset amount, meaning the G-code continues from the laser's perspective. |
-| 1   | 2     | Update G92 on spindle change | If set, when a laser spindle with an offset is activated, the internal `G92` offset is adjusted to keep the **work position identical** from the original spindle's perspective. |
+| 1   | 2     | Update G92 on spindle change | If set, when a laser spindle with an offset is activated, the internal `G92` offset is adjusted to keep the _work position identical_ from the original spindle's perspective. |
 
 The offsets are a key feature for machines with multiple tools (e.g., a primary milling spindle and a secondary laser) that are not parfocal in the X-axis.
-When you switch to a laser spindle (or a spindle designated as a laser), grblHAL will automatically apply the offsets to all subsequentmoves, effectively shifting the coordinate system to match the laser's position.
+When you switch to a laser spindle (or a spindle designated as a laser), grblHAL will automatically apply the offsets to all subsequent moves, effectively shifting the coordinate system to match the laser's position.
+
+> [!IMPORTANT]
+> The laser cannot be the primary (default) spindle.
 
 > [!TIP]
-- This offset is applied per spindle. You would configure this for the specific laser spindle ID after selecting it (e.g., via `M104 Qx`).
-- The "Update G92 on spindle change" option (`$772=2`) is generally preferred if you want your G-code programs to continue relative to the workpiece origin, regardless of which tool (spindle or laser) is active. This makes the tool change "transparent" to the work coordinates.
+- This offset is applied per spindle. You would configure this for the specific laser spindle ID after selecting it (e.g., via [`M104`](#spindle-mcode)).
+- The _Update G92 on spindle change_ option (`$772=2`) is generally preferred if you want your G-code programs to continue relative to the workpiece origin, regardless of which tool (spindle or laser) is active. This makes the tool change "transparent" to the work coordinates.
 - Test these options carefully with your setup to understand how your work zero behaves when switching between the primary spindle and the laser.
 
 **Examples**
@@ -232,7 +235,19 @@ When you switch to a laser spindle (or a spindle designated as a laser), grblHAL
 * _Default (no options, simple coordinate shift):_
   * `$772=0`
 * _Update G92 offset to maintain work position consistency on spindle change:_
-  * `$772=2` ("If update G92 offset is enabled then it is adjusted to keep the work position identical for the spindles.")
+  * `$772=2` (If update G92 offset is enabled then it is adjusted to keep the work position identical for the spindles.)
+
+---
+
+### Cloned PWM Spindle <!-- toc --> {#spindle-pwm-clone}
+
+For controllers with limited number of pins the primary PWM spindle can be cloned to function as two PWM spindles with shared PWM output.
+The primary spindle enable will be rerouted to the direction output and thus lose the ability to control spindle direction.
+This means only [`M3`](./gcode#M3-M4-M5) and [`M5`](./gcode#M3-M4-M5) can be used with it if laser mode is disabled by [`$9`](./settings#9) (or [`$709`](./settings#709)). [`M4`](./gcode#M3-M4-M5) in laser mode will _not_ change the direction output.  
+The clone can only be used with `M3` and `M5`, and laser mode is not possible.
+
+> [!NOTE]
+> If a cloned spindle is to be used with the [spindle offset](#spindle-offset) plugin the clone has to be configured as the default spindle with [$395](./settings#395).
 
 ---
 
@@ -2033,20 +2048,20 @@ Maps the physical digital input ports for an external torch heigth controller th
 |-----|-------|------------|
 | 0   | 1     | Enable [virtual ports](#virtual-ports). |
 | 1   | 2     | Sync Z position. Update the Z position when THC control ends. |
-| 2   | 4     | N/A. |
+| 2   | 4     | N/A |
 | 3   | 8     | Send push report when material is selected. |
-| 5   | 16    | Add grblHAL specific virtual parameters. |
+| 4   | 16    | Add grblHAL specific virtual parameters. |
 | 5   | 32    | Turn off arc monitoring. |
 
 > [!NOTE]
-> Option 3 for _grblHAL specific virtual parameters_ adds synonyms for LinuxCNC parameters:
+> Option 4 for _grblHAL specific virtual parameters_ adds synonyms for LinuxCNC parameters:
 > - `_plasma_feed-rate` is equal to `_hal[plasmac.cut-feed-rate]`
 > - `_plasma_kerf-width` is equal to `_hal[plasmac_run.kerf-width-f]`
 
 **Example:**  
 * _Example output when push report is enabled:_
 	```gcode
-	M190P
+	M190P1
 	ok
 	[MSEL:1|Mild Steel - 45 A - 2 MM]
 	```

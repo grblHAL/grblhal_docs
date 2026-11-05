@@ -2563,21 +2563,41 @@ Adds a mandatory delay after a spindle start command is executed, before motion 
 
 ---
 
-## `$395` – Default Spindle Index/Type {#394}
-Selects the default spindle to be used if not otherwise specified by a command.
+## `$395` – Default Spindle {#395}
+This setting determines which spindle is selected as the "default" at controller startup.
 
-> ℹ️ **Info**
-> - grblHAL supports multiple spindle types (e.g., PWM, Modbus VFD, Relay) that can coexist.
-> - This setting determines which spindle is considered the "default" and will respond to standard `M3`/`M4`/`M5` commands.
-
+<!--
 | Value | Meaning |
 |:-----:|:--------|
-| 0     | Spindle 0 |
-| 1     | Spindle 1 |
-| ...   | ... |
+| 0     | No spindle |
+| 1     | Huanyang VFD v1 |
+| 2     | Huanyang VFD v2 |
+| 3     | GS20 VDF |
+| 4     | YL620 VFD |
+| 5     | MODVFD |
+| 6     | H100 VFD |
+| 7     | Basic on/off spindle |
+| 8     | Basic on/off + direction spindle |
+| 9     | Secondary basic on/off spindle |
+| 10    | Secondary basic on/off + direction spindle |
+| 11    | Primary PWM spindle with on/off and direction signals |
+| 12    | Primary PWM spindle with on/off signal |
+| 13    | Secondary PWM spindle with on/off and direction signals |
+| 14    | Secondary PWM spindle with on/off signal |
+| 15    | Tertiary PWM spindle with on/off and direction signals |
+| 16    | Tertiary PWM spindle with on/off signal |
+| 17    | [Clone](./plugins#spindle-pwm-clone) of primary PWM spindle (11) |
+| 18    | Solenoid spindle with current reduction |
+| 19    | [Stepper spindle](./plugins#stepper-spindle) |
+| 20    | Nowforever VFD |
+| 30    | Custom spindle |
+-->
 
-#### Tips & Tricks
-- This is an advanced setting for machines with multiple or complex spindle configurations. For most users with a single spindle or laser, the default value (`0`) is correct.
+> [!NOTE]
+> This setting is only available if multiple spindles are included in the firmware at compile time.
+ 
+> [!TIP]
+> Use the [`$SPINDLES`](./commands#spindles) command to output a list of available spindles.
 
 ---
 
@@ -2808,27 +2828,27 @@ These are provided by the [networking plugin](/docs/reference/plugins#keypad-mac
 
 ---
 
-## `$510` - `$517` – Spindle Enable Mapping
+## `$510` - `$517` – Spindle Enable Mapping {#510--517}
 Assigns a specific spindle type to each of the 8 available spindle slots.
 
-> ℹ️ **Info**
 > - grblHAL can support up to 8 different spindles (e.g., PWM, Relay, Modbus, etc.).
 > - This block of settings determines which "driver" or type of spindle is assigned to each slot.
 > - `$510`: Configuration for Spindle 0
 > - `$511`: Configuration for Spindle 1
 > - ... and so on.
 
+> [!NOTE]
+> These settings are only available if multiple spindles are included in the firmware at compile time.
+ 
+> [!TIP]
+> Use the [`$SPINDLES`](./commands#spindles) command to output a list of available spindles.
+
 ---
 
-## `$518` – Reserved
-This is an unused slot in the settings enum.
+## `$519` – Encoder-to-Spindle Mapping {#519}
+Links a specific encoder to a specific spindle for RPM feedback and/or spindle synced motion.
 
----
-
-## `$519` – Encoder-to-Spindle Mapping
-Links a specific encoder to a specific spindle for closed-loop control.
-
-
+<!--
 > ℹ️ **Info**
 > - This setting tells the closed-loop spindle PID controller (`$80`-`$86`) which encoder to use as its feedback source.
 > - For example, you might link Encoder 0 to Spindle 0.
@@ -2836,10 +2856,11 @@ Links a specific encoder to a specific spindle for closed-loop control.
 | Value | Meaning |
 |:-----:|:--------|
 | 0-N   | The index of the encoder to use. |
+-->
 
 ---
 
-## `$520` - `$527` – Spindle Tool Start Offset
+## `$520` - `$527` – Spindle Tool Start Offset {#520--527}
 Assigns a starting tool number for each spindle.
 
 > ℹ️ **Info**
