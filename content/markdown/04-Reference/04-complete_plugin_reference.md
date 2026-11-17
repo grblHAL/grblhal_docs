@@ -1569,9 +1569,9 @@ Sets the largest incremental distance for step-style jogging.
 - This setting helps quickly move the tool to the vicinity of the workpiece.
 - If `$40` (Limit Jog Commands) is enabled, you can safely set this value to be quite large if needed, as jogging commands will be clamped to stay within the machine's configured workspace, preventing accidental overtravel.
 
-### Macro {keypad-macros}
+### Macro {#keypad-macros}
 
-####  {keypad-macros-settings}
+####  {#keypad-macros-settings}
 
 Assigns custom M-codes (from M100 upwards) to execute specific G-code sequences directly stored in the controller's settings.
 
